@@ -1,0 +1,153 @@
+{% import "_macros.html" as macros %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}EOPCRF_SH{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.46.0/tabler-icons.min.css"
+    />
+    <!-- Base styles (header, navbar, layout) -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/base.css') }}"
+    />
+    <!-- Page-specific styles (inserted by child templates) -->
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body data-active-tab="{{ active_tab.id if active_tab else '' }}">
+    <!-- ===== HEADER: Logos ===== -->
+    <header>
+      <div id="logo-bar">
+        <img
+          src="{{ url_for('static', filename='images/deped.png') }}"
+          alt="DepEd Logo"
+        />
+        <img
+          src="{{ url_for('static', filename='images/antipolo_division.png') }}"
+          alt="City Schools Division Office of Antipolo Logo"
+        />
+        <img
+          src="{{ url_for('static', filename='images/i_love_sgod.png') }}"
+          alt="I Love SGOD Logo"
+        />
+        <img
+          src="{{ url_for('static', filename='images/project_irc.png') }}"
+          alt="Project IRC Logo"
+        />
+      </div>
+    </header>
+
+    <!-- ===== NAVIGATION BAR ===== -->
+    <nav>
+      <ul>
+        <li>
+          <!-- prettier-ignore -->
+          <a href="{{ url_for('home') }}"
+                   {% if active_tab is none %}class="active"{% endif %}>
+                    Home
+                </a>
+        </li>
+        {% for tab in tabs %}
+        <li>
+          <!-- prettier-ignore -->
+          <a href="{{ url_for('view_tab', tab_id=tab.id) }}"
+                   title="{{ tab.name }}"
+                   {% if active_tab and active_tab.id == tab.id %}class="active"{% endif %}>
+                    {{ tab.short }}
+                </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
+
+    <!-- ===== PAGE CONTENT ===== -->
+    <main class="content">
+      {% block content %}{% endblock %}
+
+      <!-- ===== REPORT SIGNATORY FOOTER =====
+           Shown at the bottom of every IRC8a/8b/8d page (active_tab is set
+           by view_tab()) except IRC8c, which renders its own copy inline
+           inside its "Employee-Superior Agreement" card (see
+           tabs/irc8c.html) instead of down here. Hidden on Home, which has
+           no report to sign. "Prepared by" is populated client-side from
+           /api/preparer (see index.js) so it always reflects whatever was
+           last saved on the Home page. "Checked by" never changes, so it's
+           hardcoded here. -->
+      {% if active_tab and active_tab.id != 'irc8c' %}
+      <div class="report-signatory">
+        <div class="report-signatory-title">
+          <i class="ti ti-clipboard-text" aria-hidden="true"></i>
+          <span>Report signatories</span>
+        </div>
+        <div
+          class="report-signatory-grid{% if active_tab and active_tab.id == 'irc8a' %} report-signatory-grid--three{% endif %}"
+        >
+          <div class="report-signatory-block">
+            <p class="report-signatory-label">Prepared by</p>
+            <div class="report-signatory-person">
+              <span class="report-signatory-avatar" aria-hidden="true">
+                <i class="ti ti-user"></i>
+              </span>
+              <div class="report-signatory-info">
+                <p class="report-signatory-name" id="reportPreparedByName">
+                  &nbsp;
+                </p>
+                <p
+                  class="report-signatory-position"
+                  id="reportPreparedByPosition"
+                ></p>
+                {{ macros.signatory_date('prepared_by', 'Prepared by') }}
+              </div>
+            </div>
+          </div>
+          <div class="report-signatory-block">
+            <p class="report-signatory-label">Checked by</p>
+            <div class="report-signatory-person">
+              <span class="report-signatory-avatar" aria-hidden="true">
+                <i class="ti ti-user"></i>
+              </span>
+              <div class="report-signatory-info">
+                <p class="report-signatory-name">DR. JONATHAN P. DOMINGO</p>
+                <p class="report-signatory-position">SGOD Chief</p>
+                {{ macros.signatory_date('checked_by', 'Checked by') }}
+              </div>
+            </div>
+          </div>
+          <!-- IRC8A only: third signatory, name typed in directly here and
+               saved to /api/irc8a/approving-authority (see index.js).
+               Position is constant, same treatment as "Checked by" above. -->
+          {% if active_tab and active_tab.id == 'irc8a' %}
+          <div class="report-signatory-block">
+            <p class="report-signatory-label">Approving Authority</p>
+            <div class="report-signatory-person">
+              <span class="report-signatory-avatar" aria-hidden="true">
+                <i class="ti ti-user"></i>
+              </span>
+              <div class="report-signatory-info">
+                <input
+                  type="text"
+                  id="irc8aApprovingAuthorityName"
+                  class="report-signatory-name-input"
+                  placeholder="Full name"
+                  autocomplete="off"
+                />
+                <p class="report-signatory-position">
+                  Assistant Schools Division Superintendent
+                </p>
+                {{ macros.signatory_date('approving_authority', 'Approving Authority') }}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

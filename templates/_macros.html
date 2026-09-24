@@ -1,0 +1,23 @@
+{# Small reusable snippet for the calendar-date control shown under each
+   signatory's position (see /api/signatory-date/<tab>/<role> in app.py,
+   and the click/save wiring in index.js). `role` must be one of
+   prepared_by / checked_by / approving_authority. Shared between
+   base.html's report-signatory footer (every tab except irc8c) and
+   irc8c.html's own inline "Employee-Superior Agreement" card. #}
+{% macro signatory_date(role, label) %}
+<div class="report-signatory-date" data-signatory-role="{{ role }}">
+  <button
+    type="button"
+    class="report-signatory-date-btn"
+    aria-label="Set date for {{ label }}"
+  >
+    <span class="report-signatory-date-text">Set date</span>
+  </button>
+  <input
+    type="date"
+    class="report-signatory-date-input"
+    tabindex="-1"
+    aria-hidden="true"
+  />
+</div>
+{% endmacro %}

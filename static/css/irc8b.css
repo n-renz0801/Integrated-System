@@ -1,0 +1,631 @@
+/* IRC8B - Core Behavioral Competencies and Core Skills */
+/* Restyled to match IRC1a's page language: badge+divider header, a
+   numbered guided-flow rail, a dashboard-style summary shown before the
+   data-entry section, and dark section/subsection headers throughout. */
+
+/* ------------------------------------------------------------------
+   1. Page Header — badge + divider + title/subtitle, copied 1:1 from
+   IRC1a/IRC7's header so every page's top band reads identically.
+------------------------------------------------------------------ */
+
+.irc8b-header {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1.5px solid #e0e0e0;
+}
+
+.irc8b-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.irc8b-header-title-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.irc8b-header-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 54px;
+  padding: 0 16px;
+  flex-shrink: 0;
+  background: var(--navy-deep, #001550);
+  border-radius: 10px;
+  box-sizing: border-box;
+  line-height: 1.1;
+}
+
+.irc8b-header-badge-group {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.irc8b-header-badge-page {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.irc8b-header-divider {
+  width: 4px;
+  height: 54px;
+  background: var(--navy-deep, #001550);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.irc8b-header h2 {
+  font-size: 32px;
+  font-weight: 600;
+  /* Decreased title/subtitle gap -- was 8px. */
+  margin: 0 0 2px 0;
+  color: var(--navy-deep, #001550);
+  text-transform: uppercase;
+}
+
+.irc8b-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.irc8b-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Reset button — sized down to match IRC1a/IRC7's smaller header
+   action buttons (was 10px 18px / 14px font). */
+.irc8b-reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  appearance: none;
+  background: #fff;
+  color: #dc2626;
+  border: 1.5px solid #f3b4b4;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.irc8b-reset-btn i {
+  font-size: 13px;
+}
+
+.irc8b-reset-btn:hover {
+  background: #fee2e2;
+  border-color: #dc2626;
+}
+
+.irc8b-reset-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------------
+   Guided Flow — numbered rail (1-2) tying the dashboard summary and
+   the ratings section together as a top-to-bottom sequence, copied
+   from IRC1a's .irc1a-flow (no 3rd "performance overview" step here --
+   the dashboard step below covers that role using the page's own
+   summary averages instead of a trend chart).
+------------------------------------------------------------------ */
+
+.irc8b-flow {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  grid-template-rows: auto auto auto auto;
+  column-gap: 20px;
+  row-gap: 1.25rem;
+}
+
+.irc8b-flow-rail {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  display: grid;
+  grid-template-rows: subgrid;
+  position: relative;
+}
+
+.irc8b-flow-rail::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 20px;
+  bottom: 20px;
+  width: 2px;
+  background: var(--border-strong, #d0d5dd);
+  transform: translateX(-50%);
+}
+
+.irc8b-flow-badge {
+  align-self: start;
+  justify-self: center;
+  margin-top: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1f2937;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+.irc8b-flow-section-1,
+.irc8b-flow-section-2,
+.irc8b-flow-section-3,
+.irc8b-flow-section-4 {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.irc8b-flow-section-1 {
+  grid-row: 1;
+}
+
+.irc8b-flow-section-2 {
+  grid-row: 2;
+}
+
+.irc8b-flow-section-3 {
+  grid-row: 3;
+}
+
+.irc8b-flow-section-4 {
+  grid-row: 4;
+}
+
+.irc8b-flow-label {
+  margin: 20px 0 10px 2px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #1f2937;
+  box-sizing: border-box;
+}
+
+/* ---------- Rating scale legend ---------- */
+
+.irc8b-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  background: #f7f8fa;
+  border: 1px solid #e2e5ea;
+  padding: 14px 22px;
+  border-radius: 10px;
+}
+
+.irc8b-legend-title {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.irc8b-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.irc8b-legend-item {
+  font-size: 12.5px;
+  color: #4b5563;
+}
+
+.irc8b-legend-item strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 5px;
+  border-radius: 5px;
+  background: #1f2937;
+  color: #fff;
+  font-size: 10.5px;
+}
+
+/* ------------------------------------------------------------------
+   Dashboard — overall summary, shown as its own guided-flow step
+   before the data-entry section. Same dark-gradient card language as
+   IRC1a's analytics header/badge card, laid out as 3 equal metrics
+   instead of IRC1a's single big score, since there's no monthly trend
+   to chart here.
+------------------------------------------------------------------ */
+
+.irc8b-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 24px 20px;
+  background: linear-gradient(160deg, #1f2937 0%, #2d3f57 100%);
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+}
+
+.irc8b-summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.irc8b-summary-item + .irc8b-summary-item {
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.irc8b-summary-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #9fb3d1;
+}
+
+.irc8b-summary-value {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+.irc8b-summary-item--overall .irc8b-summary-value {
+  color: #f0cf7d;
+}
+
+.irc8b-summary-desc {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #b7c3d4;
+}
+
+.irc8b-summary-desc:empty {
+  display: none;
+}
+
+.irc8b-summary-item--overall .irc8b-summary-desc {
+  color: #e3cd93;
+}
+
+/* ---------- Sections (data entry) ---------- */
+
+.irc8b-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.irc8b-section {
+  background: #fff;
+  border: 1px solid #dde1e7;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Section header — same shared dark-analytics gradient as IRC1a's
+   .irc1a-dark-header (trend/table card headers), for a consistent
+   "dark header on every card" look across pages. */
+.irc8b-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  background: linear-gradient(160deg, #1f2937 0%, #2d3f57 100%);
+  border-bottom: none;
+  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.22);
+}
+
+.irc8b-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7fa8e0;
+}
+
+.irc8b-section-avg {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f0cf7d;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 5px 14px;
+  border-radius: 6px;
+}
+
+/* Two-column subsection grid */
+.irc8b-subsection-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 18px;
+  align-items: start;
+}
+
+/* ---------- Subsection cards ---------- */
+
+.irc8b-subsection-card {
+  border: 1px solid #d5d9df;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Subsection header — a lighter dark tone than the section header
+   above (rather than the previous light-gray band), so it still reads
+   as "dark", just a step down in the same hierarchy. */
+.irc8b-subsection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #2d3f57;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.irc8b-subsection-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #cbd5e1;
+}
+
+.irc8b-subsection-avg {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.irc8b-criteria-list {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+/* ---------- Criterion row ---------- */
+
+.irc8b-criterion-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-top: 1px solid #eef0f3;
+}
+
+.irc8b-criterion-row:first-child {
+  border-top: none;
+}
+
+.irc8b-criterion-num {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: #f1f2f4;
+  color: #6b7280;
+  font-size: 10.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.irc8b-criterion-text {
+  flex: 1;
+  font-size: 12.5px;
+  color: #333;
+  line-height: 1.45;
+}
+
+.irc8b-rate-group {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.irc8b-rate-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid #d8dde4;
+  background: #fff;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.irc8b-rate-btn:hover {
+  border-color: #9aa3af;
+  background: #f7f9fc;
+}
+
+.irc8b-rate-btn--selected {
+  background: #1f2937;
+  border-color: #1f2937;
+  color: #fff;
+}
+
+/* ---------- Reset-confirmation modal ---------- */
+/* Copied 1:1 from IRC6/IRC9's .ircX-confirm-overlay / .ircX-confirm-box /
+   .ircX-confirm-actions (and their secondary/danger buttons) so this
+   dialog looks identical across pages: a single centered box, no
+   header/footer divider lines, no close-X button. */
+
+.irc8b-confirm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.6);
+  z-index: 1100;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.irc8b-confirm-overlay.visible {
+  display: flex;
+}
+
+.irc8b-confirm-box {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 380px;
+  padding: 22px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.irc8b-confirm-box h4 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.irc8b-confirm-box p {
+  margin: 0 0 20px 0;
+  font-size: 13.5px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.irc8b-confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.irc8b-btn-secondary,
+.irc8b-btn-danger {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.irc8b-btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.irc8b-btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.irc8b-btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.irc8b-btn-danger:hover {
+  background: #b91c1c;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+  .irc8b-subsection-list {
+    grid-template-columns: 1fr;
+  }
+
+  .irc8b-summary {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .irc8b-summary-item + .irc8b-summary-item {
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    padding-top: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .irc8b-header h2 {
+    font-size: 22px;
+  }
+
+  .irc8b-header-badge {
+    height: 44px;
+    padding: 0 12px;
+  }
+
+  .irc8b-header-badge-group {
+    font-size: 9px;
+  }
+
+  .irc8b-header-badge-page {
+    font-size: 15px;
+  }
+
+  .irc8b-header-divider {
+    height: 44px;
+  }
+
+  .irc8b-header-actions {
+    width: 100%;
+  }
+
+  .irc8b-reset-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .irc8b-criterion-row {
+    flex-wrap: wrap;
+  }
+
+  .irc8b-rate-group {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
