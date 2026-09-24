@@ -1,0 +1,118 @@
+{% extends "base.html" %} {% block title %}Home - EOPCRF_SH{% endblock %} {%
+block extra_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/home.css') }}"
+/>
+{% endblock %} {% block content %}
+<div class="dashboard-header">
+  <!-- Row 1: Org masthead -->
+  <div class="header-admin-bar">
+    <div class="masthead-org">
+      <span class="org-name">Schools Division Office of Antipolo City</span>
+      <span class="org-sgod"
+        >School Governance and Operations Division (SGOD)</span
+      >
+    </div>
+  </div>
+
+  <!-- Row 2: Title row -->
+  <div class="header-title-bar">
+    <div class="header-title-bar-main">
+      <img
+        src="{{ url_for('static', filename='images/project_irc.png') }}"
+        alt="Project IRC Logo"
+        class="masthead-irc-logo"
+      />
+      <div class="masthead-divider"></div>
+
+      <!-- Grid so each preparer field's bottom edge lines up exactly with
+           the title-block row it sits beside: row 1 = title / greeting,
+           row 2 = subtitle / position (see .masthead-row-grid, home.css). -->
+      <div class="masthead-row-grid">
+        <h1 class="dashboard-title">TITLE</h1>
+
+        <!-- "Prepared by" name, shown at the bottom of every IRC8a-8d
+             page (see base.html). Saved automatically as the user types
+             (see index.js) -- no Save button. -->
+        <p class="masthead-preparer-greeting">
+          Welcome,
+          <input
+            type="text"
+            id="homePreparerName"
+            class="masthead-preparer-input masthead-preparer-input--name"
+            placeholder="Your name"
+            value="{{ preparer.name }}"
+            autocomplete="off"
+          />!
+        </p>
+
+        <p class="dashboard-subtitle">SUBTITLE</p>
+
+        <input
+          type="text"
+          id="homePreparerPosition"
+          class="masthead-preparer-input masthead-preparer-input--position"
+          placeholder="Position"
+          value="{{ preparer.position }}"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="page-instruction">
+  Select a card below or from the navigation bar above to get started.
+</p>
+
+<div class="content__body">
+  <div class="irc-cards-grid">
+    <!-- Card 1: EOPCRF -- the only live report, split into its 4 parts. -->
+    <div class="carousel-card card-color-navy">
+      <div class="carousel-card-body">
+        <p class="carousel-card__code">EOPCRF</p>
+        <p class="carousel-card__label">
+          Employee's Output-based Performance Commitment and Review Form
+        </p>
+      </div>
+      <div class="carousel-card__rows">
+        {% for tab in tabs %}
+        
+          href="{{ url_for('view_tab', tab_id=tab.id) }}"
+          class="carousel-card__row"
+          title="{{ tab.desc }}"
+        >
+          <span>{{ tab.part }}</span>
+          <i class="ti ti-chevron-right" aria-hidden="true"></i>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Cards 2-3: placeholders for future report cards, not yet built. -->
+    <div class="carousel-card carousel-card--ghost" aria-disabled="true">
+      <div class="carousel-card-body">
+        <p class="carousel-card__code carousel-card__code--ghost">&mdash;</p>
+        <p class="carousel-card__label carousel-card__label--ghost">
+          Another report card will appear here.
+        </p>
+      </div>
+      <span class="carousel-card__soon-cta">
+        <i class="ti ti-hourglass-high" aria-hidden="true"></i> Coming Soon
+      </span>
+    </div>
+    <div class="carousel-card carousel-card--ghost" aria-disabled="true">
+      <div class="carousel-card-body">
+        <p class="carousel-card__code carousel-card__code--ghost">&mdash;</p>
+        <p class="carousel-card__label carousel-card__label--ghost">
+          Another report card will appear here.
+        </p>
+      </div>
+      <span class="carousel-card__soon-cta">
+        <i class="ti ti-hourglass-high" aria-hidden="true"></i> Coming Soon
+      </span>
+    </div>
+  </div>
+</div>
+{% endblock %}
