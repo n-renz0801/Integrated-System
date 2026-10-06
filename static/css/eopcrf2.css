@@ -1,4 +1,4 @@
-/* IRC8B - Core Behavioral Competencies and Core Skills */
+/* EOPCRF2 - Part II: Leadership Competencies and Core Behavioural Competencies */
 /* Restyled to match IRC1a's page language: badge+divider header, a
    numbered guided-flow rail, a dashboard-style summary shown before the
    data-entry section, and dark section/subsection headers throughout. */
@@ -8,13 +8,13 @@
    IRC1a/IRC7's header so every page's top band reads identically.
 ------------------------------------------------------------------ */
 
-.irc8b-header {
+.eopcrf2-header {
   margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1.5px solid #e0e0e0;
 }
 
-.irc8b-header-top {
+.eopcrf2-header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -22,13 +22,13 @@
   flex-wrap: wrap;
 }
 
-.irc8b-header-title-main {
+.eopcrf2-header-title-main {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.irc8b-header-badge {
+.eopcrf2-header-badge {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -42,21 +42,21 @@
   line-height: 1.1;
 }
 
-.irc8b-header-badge-group {
+.eopcrf2-header-badge-group {
   color: rgba(255, 255, 255, 0.65);
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
 }
 
-.irc8b-header-badge-page {
+.eopcrf2-header-badge-page {
   color: #fff;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.03em;
 }
 
-.irc8b-header-divider {
+.eopcrf2-header-divider {
   width: 4px;
   height: 54px;
   background: var(--navy-deep, #001550);
@@ -64,7 +64,7 @@
   flex-shrink: 0;
 }
 
-.irc8b-header h2 {
+.eopcrf2-header h2 {
   font-size: 32px;
   font-weight: 600;
   /* Decreased title/subtitle gap -- was 8px. */
@@ -73,14 +73,14 @@
   text-transform: uppercase;
 }
 
-.irc8b-subtitle {
+.eopcrf2-subtitle {
   font-size: 14px;
   color: #666;
   margin: 0;
   line-height: 1.5;
 }
 
-.irc8b-header-actions {
+.eopcrf2-header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -89,7 +89,7 @@
 
 /* Reset button — sized down to match IRC1a/IRC7's smaller header
    action buttons (was 10px 18px / 14px font). */
-.irc8b-reset-btn {
+.eopcrf2-reset-btn {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -109,16 +109,16 @@
     border-color 0.15s ease;
 }
 
-.irc8b-reset-btn i {
+.eopcrf2-reset-btn i {
   font-size: 13px;
 }
 
-.irc8b-reset-btn:hover {
+.eopcrf2-reset-btn:hover {
   background: #fee2e2;
   border-color: #dc2626;
 }
 
-.irc8b-reset-btn:disabled {
+.eopcrf2-reset-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -131,7 +131,7 @@
    summary averages instead of a trend chart).
 ------------------------------------------------------------------ */
 
-.irc8b-flow {
+.eopcrf2-flow {
   display: grid;
   grid-template-columns: 40px 1fr;
   grid-template-rows: auto auto auto auto;
@@ -139,7 +139,7 @@
   row-gap: 1.25rem;
 }
 
-.irc8b-flow-rail {
+.eopcrf2-flow-rail {
   grid-column: 1;
   grid-row: 1 / span 4;
   display: grid;
@@ -147,7 +147,7 @@
   position: relative;
 }
 
-.irc8b-flow-rail::before {
+.eopcrf2-flow-rail::before {
   content: "";
   position: absolute;
   left: 50%;
@@ -158,7 +158,7 @@
   transform: translateX(-50%);
 }
 
-.irc8b-flow-badge {
+.eopcrf2-flow-badge {
   align-self: start;
   justify-self: center;
   margin-top: 20px;
@@ -176,31 +176,31 @@
   box-sizing: border-box;
 }
 
-.irc8b-flow-section-1,
-.irc8b-flow-section-2,
-.irc8b-flow-section-3,
-.irc8b-flow-section-4 {
+.eopcrf2-flow-section-1,
+.eopcrf2-flow-section-2,
+.eopcrf2-flow-section-3,
+.eopcrf2-flow-section-4 {
   grid-column: 2;
   min-width: 0;
 }
 
-.irc8b-flow-section-1 {
+.eopcrf2-flow-section-1 {
   grid-row: 1;
 }
 
-.irc8b-flow-section-2 {
+.eopcrf2-flow-section-2 {
   grid-row: 2;
 }
 
-.irc8b-flow-section-3 {
+.eopcrf2-flow-section-3 {
   grid-row: 3;
 }
 
-.irc8b-flow-section-4 {
+.eopcrf2-flow-section-4 {
   grid-row: 4;
 }
 
-.irc8b-flow-label {
+.eopcrf2-flow-label {
   margin: 20px 0 10px 2px;
   height: 36px;
   display: flex;
@@ -213,50 +213,62 @@
   box-sizing: border-box;
 }
 
-/* ---------- Rating scale legend ---------- */
+/* ---------- DepEd Competencies Scale (rating scale table) ---------- */
 
-.irc8b-legend {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 18px;
+.eopcrf2-scale {
   background: #f7f8fa;
   border: 1px solid #e2e5ea;
-  padding: 14px 22px;
+  padding: 14px 22px 18px;
   border-radius: 10px;
 }
 
-.irc8b-legend-title {
+.eopcrf2-scale-title {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-size: 11px;
   color: #6b7280;
-  flex-shrink: 0;
+  margin-bottom: 10px;
 }
 
-.irc8b-legend-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-}
-
-.irc8b-legend-item {
+.eopcrf2-scale-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
   font-size: 12.5px;
   color: #4b5563;
 }
 
-.irc8b-legend-item strong {
+.eopcrf2-scale-table th,
+.eopcrf2-scale-table td {
+  border: 1px solid #e2e5ea;
+  padding: 7px 12px;
+  text-align: left;
+}
+
+.eopcrf2-scale-table th {
+  background: #eef0f3;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.eopcrf2-scale-table td:first-child,
+.eopcrf2-scale-table th:first-child {
+  text-align: center;
+  width: 110px;
+}
+
+.eopcrf2-scale-table td strong {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
-  margin-right: 5px;
+  width: 20px;
+  height: 20px;
   border-radius: 5px;
   background: #1f2937;
   color: #fff;
-  font-size: 10.5px;
+  font-size: 11px;
 }
 
 /* ------------------------------------------------------------------
@@ -267,7 +279,7 @@
    to chart here.
 ------------------------------------------------------------------ */
 
-.irc8b-summary {
+.eopcrf2-summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
@@ -278,7 +290,7 @@
   box-sizing: border-box;
 }
 
-.irc8b-summary-item {
+.eopcrf2-summary-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -287,11 +299,11 @@
   min-width: 0;
 }
 
-.irc8b-summary-item + .irc8b-summary-item {
+.eopcrf2-summary-item + .eopcrf2-summary-item {
   border-left: 1px solid rgba(255, 255, 255, 0.14);
 }
 
-.irc8b-summary-label {
+.eopcrf2-summary-label {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -299,40 +311,47 @@
   color: #9fb3d1;
 }
 
-.irc8b-summary-value {
+.eopcrf2-summary-value {
   font-size: 34px;
   font-weight: 700;
   line-height: 1;
   color: #fff;
 }
 
-.irc8b-summary-item--overall .irc8b-summary-value {
+.eopcrf2-summary-item--overall .eopcrf2-summary-value {
   color: #f0cf7d;
 }
 
-.irc8b-summary-desc {
+.eopcrf2-summary-desc {
   font-size: 11.5px;
   font-weight: 600;
   color: #b7c3d4;
 }
 
-.irc8b-summary-desc:empty {
+.eopcrf2-summary-weighted {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9fb3d1;
+}
+
+.eopcrf2-summary-weighted:empty,
+.eopcrf2-summary-desc:empty {
   display: none;
 }
 
-.irc8b-summary-item--overall .irc8b-summary-desc {
+.eopcrf2-summary-item--overall .eopcrf2-summary-desc {
   color: #e3cd93;
 }
 
 /* ---------- Sections (data entry) ---------- */
 
-.irc8b-sections {
+.eopcrf2-sections {
   display: flex;
   flex-direction: column;
   gap: 26px;
 }
 
-.irc8b-section {
+.eopcrf2-section {
   background: #fff;
   border: 1px solid #dde1e7;
   border-radius: 12px;
@@ -342,7 +361,7 @@
 /* Section header — same shared dark-analytics gradient as IRC1a's
    .irc1a-dark-header (trend/table card headers), for a consistent
    "dark header on every card" look across pages. */
-.irc8b-section-header {
+.eopcrf2-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -352,7 +371,7 @@
   box-shadow: 0 6px 18px rgba(17, 24, 39, 0.22);
 }
 
-.irc8b-section-title {
+.eopcrf2-section-title {
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -360,7 +379,7 @@
   color: #7fa8e0;
 }
 
-.irc8b-section-avg {
+.eopcrf2-section-avg {
   font-size: 15px;
   font-weight: 700;
   color: #f0cf7d;
@@ -369,8 +388,37 @@
   border-radius: 6px;
 }
 
+.eopcrf2-section-desc {
+  margin: 0;
+  padding: 14px 22px 0;
+  font-size: 12.5px;
+  font-style: italic;
+  line-height: 1.55;
+  color: #4b5563;
+}
+
+.eopcrf2-section-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 22px;
+  border-top: 1px solid #e5e8ec;
+  background: #f7f8fa;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.eopcrf2-section-footer-value {
+  background: #1f2937;
+  color: #f0cf7d;
+  padding: 4px 14px;
+  border-radius: 6px;
+}
+
 /* Two-column subsection grid */
-.irc8b-subsection-list {
+.eopcrf2-subsection-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
@@ -380,7 +428,7 @@
 
 /* ---------- Subsection cards ---------- */
 
-.irc8b-subsection-card {
+.eopcrf2-subsection-card {
   border: 1px solid #d5d9df;
   border-radius: 8px;
   overflow: hidden;
@@ -389,7 +437,7 @@
 /* Subsection header — a lighter dark tone than the section header
    above (rather than the previous light-gray band), so it still reads
    as "dark", just a step down in the same hierarchy. */
-.irc8b-subsection-header {
+.eopcrf2-subsection-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -399,7 +447,7 @@
   border-bottom: 2px solid rgba(255, 255, 255, 0.12);
 }
 
-.irc8b-subsection-title {
+.eopcrf2-subsection-title {
   font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -407,7 +455,7 @@
   color: #cbd5e1;
 }
 
-.irc8b-subsection-avg {
+.eopcrf2-subsection-avg {
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
   font-size: 12.5px;
@@ -418,7 +466,7 @@
   flex-shrink: 0;
 }
 
-.irc8b-criteria-list {
+.eopcrf2-criteria-list {
   display: flex;
   flex-direction: column;
   background: #fff;
@@ -426,19 +474,19 @@
 
 /* ---------- Criterion row ---------- */
 
-.irc8b-criterion-row {
+.eopcrf2-criterion-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   padding: 10px 14px;
   border-top: 1px solid #eef0f3;
 }
 
-.irc8b-criterion-row:first-child {
+.eopcrf2-criterion-row:first-child {
   border-top: none;
 }
 
-.irc8b-criterion-num {
+.eopcrf2-criterion-num {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
@@ -452,20 +500,51 @@
   justify-content: center;
 }
 
-.irc8b-criterion-text {
+.eopcrf2-criterion-body {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eopcrf2-criterion-text {
   font-size: 12.5px;
   color: #333;
   line-height: 1.45;
 }
 
-.irc8b-rate-group {
+/* Remarks / Observations (per-indicator free text, as on the form) */
+.eopcrf2-remarks {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #e2e5ea;
+  border-radius: 6px;
+  background: #fafbfc;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 11.5px;
+  color: #374151;
+}
+
+.eopcrf2-remarks::placeholder {
+  color: #9aa3af;
+}
+
+.eopcrf2-remarks:focus {
+  outline: none;
+  border-color: #2d3f57;
+  background: #fff;
+}
+
+.eopcrf2-rate-group {
   display: flex;
+  margin-top: 1px;
   gap: 4px;
   flex-shrink: 0;
 }
 
-.irc8b-rate-btn {
+.eopcrf2-rate-btn {
   width: 26px;
   height: 26px;
   border-radius: 6px;
@@ -478,12 +557,12 @@
   transition: all 0.15s ease;
 }
 
-.irc8b-rate-btn:hover {
+.eopcrf2-rate-btn:hover {
   border-color: #9aa3af;
   background: #f7f9fc;
 }
 
-.irc8b-rate-btn--selected {
+.eopcrf2-rate-btn--selected {
   background: #1f2937;
   border-color: #1f2937;
   color: #fff;
@@ -495,7 +574,7 @@
    dialog looks identical across pages: a single centered box, no
    header/footer divider lines, no close-X button. */
 
-.irc8b-confirm-overlay {
+.eopcrf2-confirm-overlay {
   display: none;
   position: fixed;
   inset: 0;
@@ -506,11 +585,11 @@
   padding: 16px;
 }
 
-.irc8b-confirm-overlay.visible {
+.eopcrf2-confirm-overlay.visible {
   display: flex;
 }
 
-.irc8b-confirm-box {
+.eopcrf2-confirm-box {
   background: #fff;
   border-radius: 12px;
   width: 100%;
@@ -520,28 +599,28 @@
   text-align: center;
 }
 
-.irc8b-confirm-box h4 {
+.eopcrf2-confirm-box h4 {
   margin: 0 0 10px 0;
   font-size: 16px;
   font-weight: 700;
   color: #1a1a1a;
 }
 
-.irc8b-confirm-box p {
+.eopcrf2-confirm-box p {
   margin: 0 0 20px 0;
   font-size: 13.5px;
   color: #555;
   line-height: 1.5;
 }
 
-.irc8b-confirm-actions {
+.eopcrf2-confirm-actions {
   display: flex;
   justify-content: center;
   gap: 10px;
 }
 
-.irc8b-btn-secondary,
-.irc8b-btn-danger {
+.eopcrf2-btn-secondary,
+.eopcrf2-btn-danger {
   border: none;
   border-radius: 8px;
   padding: 10px 20px;
@@ -550,37 +629,37 @@
   cursor: pointer;
 }
 
-.irc8b-btn-secondary {
+.eopcrf2-btn-secondary {
   background: #f3f4f6;
   color: #374151;
 }
 
-.irc8b-btn-secondary:hover {
+.eopcrf2-btn-secondary:hover {
   background: #e5e7eb;
 }
 
-.irc8b-btn-danger {
+.eopcrf2-btn-danger {
   background: #dc2626;
   color: #fff;
 }
 
-.irc8b-btn-danger:hover {
+.eopcrf2-btn-danger:hover {
   background: #b91c1c;
 }
 
 /* ---------- Responsive ---------- */
 
 @media (max-width: 900px) {
-  .irc8b-subsection-list {
+  .eopcrf2-subsection-list {
     grid-template-columns: 1fr;
   }
 
-  .irc8b-summary {
+  .eopcrf2-summary {
     grid-template-columns: 1fr;
     gap: 16px;
   }
 
-  .irc8b-summary-item + .irc8b-summary-item {
+  .eopcrf2-summary-item + .eopcrf2-summary-item {
     border-left: none;
     border-top: 1px solid rgba(255, 255, 255, 0.14);
     padding-top: 16px;
@@ -588,43 +667,43 @@
 }
 
 @media (max-width: 768px) {
-  .irc8b-header h2 {
+  .eopcrf2-header h2 {
     font-size: 22px;
   }
 
-  .irc8b-header-badge {
+  .eopcrf2-header-badge {
     height: 44px;
     padding: 0 12px;
   }
 
-  .irc8b-header-badge-group {
+  .eopcrf2-header-badge-group {
     font-size: 9px;
   }
 
-  .irc8b-header-badge-page {
+  .eopcrf2-header-badge-page {
     font-size: 15px;
   }
 
-  .irc8b-header-divider {
+  .eopcrf2-header-divider {
     height: 44px;
   }
 
-  .irc8b-header-actions {
+  .eopcrf2-header-actions {
     width: 100%;
   }
 
-  .irc8b-reset-btn {
+  .eopcrf2-reset-btn {
     flex: 1;
     justify-content: center;
   }
 }
 
 @media (max-width: 640px) {
-  .irc8b-criterion-row {
+  .eopcrf2-criterion-row {
     flex-wrap: wrap;
   }
 
-  .irc8b-rate-group {
+  .eopcrf2-rate-group {
     width: 100%;
     justify-content: flex-end;
   }

@@ -1,0 +1,195 @@
+{% extends "base.html" %} {% block title %}EOPCRF Part II - EOPCRF_SH{% endblock
+%} {% block content %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/eopcrf2.css') }}"
+/>
+
+<section id="eopcrf2-tab" class="tab-panel eopcrf2-panel">
+  <!-- ================= 1. PAGE HEADER ================= -->
+  <div class="eopcrf2-header">
+    <div class="eopcrf2-header-top">
+      <div class="eopcrf2-header-title-main">
+        <span class="eopcrf2-header-badge">
+          <span class="eopcrf2-header-badge-group">EOPCRF</span>
+          <span class="eopcrf2-header-badge-page">II</span>
+        </span>
+        <div class="eopcrf2-header-divider"></div>
+        <div>
+          <h2>Leadership and Core Behavioral Competencies</h2>
+          <p class="eopcrf2-subtitle">
+            Rate each behavioural indicator under Part II-A: Leadership
+            Competencies and Part II-B: Core Behavioural Competencies.
+          </p>
+        </div>
+      </div>
+      <div class="eopcrf2-header-actions">
+        <button type="button" id="eopcrf2-reset-btn" class="eopcrf2-reset-btn">
+          <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset All Data
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GUIDED FLOW: 1. Overall summary -> 2. Rating Scale -> 3. Part II-A Leadership -> 4. Part II-B Core Behavioral ================= -->
+  <div class="eopcrf2-flow">
+    <div class="eopcrf2-flow-rail" aria-hidden="true">
+      <span class="eopcrf2-flow-badge">1</span>
+      <span class="eopcrf2-flow-badge">2</span>
+      <span class="eopcrf2-flow-badge">3</span>
+      <span class="eopcrf2-flow-badge">4</span>
+    </div>
+
+    <!-- 2. DASHBOARD: overall summary, shown before data entry -->
+    <div class="eopcrf2-flow-section eopcrf2-flow-section-1">
+      <p class="eopcrf2-flow-label">Overall summary</p>
+      <div id="eopcrf2-summary" class="eopcrf2-summary">
+        <div class="eopcrf2-summary-item">
+          <span class="eopcrf2-summary-label"
+            >Part II-A &middot; Leadership</span
+          >
+          <span class="eopcrf2-summary-value" id="eopcrf2-summary-lead"
+            >&mdash;</span
+          >
+          <span
+            class="eopcrf2-summary-desc"
+            id="eopcrf2-summary-lead-desc"
+          ></span>
+          <span
+            class="eopcrf2-summary-weighted"
+            id="eopcrf2-summary-lead-w"
+          ></span>
+        </div>
+        <div class="eopcrf2-summary-item">
+          <span class="eopcrf2-summary-label"
+            >Part II-B &middot; Core Behavioural</span
+          >
+          <span class="eopcrf2-summary-value" id="eopcrf2-summary-cbc"
+            >&mdash;</span
+          >
+          <span
+            class="eopcrf2-summary-desc"
+            id="eopcrf2-summary-cbc-desc"
+          ></span>
+          <span
+            class="eopcrf2-summary-weighted"
+            id="eopcrf2-summary-cbc-w"
+          ></span>
+        </div>
+        <div class="eopcrf2-summary-item eopcrf2-summary-item--overall">
+          <span class="eopcrf2-summary-label">Total Weighted Score</span>
+          <span class="eopcrf2-summary-value" id="eopcrf2-summary-overall"
+            >&mdash;</span
+          >
+          <span
+            class="eopcrf2-summary-desc"
+            id="eopcrf2-summary-overall-desc"
+          ></span>
+          <span
+            class="eopcrf2-summary-weighted"
+            id="eopcrf2-summary-overall-w"
+          ></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. RATING SCALE — its own step, shown once ahead of both data-entry sections below -->
+    <div class="eopcrf2-flow-section eopcrf2-flow-section-2">
+      <p class="eopcrf2-flow-label">Rating scale</p>
+      <div class="eopcrf2-scale">
+        <div class="eopcrf2-scale-title">DepEd Competencies Scale</div>
+        <table class="eopcrf2-scale-table">
+          <thead>
+            <tr>
+              <th>Numerical Rating</th>
+              <th>Adjectival Rating</th>
+              <th>Definition</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>5</strong></td>
+              <td>Role Model</td>
+              <td>
+                Behavioral indicator is consistently exhibited and is worthy of
+                emulation.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>4</strong></td>
+              <td>Consistently Demonstrated</td>
+              <td>Behavioral indicator is constantly shown.</td>
+            </tr>
+            <tr>
+              <td><strong>3</strong></td>
+              <td>Most of the Time Demonstrated</td>
+              <td>Behavioral indicator is often shown.</td>
+            </tr>
+            <tr>
+              <td><strong>2</strong></td>
+              <td>Sometimes Demonstrated</td>
+              <td>Behavioral indicator is irregularly shown.</td>
+            </tr>
+            <tr>
+              <td><strong>1</strong></td>
+              <td>Rarely Demonstrated</td>
+              <td>Behavioral indicator is seldom shown.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4. DATA ENTRY: Part II-A Leadership Competencies -->
+    <div class="eopcrf2-flow-section eopcrf2-flow-section-3">
+      <p class="eopcrf2-flow-label">
+        Part II-A: Leadership Competencies (2.5%)
+      </p>
+      <div id="eopcrf2-sections-lead" class="eopcrf2-sections">
+        <!-- Leadership section / subsection / indicator cards rendered here by eopcrf2.js -->
+      </div>
+    </div>
+
+    <!-- 5. DATA ENTRY: Part II-B Core Behavioural Competencies -->
+    <div class="eopcrf2-flow-section eopcrf2-flow-section-4">
+      <p class="eopcrf2-flow-label">
+        Part II-B: Core Behavioural Competencies (2.5%)
+      </p>
+      <div id="eopcrf2-sections-cbc" class="eopcrf2-sections">
+        <!-- Core Behavioural section / subsection / indicator cards rendered here by eopcrf2.js -->
+      </div>
+    </div>
+    <!-- /.eopcrf2-flow -->
+  </div>
+</section>
+
+<!-- ================= RESET-PAGE CONFIRMATION MODAL ================= -->
+<div id="eopcrf2-reset-confirm-overlay" class="eopcrf2-confirm-overlay">
+  <div class="eopcrf2-confirm-box">
+    <h4>Reset the contents of this page?</h4>
+    <p>
+      This will delete all data entered on this page. This cannot be undone.
+    </p>
+    <div class="eopcrf2-confirm-actions">
+      <button
+        type="button"
+        id="eopcrf2-reset-confirm-cancel"
+        class="eopcrf2-btn-secondary"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        id="eopcrf2-reset-confirm-confirm"
+        class="eopcrf2-btn-danger"
+      >
+        Yes, Reset
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/eopcrf2.js') }}"></script>
+
+{% endblock %}

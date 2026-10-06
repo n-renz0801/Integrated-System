@@ -1,0 +1,242 @@
+{% extends "base.html" %} {% import "_macros.html" as macros %} {% block title
+%}EOPCRF Part III - EOPCRF_SH{% endblock %} {% block content %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/eopcrf3.css') }}"
+/>
+
+<section id="eopcrf3-tab" class="tab-panel eopcrf3-panel">
+  <div class="eopcrf3-header">
+    <div class="eopcrf3-header-top">
+      <div class="eopcrf3-header-title-main">
+        <span class="eopcrf3-header-badge">
+          <span class="eopcrf3-header-badge-group">EOPCRF</span>
+          <span class="eopcrf3-header-badge-page">III</span>
+        </span>
+        <div class="eopcrf3-header-divider"></div>
+        <div>
+          <h2>Summary of Ratings</h2>
+          <p class="eopcrf3-subtitle">
+            Read-only. Obtained scores mirror EOPCRF Part I and Part II live
+            &mdash; edit ratings on those tabs.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="eopcrf3-form-ref">DepEd OPCRF (ver.Feb2025), page 3 of 4</p>
+
+  <!-- ================= GUIDED FLOW: 1. Summary of ratings -> 2. PMES rating table -> 3. Ratee-Rater Agreement ================= -->
+  <div class="eopcrf3-flow">
+    <div class="eopcrf3-flow-rail" aria-hidden="true">
+      <span class="eopcrf3-flow-badge">1</span>
+      <span class="eopcrf3-flow-badge">2</span>
+      <span class="eopcrf3-flow-badge">3</span>
+    </div>
+
+    <!-- 1. SUMMARY OF RATINGS: obtained scores pulled live from Part I / II -->
+    <div class="eopcrf3-flow-section eopcrf3-flow-section-1">
+      <p class="eopcrf3-flow-label">Summary of ratings</p>
+      <div class="eopcrf3-card">
+        <div class="eopcrf3-card-header">
+          <h3>PART III: SUMMARY OF RATINGS</h3>
+        </div>
+        <div class="eopcrf3-table-wrap">
+          <table class="eopcrf3-table" id="eopcrf3-summary-table">
+            <thead>
+              <tr>
+                <th rowspan="2" colspan="2">Final Performance Components</th>
+                <th rowspan="2">Weight Allocation</th>
+                <th rowspan="2">Obtained Score</th>
+                <th rowspan="2">Overall Score</th>
+                <th colspan="2">PMES Rating</th>
+              </tr>
+              <tr>
+                <th>Numerical Rating</th>
+                <th>Adjectival Rating</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th rowspan="3" class="eopcrf3-part-cell">PART I</th>
+                <td class="eopcrf3-component">
+                  A. Commitment to Organizational Outcomes
+                </td>
+                <td class="eopcrf3-center">60%</td>
+                <td class="eopcrf3-center eopcrf3-score" id="eopcrf3-score-1a">
+                  &mdash;
+                </td>
+                <td
+                  rowspan="5"
+                  class="eopcrf3-center eopcrf3-overall"
+                  id="eopcrf3-overall-score"
+                >
+                  &mdash;
+                </td>
+                <td
+                  rowspan="5"
+                  class="eopcrf3-center eopcrf3-pmes"
+                  id="eopcrf3-pmes-numerical"
+                ></td>
+                <td
+                  rowspan="5"
+                  class="eopcrf3-center eopcrf3-pmes"
+                  id="eopcrf3-pmes-adjectival"
+                ></td>
+              </tr>
+              <tr>
+                <td class="eopcrf3-component">
+                  B. Innovating and Intervening Accomplishments
+                </td>
+                <td class="eopcrf3-center">20%</td>
+                <td class="eopcrf3-center eopcrf3-score" id="eopcrf3-score-1b">
+                  &mdash;
+                </td>
+              </tr>
+              <tr>
+                <td class="eopcrf3-component">
+                  C. Organizational Effectiveness
+                </td>
+                <td class="eopcrf3-center">15%</td>
+                <td class="eopcrf3-center eopcrf3-score" id="eopcrf3-score-1c">
+                  &mdash;
+                </td>
+              </tr>
+              <tr>
+                <th rowspan="2" class="eopcrf3-part-cell">PART II</th>
+                <td class="eopcrf3-component">A. Leadership Competencies</td>
+                <td class="eopcrf3-center">2.5% (0.125)</td>
+                <td class="eopcrf3-center eopcrf3-score" id="eopcrf3-score-2a">
+                  &mdash;
+                </td>
+              </tr>
+              <tr>
+                <td class="eopcrf3-component">
+                  B. Core Behavioural Competencies
+                </td>
+                <td class="eopcrf3-center">2.5% (0.125)</td>
+                <td class="eopcrf3-center eopcrf3-score" id="eopcrf3-score-2b">
+                  &mdash;
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. PMES RATING TABLE: its own step, used to read the Overall Score -->
+    <div class="eopcrf3-flow-section eopcrf3-flow-section-2">
+      <p class="eopcrf3-flow-label">Rating table</p>
+      <div class="eopcrf3-card">
+        <div class="eopcrf3-table-wrap">
+          <table class="eopcrf3-table eopcrf3-table--ref">
+            <thead>
+              <tr>
+                <th colspan="3">PMES Rating Table</th>
+              </tr>
+              <tr>
+                <th>Range</th>
+                <th>Numerical Rating</th>
+                <th>Adjectival Rating</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="eopcrf3-center">4.500-5.000</td>
+                <td class="eopcrf3-center">5</td>
+                <td class="eopcrf3-center">Outstanding</td>
+              </tr>
+              <tr>
+                <td class="eopcrf3-center">3.500-4.499</td>
+                <td class="eopcrf3-center">4</td>
+                <td class="eopcrf3-center">Very Satisfactory</td>
+              </tr>
+              <tr>
+                <td class="eopcrf3-center">2.500-3.499</td>
+                <td class="eopcrf3-center">3</td>
+                <td class="eopcrf3-center">Satisfactory</td>
+              </tr>
+              <tr>
+                <td class="eopcrf3-center">1.500-2.499</td>
+                <td class="eopcrf3-center">2</td>
+                <td class="eopcrf3-center">Unsatisfactory</td>
+              </tr>
+              <tr>
+                <td class="eopcrf3-center">1.000-1.499</td>
+                <td class="eopcrf3-center">1</td>
+                <td class="eopcrf3-center">Poor</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. RATEE-RATER AGREEMENT
+         Replaces base.html's page-footer signatory block for this tab
+         (suppressed there, same as irc8c) and reuses base.css's
+         .report-signatory-* classes, just with the PDF's own labels. -->
+    <div class="eopcrf3-flow-section eopcrf3-flow-section-3">
+      <p class="eopcrf3-flow-label">Sign-off</p>
+      <div class="eopcrf3-card">
+        <div class="eopcrf3-card-header">
+          <h3>Ratee-Rater Agreement</h3>
+          <p class="eopcrf3-subtitle-dark">
+            The signatures below confirm that the employee and his/her superior
+            have agreed to the contents of the performance as captured in this
+            form.
+          </p>
+        </div>
+        <div class="report-signatory-grid">
+          <div class="report-signatory-block">
+            <p class="report-signatory-label">Name of Employee:</p>
+            <div class="report-signatory-person">
+              <span class="report-signatory-avatar" aria-hidden="true">
+                <i class="ti ti-user"></i>
+              </span>
+              <div class="report-signatory-info">
+                <p
+                  class="report-signatory-name eopcrf3-sign-name"
+                  id="reportPreparedByName"
+                >
+                  &nbsp;
+                </p>
+                <p
+                  class="report-signatory-position"
+                  id="reportPreparedByPosition"
+                ></p>
+                {{ macros.signatory_date('prepared_by', 'Name of Employee') }}
+              </div>
+            </div>
+          </div>
+          <div class="report-signatory-block">
+            <p class="report-signatory-label">Name of Superior:</p>
+            <div class="report-signatory-person">
+              <span class="report-signatory-avatar" aria-hidden="true">
+                <i class="ti ti-user"></i>
+              </span>
+              <div class="report-signatory-info">
+                <input
+                  type="text"
+                  id="eopcrf3-superior-name"
+                  class="report-signatory-name-input"
+                  placeholder="Full name"
+                  autocomplete="off"
+                />
+                {{ macros.signatory_date('checked_by', 'Name of Superior') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /.eopcrf3-flow -->
+  </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/eopcrf3.js') }}"></script>
+
+{% endblock %}

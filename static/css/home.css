@@ -359,17 +359,20 @@
   transform: translateX(3px);
 }
 
-/* Multi-part card (e.g. IRC1 -> 1a, 1b): all sub-reports sit in ONE row,
-   split into equal-width columns — however many tabs a group has, the
-   row never grows taller, so every card in the grid keeps the same
-   height regardless of how many sub-reports it links to. */
+/* EOPCRF card: its 4 Part links sit in a fixed 2x2 grid. (Old comment
+   here described a single squeezed row for 2-3 sub-reports -- with this
+   card always having exactly 4 parts, a single row made each button too
+   narrow (text clipping/overlapping the chevron) and left a large empty
+   gap under it once the card grew taller. A 2x2 grid gives each link
+   comfortable width and fills the card's height properly.) */
 .carousel-card__rows {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
   gap: 8px;
+  flex: 1;
 }
 
 .carousel-card__row {
@@ -377,12 +380,12 @@
   display: flex;
   align-items: center;
   text-decoration: none;
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--text);
   background: var(--white);
   border: 1px solid var(--card-border);
-  padding: 4px 20px 4px 6px;
+  padding: 6px 26px 6px 10px;
   border-radius: 8px;
   transition:
     background 0.15s ease,
@@ -393,11 +396,14 @@
 .carousel-card__row span {
   flex: 1;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .carousel-card__row i {
   position: absolute;
-  right: 6px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-light);

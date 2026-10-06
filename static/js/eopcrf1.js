@@ -1,81 +1,84 @@
 (function () {
-  const listEl = document.getElementById("irc8a-kra-list");
+  const listEl = document.getElementById("eopcrf1-kra-list");
   if (!listEl) return;
 
-  const emptyStateEl = document.getElementById("irc8a-empty-state");
-  const summaryEl = document.getElementById("irc8a-summary");
-  const summaryWeightEl = document.getElementById("irc8a-summary-weight");
+  const emptyStateEl = document.getElementById("eopcrf1-empty-state");
+  const summaryEl = document.getElementById("eopcrf1-summary");
+  const summaryWeightEl = document.getElementById("eopcrf1-summary-weight");
   const summaryWeightHintEl = document.getElementById(
-    "irc8a-summary-weight-hint",
+    "eopcrf1-summary-weight-hint",
   );
-  const summaryRatingEl = document.getElementById("irc8a-summary-rating");
+  const summaryRatingEl = document.getElementById("eopcrf1-summary-rating");
   const addKraBtn = document.getElementById("addKraBtn");
-  const pdfBtn = document.getElementById("irc8a-pdf-btn");
+  const pdfBtn = document.getElementById("eopcrf1-pdf-btn");
 
   // ================= IPCRF header info (Name of Rater/Employee, Bureau,
   // Rating Period, Date of Review) =================
   // Plain inputs, no modal -- each one saves independently on blur/change
-  // to /api/irc8a/report-header, the same treatment base.html gives the
+  // to /api/eopcrf1/report-header, the same treatment base.html gives the
   // "Approving Authority" name input. Reproduced verbatim in the printed
   // report by buildPrintReport() further down.
   const reportHeaderInputs = {
-    nameOfRater: document.getElementById("irc8a-rh-rater-name"),
-    positionOfRater: document.getElementById("irc8a-rh-rater-position"),
-    nameOfEmployee: document.getElementById("irc8a-rh-employee-name"),
-    positionOfEmployee: document.getElementById("irc8a-rh-employee-position"),
-    bureau: document.getElementById("irc8a-rh-bureau"),
-    ratingPeriod: document.getElementById("irc8a-rh-rating-period"),
-    dateOfReview: document.getElementById("irc8a-rh-date-of-review"),
+    nameOfRater: document.getElementById("eopcrf1-rh-rater-name"),
+    positionOfRater: document.getElementById("eopcrf1-rh-rater-position"),
+    nameOfEmployee: document.getElementById("eopcrf1-rh-employee-name"),
+    positionOfEmployee: document.getElementById("eopcrf1-rh-employee-position"),
+    bureau: document.getElementById("eopcrf1-rh-bureau"),
+    ratingPeriod: document.getElementById("eopcrf1-rh-rating-period"),
+    dateOfReview: document.getElementById("eopcrf1-rh-date-of-review"),
   };
 
   // ================= Reset button + confirmation modal =================
-  const resetBtn = document.getElementById("irc8a-reset-btn");
+  const resetBtn = document.getElementById("eopcrf1-reset-btn");
   const resetConfirmOverlay = document.getElementById(
-    "irc8a-reset-confirm-overlay",
+    "eopcrf1-reset-confirm-overlay",
   );
   const resetConfirmCancelBtn = document.getElementById(
-    "irc8a-reset-confirm-cancel",
+    "eopcrf1-reset-confirm-cancel",
   );
   const resetConfirmConfirmBtn = document.getElementById(
-    "irc8a-reset-confirm-confirm",
+    "eopcrf1-reset-confirm-confirm",
   );
   const resetScopeRadios = document.querySelectorAll(
-    'input[name="irc8a-reset-scope"]',
+    'input[name="eopcrf1-reset-scope"]',
   );
   const resetConfirmWarning = document.getElementById(
-    "irc8a-reset-confirm-warning",
+    "eopcrf1-reset-confirm-warning",
   );
 
   // ================= Modal elements =================
-  const modal = document.getElementById("irc8a-entry-modal");
-  const modalTitle = document.getElementById("irc8a-entry-modal-title");
-  const modalHint = document.getElementById("irc8a-entry-modal-hint");
-  const modalClose = document.getElementById("irc8aEntryModalClose");
-  const modalCancel = document.getElementById("irc8aEntryModalCancel");
-  const modalOverlay = document.getElementById("irc8aEntryModalOverlay");
-  const modalSubmit = document.getElementById("irc8aEntryModalSubmit");
+  const modal = document.getElementById("eopcrf1-entry-modal");
+  const modalTitle = document.getElementById("eopcrf1-entry-modal-title");
+  const modalHint = document.getElementById("eopcrf1-entry-modal-hint");
+  const modalClose = document.getElementById("eopcrf1EntryModalClose");
+  const modalCancel = document.getElementById("eopcrf1EntryModalCancel");
+  const modalOverlay = document.getElementById("eopcrf1EntryModalOverlay");
+  const modalSubmit = document.getElementById("eopcrf1EntryModalSubmit");
 
-  const fieldPrimaryWrap = document.getElementById("irc8a-field-primary");
+  const fieldPrimaryWrap = document.getElementById("eopcrf1-field-primary");
   const fieldPrimaryLabel = document.getElementById(
-    "irc8a-field-primary-label",
+    "eopcrf1-field-primary-label",
   );
-  const primaryInput = document.getElementById("irc8a-entry-text");
+  const primaryInput = document.getElementById("eopcrf1-entry-text");
 
-  const fieldUrlWrap = document.getElementById("irc8a-field-url");
-  const urlInput = document.getElementById("irc8a-entry-url");
+  const fieldUrlWrap = document.getElementById("eopcrf1-field-url");
+  const urlInput = document.getElementById("eopcrf1-entry-url");
 
-  const fieldRateWrap = document.getElementById("irc8a-field-rate");
-  const rateSelect = document.getElementById("irc8a-entry-rate");
+  const fieldRateWrap = document.getElementById("eopcrf1-field-rate");
+  const rateSelect = document.getElementById("eopcrf1-entry-rate");
 
-  const fieldWeightWrap = document.getElementById("irc8a-field-weight");
-  const fieldWeightLabel = document.getElementById("irc8a-field-weight-label");
-  const weightInput = document.getElementById("irc8a-entry-weight");
+  const fieldWeightWrap = document.getElementById("eopcrf1-field-weight");
+  const fieldWeightLabel = document.getElementById(
+    "eopcrf1-field-weight-label",
+  );
+  const weightInput = document.getElementById("eopcrf1-entry-weight");
 
   // ================= Icons =================
   const ICON_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>`;
   const ICON_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>`;
-  const ICON_PLUS = `<svg class="irc8a-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>`;
+  const ICON_PLUS = `<svg class="eopcrf1-inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>`;
   const ICON_LINK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+  const ICON_LOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
   // Banner icons — used in the solid Planning / Evaluation section headers.
   const ICON_CLIPBOARD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6M9 16h6"></path></svg>`;
   const ICON_CHECKLIST = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"></path><path d="M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"></path></svg>`;
@@ -87,17 +90,46 @@
     { key: "timeliness", label: "Timeliness" },
   ];
 
+  // ================= Part I-A / I-B / I-C tabs =================
+  // Part I-A and Part I-C are the office's fixed structure -- seeded
+  // server-side, read-only apart from rating/MOV/actual-results/timeline.
+  // Part I-B ("Innovating and Intervening Accomplishments") is the only
+  // part a user can add/edit/delete KRAs and objectives in. A KRA's
+  // `part` and `locked` flags come straight from the server (see
+  // EOPCRF1Kra.to_dict() in models.py) -- this list just drives the tab
+  // bar and which KRAs show under each tab.
+  const PARTS = [
+    {
+      key: "a",
+      label: "Part I-A",
+      full: "Commitment to Organizational Outcomes",
+    },
+    {
+      key: "b",
+      label: "Part I-B",
+      full: "Innovating and Intervening Accomplishments",
+    },
+    { key: "c", label: "Part I-C", full: "Organizational Effectiveness" },
+  ];
+  let activePart = "a";
+  const partTabsEl = document.getElementById("eopcrf1-part-tabs");
+  const emptyStateTextEl = document.getElementById("eopcrf1-empty-state-text");
+  const summaryWeightLabelEl = document.getElementById(
+    "eopcrf1-summary-weight-label",
+  );
+  const PART_EXPECTED_TOTAL = { a: 60, b: 20, c: 15 };
+
   // Fixed color palette for KRA cards — cycles by list position, not by id,
   // so deleting a KRA re-flows the colors of the ones that remain.
   // Coral has been removed; only 4 hues remain (Violet, Teal, Pink, Amber).
   const KRA_PALETTE_SIZE = 4;
 
   function kraPaletteClass(kraIndex) {
-    return "irc8a-kra-palette-" + ((kraIndex % KRA_PALETTE_SIZE) + 1);
+    return "eopcrf1-kra-palette-" + ((kraIndex % KRA_PALETTE_SIZE) + 1);
   }
 
   // ================= State =================
-  // `state.kras` mirrors exactly what GET /irc/irc8a/data returns (each KRA
+  // `state.kras` mirrors exactly what GET /irc/eopcrf1/data returns (each KRA
   // nesting its objectives, each objective nesting its quality/efficiency/
   // timeliness indicator arrays and its `ratings` object) -- there's no
   // more locally-generated data here, everything comes from the server.
@@ -233,24 +265,71 @@
   }
 
   // ================= Render =================
+  function partTotals(partKey) {
+    const kras = state.kras.filter((k) => k.part === partKey);
+    let scoreSum = 0;
+    let hasAny = false;
+    kras.forEach((k) =>
+      k.objectives.forEach((o) => {
+        const s = computeScore(o);
+        if (s !== null) {
+          scoreSum += s;
+          hasAny = true;
+        }
+      }),
+    );
+    return { weight: sumWeights(kras), score: hasAny ? scoreSum : null };
+  }
+
+  function renderPartTabs() {
+    partTabsEl.innerHTML = PARTS.map((p) => {
+      const totals = partTotals(p.key);
+      const scoreText = totals.score === null ? "—" : fmtNum(totals.score);
+      return `
+        <button type="button" class="eopcrf1-part-tab${p.key === activePart ? " is-active" : ""}" data-part="${p.key}" role="tab" aria-selected="${p.key === activePart}" title="${escapeHtml(p.full)}">
+          <span class="eopcrf1-part-tab-label">${p.label}</span>
+          <span class="eopcrf1-part-tab-score">${scoreText}</span>
+        </button>`;
+    }).join("");
+
+    partTabsEl.querySelectorAll("[data-part]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (btn.dataset.part === activePart) return;
+        activePart = btn.dataset.part;
+        render();
+      });
+    });
+  }
+
   function render() {
+    renderPartTabs();
+    addKraBtn.style.display = activePart === "b" ? "" : "none";
+
     listEl.innerHTML = "";
+    const visibleKras = state.kras.filter((k) => k.part === activePart);
 
-    emptyStateEl.style.display = state.kras.length === 0 ? "block" : "none";
+    emptyStateEl.style.display = visibleKras.length === 0 ? "block" : "none";
+    if (visibleKras.length === 0) {
+      emptyStateTextEl.innerHTML =
+        activePart === "b"
+          ? "No KRAs yet. Click <strong>Add KRA</strong> to start planning."
+          : "Nothing here yet — this part's fixed structure is seeded automatically the first time data loads for this rating year.";
+    }
 
-    state.kras.forEach((kra, kraIndex) => {
+    visibleKras.forEach((kra, kraIndex) => {
       listEl.appendChild(renderKraCard(kra, kraIndex));
     });
 
-    // Bottom summary: total KRA weight (always visible once a KRA exists, updates live)
-    // and overall rating (once at least one objective has a score).
-    const totalKraWeight = sumWeights(state.kras);
+    // Bottom summary is scoped to the active tab: total KRA weight (always
+    // visible once this part has a KRA, updates live) and overall rating
+    // (once at least one of this part's objectives has a score).
+    const totalKraWeight = sumWeights(visibleKras);
     let allObjectives = [];
-    state.kras.forEach(
+    visibleKras.forEach(
       (k) => (allObjectives = allObjectives.concat(k.objectives)),
     );
 
-    if (state.kras.length === 0) {
+    if (visibleKras.length === 0) {
       summaryEl.style.display = "none";
     } else {
       summaryEl.style.display = "flex";
@@ -270,20 +349,24 @@
   }
 
   function updateWeightSummary(totalKraWeight) {
-    const ok = Math.abs(totalKraWeight - 100) < 0.005;
+    const activeLabel = PARTS.find((p) => p.key === activePart).label;
+    const expected = PART_EXPECTED_TOTAL[activePart];
+    const ok = Math.abs(totalKraWeight - expected) < 0.005;
+    summaryWeightLabelEl.textContent = `${activeLabel} KRA Weight`;
     summaryWeightEl.textContent = fmtWeight(totalKraWeight);
-    summaryWeightEl.classList.toggle("irc8a-summary-value--ok", ok);
-    summaryWeightEl.classList.toggle("irc8a-summary-value--warn", !ok);
-    summaryWeightHintEl.textContent = ok ? "" : "Should total 100%";
+    summaryWeightEl.classList.toggle("eopcrf1-summary-value--ok", ok);
+    summaryWeightEl.classList.toggle("eopcrf1-summary-value--warn", !ok);
+    summaryWeightHintEl.textContent = ok ? "" : `Should total ${expected}%`;
   }
 
   function renderKraCard(kra, kraIndex) {
     const card = document.createElement("div");
     const isOpen = openKras.has(id(kra.id));
     card.className =
-      "irc8a-kra-card " +
+      "eopcrf1-kra-card " +
       kraPaletteClass(kraIndex) +
-      (isOpen ? " is-open" : "");
+      (isOpen ? " is-open" : "") +
+      (kra.locked ? " eopcrf1-kra-card--locked" : "");
     card.dataset.kraId = kra.id;
 
     const totalObjWeight = sumWeights(kra.objectives);
@@ -293,38 +376,42 @@
       !isNaN(kraWeightNum) &&
       Math.abs(totalObjWeight - kraWeightNum) >= 0.005;
 
+    const kraActionsHtml = kra.locked
+      ? `<span class="eopcrf1-locked-badge" title="Part I-A/I-C's fixed structure -- set by office mandate, not editable here">${ICON_LOCK}Fixed</span>`
+      : `<button type="button" class="eopcrf1-add-btn eopcrf1-add-btn--sm" data-action="add-objective">${ICON_PLUS}Add Objective</button>
+         <button type="button" class="eopcrf1-icon-btn" data-action="edit-kra" title="Edit KRA">${ICON_EDIT}</button>
+         <button type="button" class="eopcrf1-icon-btn eopcrf1-icon-btn--danger" data-action="delete-kra" title="Delete KRA">${ICON_TRASH}</button>`;
+
     card.innerHTML = `
-      <div class="irc8a-kra-header" data-action="toggle-kra" title="Click to ${isOpen ? "collapse" : "expand"}">
-        <div class="irc8a-kra-header-top">
-          <span class="irc8a-kra-eyebrow">Key Result Area ${kraIndex + 1}</span>
+      <div class="eopcrf1-kra-header" data-action="toggle-kra" title="Click to ${isOpen ? "collapse" : "expand"}">
+        <div class="eopcrf1-kra-header-top">
+          <span class="eopcrf1-kra-eyebrow">Key Result Area ${kraIndex + 1}</span>
         </div>
-        <div class="irc8a-kra-header-main">
-          <span class="irc8a-kra-index">KRA ${kraIndex + 1}</span>
-          <span class="irc8a-kra-text">${kra.text ? escapeHtml(kra.text) : '<em style="color:#e4e7ec;">Untitled KRA — click the pencil to describe it</em>'}</span>
-          <span class="irc8a-weight-badge irc8a-weight-badge--kra">${fmtWeight(kra.weight)}</span>
-          <div class="irc8a-kra-actions">
-            <button type="button" class="irc8a-add-btn irc8a-add-btn--sm" data-action="add-objective">${ICON_PLUS}Add Objective</button>
-            <button type="button" class="irc8a-icon-btn" data-action="edit-kra" title="Edit KRA">${ICON_EDIT}</button>
-            <button type="button" class="irc8a-icon-btn irc8a-icon-btn--danger" data-action="delete-kra" title="Delete KRA">${ICON_TRASH}</button>
+        <div class="eopcrf1-kra-header-main">
+          <span class="eopcrf1-kra-index">KRA ${kraIndex + 1}</span>
+          <span class="eopcrf1-kra-text">${kra.text ? escapeHtml(kra.text) : '<em style="color:#e4e7ec;">Untitled KRA — click the pencil to describe it</em>'}</span>
+          <span class="eopcrf1-weight-badge eopcrf1-weight-badge--kra">${fmtWeight(kra.weight)}</span>
+          <div class="eopcrf1-kra-actions">
+            ${kraActionsHtml}
           </div>
         </div>
       </div>
-      <div class="irc8a-kra-body">
-        <div class="irc8a-objectives-list"></div>
+      <div class="eopcrf1-kra-body">
+        <div class="eopcrf1-objectives-list"></div>
         ${
           kra.objectives.length === 0
-            ? '<p class="irc8a-indicator-empty">No objectives yet for this KRA.</p>'
+            ? '<p class="eopcrf1-indicator-empty">No objectives yet for this KRA.</p>'
             : ""
         }
         ${
           objWarningNeeded
-            ? `<div class="irc8a-weight-banner-inline">Objective weights total ${fmtWeight(totalObjWeight)}, but this KRA is weighted ${fmtWeight(kra.weight)}. They should match.</div>`
+            ? `<div class="eopcrf1-weight-banner-inline">Objective weights total ${fmtWeight(totalObjWeight)}, but this KRA is weighted ${fmtWeight(kra.weight)}. They should match.</div>`
             : ""
         }
       </div>
     `;
 
-    const objectivesListEl = card.querySelector(".irc8a-objectives-list");
+    const objectivesListEl = card.querySelector(".eopcrf1-objectives-list");
     kra.objectives.forEach((obj, objIndex) => {
       objectivesListEl.appendChild(renderObjectiveCard(kra, obj, objIndex));
     });
@@ -335,40 +422,45 @@
   function renderObjectiveCard(kra, obj, objIndex) {
     const card = document.createElement("div");
     const isOpen = openObjectives.has(id(obj.id));
-    card.className = "irc8a-objective-card" + (isOpen ? " is-open" : "");
+    card.className = "eopcrf1-objective-card" + (isOpen ? " is-open" : "");
     card.dataset.kraId = kra.id;
     card.dataset.objId = obj.id;
 
     const score = computeScore(obj);
     const letter = letterLabel(objIndex);
+    const locked = !!kra.locked;
 
     card.innerHTML = `
-      <div class="irc8a-objective-header" data-action="toggle-objective" title="Click to ${isOpen ? "collapse" : "expand"}">
-        <div class="irc8a-objective-header-top">
-          <span class="irc8a-objective-eyebrow">Objective ${letter}</span>
+      <div class="eopcrf1-objective-header" data-action="toggle-objective" title="Click to ${isOpen ? "collapse" : "expand"}">
+        <div class="eopcrf1-objective-header-top">
+          <span class="eopcrf1-objective-eyebrow">Objective ${letter}</span>
         </div>
-        <div class="irc8a-objective-header-main">
-          <span class="irc8a-objective-index">OBJ ${letter}</span>
-          <span class="irc8a-objective-text">${obj.text ? escapeHtml(obj.text) : '<em style="color:#aab1bb;">Untitled objective — click the pencil to describe it</em>'}</span>
-          <div class="irc8a-objective-meta">
-            <span class="irc8a-weight-badge">${fmtWeight(obj.weight)}</span>
+        <div class="eopcrf1-objective-header-main">
+          <span class="eopcrf1-objective-index">OBJ ${letter}</span>
+          <span class="eopcrf1-objective-text">${obj.text ? escapeHtml(obj.text) : '<em style="color:#aab1bb;">Untitled objective — click the pencil to describe it</em>'}</span>
+          <div class="eopcrf1-objective-meta">
+            <span class="eopcrf1-weight-badge">${fmtWeight(obj.weight)}</span>
           </div>
-          <div class="irc8a-objective-actions">
-            <button type="button" class="irc8a-icon-btn" data-action="edit-objective" title="Edit objective">${ICON_EDIT}</button>
-            <button type="button" class="irc8a-icon-btn irc8a-icon-btn--danger" data-action="delete-objective" title="Delete objective">${ICON_TRASH}</button>
+          <div class="eopcrf1-objective-actions">
+            ${
+              locked
+                ? ""
+                : `<button type="button" class="eopcrf1-icon-btn" data-action="edit-objective" title="Edit objective">${ICON_EDIT}</button>
+                   <button type="button" class="eopcrf1-icon-btn eopcrf1-icon-btn--danger" data-action="delete-objective" title="Delete objective">${ICON_TRASH}</button>`
+            }
           </div>
         </div>
       </div>
-      <div class="irc8a-objective-body">
-        <div class="irc8a-obj-section irc8a-obj-section--planning">
-          <div class="irc8a-obj-banner irc8a-obj-banner--planning">${ICON_CLIPBOARD}A. Planning &mdash; Performance Indicators</div>
-          <div class="irc8a-indicator-groups"></div>
-          <div class="irc8a-field-block irc8a-field-block--timeline">
-            <div class="irc8a-field-block-header">
-              <span class="irc8a-field-block-title">Timeline</span>
-              <button type="button" class="irc8a-icon-btn" data-action="edit-timeline" title="Edit timeline">${ICON_EDIT}</button>
+      <div class="eopcrf1-objective-body">
+        <div class="eopcrf1-obj-section eopcrf1-obj-section--planning">
+          <div class="eopcrf1-obj-banner eopcrf1-obj-banner--planning">${ICON_CLIPBOARD}A. Planning &mdash; Performance Indicators</div>
+          <div class="eopcrf1-indicator-groups"></div>
+          <div class="eopcrf1-field-block eopcrf1-field-block--timeline">
+            <div class="eopcrf1-field-block-header">
+              <span class="eopcrf1-field-block-title">Timeline</span>
+              <button type="button" class="eopcrf1-icon-btn" data-action="edit-timeline" title="Edit timeline">${ICON_EDIT}</button>
             </div>
-            <div class="irc8a-actual-box${obj.timeline ? "" : " is-empty"}">${
+            <div class="eopcrf1-actual-box${obj.timeline ? "" : " is-empty"}">${
               obj.timeline
                 ? escapeHtml(obj.timeline)
                 : "No timeline specified yet."
@@ -376,19 +468,19 @@
           </div>
         </div>
 
-        <div class="irc8a-obj-section irc8a-obj-section--evaluation">
-          <div class="irc8a-obj-banner irc8a-obj-banner--evaluation">${ICON_CHECKLIST}B. Evaluation &mdash; Results and Rating</div>
+        <div class="eopcrf1-obj-section eopcrf1-obj-section--evaluation">
+          <div class="eopcrf1-obj-banner eopcrf1-obj-banner--evaluation">${ICON_CHECKLIST}B. Evaluation &mdash; Results and Rating</div>
 
-          <div class="irc8a-field-row">
-            <div class="irc8a-field-block">
-              <div class="irc8a-field-block-header">
-                <span class="irc8a-field-block-title">Means of Verification (MOV)</span>
+          <div class="eopcrf1-field-row">
+            <div class="eopcrf1-field-block">
+              <div class="eopcrf1-field-block-header">
+                <span class="eopcrf1-field-block-title">Means of Verification (MOV)</span>
                 ${
                   obj.mov
-                    ? '<button type="button" class="irc8a-icon-btn" data-action="edit-mov" title="Edit link">' +
+                    ? '<button type="button" class="eopcrf1-icon-btn" data-action="edit-mov" title="Edit link">' +
                       ICON_EDIT +
                       "</button>"
-                    : '<button type="button" class="irc8a-add-btn irc8a-add-btn--ghost irc8a-add-btn--sm" data-action="edit-mov">' +
+                    : '<button type="button" class="eopcrf1-add-btn eopcrf1-add-btn--ghost eopcrf1-add-btn--sm" data-action="edit-mov">' +
                       ICON_PLUS +
                       "Add Link</button>"
                 }
@@ -396,12 +488,12 @@
               ${renderMovRow(obj)}
             </div>
 
-            <div class="irc8a-field-block">
-              <div class="irc8a-field-block-header">
-                <span class="irc8a-field-block-title">Actual Results</span>
-                <button type="button" class="irc8a-icon-btn" data-action="edit-actual" title="Edit actual results">${ICON_EDIT}</button>
+            <div class="eopcrf1-field-block">
+              <div class="eopcrf1-field-block-header">
+                <span class="eopcrf1-field-block-title">Actual Results</span>
+                <button type="button" class="eopcrf1-icon-btn" data-action="edit-actual" title="Edit actual results">${ICON_EDIT}</button>
               </div>
-              <div class="irc8a-actual-box${obj.actualResults ? "" : " is-empty"}">${
+              <div class="eopcrf1-actual-box${obj.actualResults ? "" : " is-empty"}">${
                 obj.actualResults
                   ? escapeHtml(obj.actualResults)
                   : "No actual results recorded yet."
@@ -409,37 +501,39 @@
             </div>
           </div>
 
-          <div class="irc8a-field-block">
-            <div class="irc8a-field-block-header">
-              <span class="irc8a-field-block-title">Rating</span>
+          <div class="eopcrf1-field-block">
+            <div class="eopcrf1-field-block-header">
+              <span class="eopcrf1-field-block-title">Rating</span>
             </div>
-            <div class="irc8a-ratings-grid">
+            <div class="eopcrf1-ratings-grid">
               ${renderRatingField(obj, "quality", "Quality")}
               ${renderRatingField(obj, "efficiency", "Efficiency")}
               ${renderRatingField(obj, "timeliness", "Timeliness")}
-              <div class="irc8a-rating-field">
+              <div class="eopcrf1-rating-field">
                 <label>Average</label>
-                <div class="irc8a-rating-readonly" data-role="avg-readout">${(() => {
+                <div class="eopcrf1-rating-readonly" data-role="avg-readout">${(() => {
                   const avg = computeAverage(obj);
                   return avg === null ? "—" : fmtNum(avg);
                 })()}</div>
               </div>
             </div>
-            <div class="irc8a-score-strip">
+            <div class="eopcrf1-score-strip">
               <div>
-                <div class="irc8a-score-strip-label">Score</div>
-                <div class="irc8a-score-strip-formula">Average &times; Objective Weight</div>
+                <div class="eopcrf1-score-strip-label">Score</div>
+                <div class="eopcrf1-score-strip-formula">Average &times; Objective Weight</div>
               </div>
-              <div class="irc8a-score-strip-value" data-role="score-readout">${score === null ? "—" : fmtNum(score)}</div>
+              <div class="eopcrf1-score-strip-value" data-role="score-readout">${score === null ? "—" : fmtNum(score)}</div>
             </div>
           </div>
         </div>
       </div>
     `;
 
-    const groupsEl = card.querySelector(".irc8a-indicator-groups");
+    const groupsEl = card.querySelector(".eopcrf1-indicator-groups");
     INDICATOR_CATEGORIES.forEach((cat) => {
-      groupsEl.appendChild(renderIndicatorGroup(obj, cat.key, cat.label));
+      groupsEl.appendChild(
+        renderIndicatorGroup(obj, cat.key, cat.label, locked),
+      );
     });
 
     return card;
@@ -447,12 +541,12 @@
 
   function renderMovRow(obj) {
     if (!obj.mov) {
-      return '<p class="irc8a-mov-empty">No MOV link added yet.</p>';
+      return '<p class="eopcrf1-mov-empty">No MOV link added yet.</p>';
     }
     return `
-      <div class="irc8a-mov-row">
-        <a class="irc8a-mov-link" href="${escapeHtml(obj.mov)}" target="_blank" rel="noopener noreferrer">${ICON_LINK}<span>${escapeHtml(obj.mov)}</span></a>
-        <button type="button" class="irc8a-icon-btn irc8a-icon-btn--danger" data-action="delete-mov" title="Remove link">${ICON_TRASH}</button>
+      <div class="eopcrf1-mov-row">
+        <a class="eopcrf1-mov-link" href="${escapeHtml(obj.mov)}" target="_blank" rel="noopener noreferrer">${ICON_LINK}<span>${escapeHtml(obj.mov)}</span></a>
+        <button type="button" class="eopcrf1-icon-btn eopcrf1-icon-btn--danger" data-action="delete-mov" title="Remove link">${ICON_TRASH}</button>
       </div>
     `;
   }
@@ -471,9 +565,9 @@
       })
       .join("");
     return `
-      <div class="irc8a-rating-field">
+      <div class="eopcrf1-rating-field">
         <label>${label}</label>
-        <select class="irc8a-rating-select" data-role="rating-select" data-field="${field}">${options}</select>
+        <select class="eopcrf1-rating-select" data-role="rating-select" data-field="${field}">${options}</select>
       </div>
     `;
   }
@@ -483,41 +577,45 @@
   // value). The rating dropdown and the indicator list stay in sync in both
   // directions, since both read from obj.ratings[category] and both save
   // through the same /objective/<id>/rating endpoint.
-  function renderIndicatorGroup(obj, category, label) {
+  function renderIndicatorGroup(obj, category, label, locked) {
     const wrap = document.createElement("div");
-    wrap.className = "irc8a-indicator-group";
+    wrap.className = "eopcrf1-indicator-group";
     wrap.dataset.category = category;
 
     const items = obj[category].slice().sort((a, b) => b.rate - a.rate);
-    const canAddMore = obj[category].length < 5;
+    const canAddMore = !locked && obj[category].length < 5;
     const selectedRate =
       obj.ratings[category] !== "" && obj.ratings[category] != null
         ? Number(obj.ratings[category])
         : null;
 
     wrap.innerHTML = `
-      <div class="irc8a-indicator-group-header">
-        <span class="irc8a-indicator-group-title">${label}</span>
+      <div class="eopcrf1-indicator-group-header">
+        <span class="eopcrf1-indicator-group-title">${label}</span>
         ${
           canAddMore
-            ? `<button type="button" class="irc8a-icon-btn" data-action="add-rubric" data-category="${category}" title="Add ${label.toLowerCase()} indicator">${ICON_PLUS.replace('class="irc8a-inline-icon"', 'class=""')}</button>`
+            ? `<button type="button" class="eopcrf1-icon-btn" data-action="add-rubric" data-category="${category}" title="Add ${label.toLowerCase()} indicator">${ICON_PLUS.replace('class="eopcrf1-inline-icon"', 'class=""')}</button>`
             : ""
         }
       </div>
-      <div class="irc8a-indicator-list">
+      <div class="eopcrf1-indicator-list">
         ${
           items.length === 0
-            ? `<div class="irc8a-indicator-empty">Not specified.</div>`
+            ? `<div class="eopcrf1-indicator-empty">Not specified.</div>`
             : items
                 .map(
                   (item) => `
-              <div class="irc8a-indicator-item${item.rate === selectedRate ? " irc8a-indicator-item--selected" : ""}" data-item-id="${item.id}" data-category="${category}" data-action="select-indicator" title="Click to set ${label} rating to ${item.rate}">
-                <span class="irc8a-indicator-rate">${item.rate}</span>
-                <span class="irc8a-indicator-text">${escapeHtml(item.label)}</span>
-                <div class="irc8a-indicator-item-actions">
-                  <button type="button" class="irc8a-icon-btn" data-action="edit-rubric" data-category="${category}" data-item-id="${item.id}" title="Edit">${ICON_EDIT}</button>
-                  <button type="button" class="irc8a-icon-btn irc8a-icon-btn--danger" data-action="delete-rubric" data-category="${category}" data-item-id="${item.id}" title="Delete">${ICON_TRASH}</button>
-                </div>
+              <div class="eopcrf1-indicator-item${item.rate === selectedRate ? " eopcrf1-indicator-item--selected" : ""}" data-item-id="${item.id}" data-category="${category}" data-action="select-indicator" title="Click to set ${label} rating to ${item.rate}">
+                <span class="eopcrf1-indicator-rate">${item.rate}</span>
+                <span class="eopcrf1-indicator-text">${escapeHtml(item.label)}</span>
+                ${
+                  locked
+                    ? ""
+                    : `<div class="eopcrf1-indicator-item-actions">
+                         <button type="button" class="eopcrf1-icon-btn" data-action="edit-rubric" data-category="${category}" data-item-id="${item.id}" title="Edit">${ICON_EDIT}</button>
+                         <button type="button" class="eopcrf1-icon-btn eopcrf1-icon-btn--danger" data-action="delete-rubric" data-category="${category}" data-item-id="${item.id}" title="Delete">${ICON_TRASH}</button>
+                       </div>`
+                }
               </div>`,
                 )
                 .join("")
@@ -648,7 +746,7 @@
   modalCancel.addEventListener("click", closeModal);
   modalOverlay.addEventListener("click", closeModal);
   document
-    .querySelector("#irc8a-entry-modal .irc8a-modal-content")
+    .querySelector("#eopcrf1-entry-modal .eopcrf1-modal-content")
     .addEventListener("click", (e) => e.stopPropagation());
 
   function parseWeightInput() {
@@ -680,7 +778,7 @@
         if (mode === "edit-kra") body.id = modalCtx.kraId;
         else body.year = state.year;
 
-        const kra = await apiCall("POST", "/irc/irc8a/kra", body);
+        const kra = await apiCall("POST", "/irc/eopcrf1/kra", body);
         if (mode === "add-kra") {
           state.kras.push(kra);
           openKras.add(id(kra.id));
@@ -698,7 +796,7 @@
         if (mode === "edit-objective") body.id = modalCtx.objId;
         else body.kraId = modalCtx.kraId;
 
-        const obj = await apiCall("POST", "/irc/irc8a/objective", body);
+        const obj = await apiCall("POST", "/irc/eopcrf1/objective", body);
         upsertObjective(obj);
         if (mode === "add-objective") openObjectives.add(id(obj.id));
       } else if (mode === "add-rubric" || mode === "edit-rubric") {
@@ -715,7 +813,7 @@
         };
         if (mode === "edit-rubric") body.id = modalCtx.itemId;
 
-        const item = await apiCall("POST", "/irc/irc8a/indicator", body);
+        const item = await apiCall("POST", "/irc/eopcrf1/indicator", body);
         upsertIndicator(
           modalCtx.kraId,
           modalCtx.objId,
@@ -727,7 +825,7 @@
         if (!url) return alert("Please paste a link.");
         const obj = await apiCall(
           "POST",
-          `/irc/irc8a/objective/${modalCtx.objId}/mov`,
+          `/irc/eopcrf1/objective/${modalCtx.objId}/mov`,
           { url },
         );
         upsertObjective(obj);
@@ -735,7 +833,7 @@
         const text = primaryInput.value.trim();
         const obj = await apiCall(
           "POST",
-          `/irc/irc8a/objective/${modalCtx.objId}/actual-results`,
+          `/irc/eopcrf1/objective/${modalCtx.objId}/actual-results`,
           { text },
         );
         upsertObjective(obj);
@@ -743,7 +841,7 @@
         const text = primaryInput.value.trim();
         const obj = await apiCall(
           "POST",
-          `/irc/irc8a/objective/${modalCtx.objId}/timeline`,
+          `/irc/eopcrf1/objective/${modalCtx.objId}/timeline`,
           { text },
         );
         upsertObjective(obj);
@@ -764,7 +862,7 @@
   // ================= RESET: RATINGS & MOV ONLY, OR ENTIRE FORM =================
   //
   // Two scopes, chosen via the modal's radio buttons and sent as
-  // ?scope=ratings_mov|all to /irc/irc8a/reset:
+  // ?scope=ratings_mov|all to /irc/eopcrf1/reset:
   //
   //  - "ratings_mov" (default): only each objective's three ratings
   //    (quality/efficiency/timeliness) and its MOV link are cleared
@@ -772,7 +870,7 @@
   //    timeline, and actual results are never touched.
   //  - "all": every KRA for this year is deleted outright, which cascades
   //    to its objectives and their rubric indicators too (see
-  //    reset_irc8a_data() in app.py) -- the form goes back to empty.
+  //    reset_eopcrf1_data() in app.py) -- the form goes back to empty.
   const RESET_WARNINGS = {
     ratings_mov:
       "This will clear every rating and MOV link, but keeps your KRAs, objectives, and their weights. This cannot be undone.",
@@ -781,7 +879,7 @@
 
   function getSelectedResetScope() {
     const checked = document.querySelector(
-      'input[name="irc8a-reset-scope"]:checked',
+      'input[name="eopcrf1-reset-scope"]:checked',
     );
     return checked ? checked.value : "ratings_mov";
   }
@@ -791,7 +889,7 @@
     resetConfirmWarning.textContent =
       RESET_WARNINGS[scope] || RESET_WARNINGS.ratings_mov;
     resetConfirmWarning.classList.toggle(
-      "irc8a-reset-warning--danger",
+      "eopcrf1-reset-warning--danger",
       scope === "all",
     );
   }
@@ -803,7 +901,7 @@
   function openResetConfirm() {
     // Always reopen on the safer "ratings & MOV only" option rather than
     // remembering whatever was picked last time.
-    const ratingsRadio = document.getElementById("irc8a-reset-scope-ratings");
+    const ratingsRadio = document.getElementById("eopcrf1-reset-scope-ratings");
     if (ratingsRadio) ratingsRadio.checked = true;
     updateResetWarning();
     resetConfirmOverlay.classList.add("visible");
@@ -842,7 +940,7 @@
     try {
       const data = await apiCall(
         "DELETE",
-        `/irc/irc8a/reset?scope=${scope}&year=${state.year}`,
+        `/irc/eopcrf1/reset?scope=${scope}&year=${state.year}`,
       );
       if (data && data.scope === "all") {
         removeAllKrasInPlace();
@@ -863,8 +961,8 @@
     if (!actionEl) return;
 
     const action = actionEl.dataset.action;
-    const kraCard = actionEl.closest(".irc8a-kra-card");
-    const objCard = actionEl.closest(".irc8a-objective-card");
+    const kraCard = actionEl.closest(".eopcrf1-kra-card");
+    const objCard = actionEl.closest(".eopcrf1-objective-card");
     const kraId = kraCard ? kraCard.dataset.kraId : null;
     const objId = objCard ? objCard.dataset.objId : null;
 
@@ -894,7 +992,7 @@
         )
           return;
         try {
-          await apiCall("DELETE", `/irc/irc8a/kra/${kraId}`);
+          await apiCall("DELETE", `/irc/eopcrf1/kra/${kraId}`);
           state.kras = state.kras.filter((k) => id(k.id) !== id(kraId));
           openKras.delete(id(kraId));
           render();
@@ -931,7 +1029,7 @@
         )
           return;
         try {
-          await apiCall("DELETE", `/irc/irc8a/objective/${objId}`);
+          await apiCall("DELETE", `/irc/eopcrf1/objective/${objId}`);
           kra.objectives = kra.objectives.filter((o) => id(o.id) !== id(objId));
           openObjectives.delete(id(objId));
           render();
@@ -963,11 +1061,11 @@
         const itemId = actionEl.dataset.itemId;
         if (!confirm("Remove this indicator? This cannot be undone.")) return;
         try {
-          await apiCall("DELETE", `/irc/irc8a/indicator/${itemId}`);
+          await apiCall("DELETE", `/irc/eopcrf1/indicator/${itemId}`);
           // The selected rating (obj.ratings[category]) is intentionally
           // left as-is even if it was this indicator's rate -- it may
           // have been set manually too, and the server never derives it
-          // from the indicator list (see models.py's IRC8AObjective docs).
+          // from the indicator list (see models.py's EOPCRF1Objective docs).
           obj[category] = obj[category].filter((i) => id(i.id) !== id(itemId));
           render();
         } catch (err) {
@@ -982,7 +1080,7 @@
         try {
           const obj = await apiCall(
             "POST",
-            `/irc/irc8a/objective/${objId}/mov`,
+            `/irc/eopcrf1/objective/${objId}/mov`,
             { url: "" },
           );
           upsertObjective(obj);
@@ -1013,7 +1111,7 @@
         try {
           const updated = await apiCall(
             "POST",
-            `/irc/irc8a/objective/${objId}/rating`,
+            `/irc/eopcrf1/objective/${objId}/rating`,
             { category, rating: item.rate },
           );
           upsertObjective(updated);
@@ -1035,7 +1133,7 @@
     const select = e.target.closest('[data-role="rating-select"]');
     if (!select) return;
 
-    const objCard = select.closest(".irc8a-objective-card");
+    const objCard = select.closest(".eopcrf1-objective-card");
     const objId = objCard.dataset.objId;
     const category = select.dataset.field;
     const rating = select.value === "" ? null : parseInt(select.value, 10);
@@ -1043,7 +1141,7 @@
     try {
       const updated = await apiCall(
         "POST",
-        `/irc/irc8a/objective/${objId}/rating`,
+        `/irc/eopcrf1/objective/${objId}/rating`,
         { category, rating },
       );
       upsertObjective(updated);
@@ -1057,7 +1155,7 @@
   // ================= IPCRF header info: load + per-field save =================
   async function loadReportHeader() {
     try {
-      const data = await apiCall("GET", "/api/irc8a/report-header");
+      const data = await apiCall("GET", "/api/eopcrf1/report-header");
       if (!data) return;
       reportHeaderInputs.nameOfRater.value = data.nameOfRater || "";
       reportHeaderInputs.positionOfRater.value = data.positionOfRater || "";
@@ -1076,13 +1174,13 @@
   // Each field posts only itself ({ [field]: value }) so one input's save
   // can never clobber a value another field just saved -- the server
   // endpoint only touches keys present in the body (see
-  // save_irc8a_report_header in app.py).
+  // save_eopcrf1_report_header in app.py).
   Object.entries(reportHeaderInputs).forEach(([field, input]) => {
     if (!input) return;
     const eventName = input.type === "date" ? "change" : "blur";
     input.addEventListener(eventName, async () => {
       try {
-        await apiCall("POST", "/api/irc8a/report-header", {
+        await apiCall("POST", "/api/eopcrf1/report-header", {
           [field]: input.value.trim(),
         });
       } catch (err) {
@@ -1093,20 +1191,20 @@
 
   // ================= Save to PDF =================
   // Unlike IRC1a (which prints its own on-screen table as-is -- see
-  // saveToPdf() in irc1a.js), IRC8A's on-screen accordion of KRA/objective
+  // saveToPdf() in irc1a.js), EOPCRF1's on-screen accordion of KRA/objective
   // cards looks nothing like the official DEPED RPMS "Individual
   // Performance Commitment and Review Form" (IPCRF) sheet it's required
-  // to match (see irc8a_pdf_format.pdf). So instead of reflowing the
+  // to match (see eopcrf1_pdf_format.pdf). So instead of reflowing the
   // on-screen DOM for print, buildPrintReport() rebuilds a dedicated
-  // replica of that sheet from `state` into #irc8a-print-report right
-  // before window.print() -- the @media print rules in irc8a.css then
+  // replica of that sheet from `state` into #eopcrf1-print-report right
+  // before window.print() -- the @media print rules in eopcrf1.css then
   // hide the whole interactive page and show only that replica.
 
   const RATE_LEVELS = [5, 4, 3, 2, 1];
 
   function fmtRatingCell(v) {
     if (v === null || v === undefined || v === "") {
-      return '<span class="irc8a-print-blank"></span>';
+      return '<span class="eopcrf1-print-blank"></span>';
     }
     return String(v);
   }
@@ -1115,7 +1213,7 @@
   // Efficiency / Timeliness category so each rate level (5 down to 1) can
   // be rendered as its own table row instead of a single bulleted list --
   // matches the row-per-rate-level layout of the official DEPED RPMS
-  // sheet (see irc8a_pdf_format.pdf).
+  // sheet (see eopcrf1_pdf_format.pdf).
   function rubricByRate(items) {
     const map = {};
     items.forEach((item) => {
@@ -1130,13 +1228,13 @@
   function renderPrintRubricCell(byRate, rate) {
     const label = byRate[rate];
     if (label === undefined) {
-      return '<td class="irc8a-print-blank"></td>';
+      return '<td class="eopcrf1-print-blank"></td>';
     }
-    return `<td><span class="irc8a-print-rate">${rate}</span> - ${escapeHtml(label)}</td>`;
+    return `<td><span class="eopcrf1-print-rate">${rate}</span> - ${escapeHtml(label)}</td>`;
   }
 
   function buildPrintReport() {
-    const container = document.getElementById("irc8a-print-report");
+    const container = document.getElementById("eopcrf1-print-report");
     if (!container) return;
 
     const rh = {
@@ -1182,27 +1280,27 @@
           // normal border, guaranteeing the grid stays intact no matter
           // where the table happens to break.
           if (subRowIndex === 0) {
-            rows += `<td class="irc8a-print-mfo" rowspan="${RATE_LEVELS.length}">Basic Education Services</td>`;
-            rows += `<td class="irc8a-print-kra" rowspan="${RATE_LEVELS.length}">${objIndex === 0 ? (kra.text ? escapeHtml(kra.text) : "—") : ""}</td>`;
+            rows += `<td class="eopcrf1-print-mfo" rowspan="${RATE_LEVELS.length}">Basic Education Services</td>`;
+            rows += `<td class="eopcrf1-print-kra" rowspan="${RATE_LEVELS.length}">${objIndex === 0 ? (kra.text ? escapeHtml(kra.text) : "—") : ""}</td>`;
           }
           if (subRowIndex === 0) {
-            rows += `<td rowspan="${RATE_LEVELS.length}"><span class="irc8a-print-objective-label">${letter}.</span>${obj.text ? escapeHtml(obj.text) : "—"}</td>`;
-            rows += `<td rowspan="${RATE_LEVELS.length}">${obj.timeline ? escapeHtml(obj.timeline) : '<span class="irc8a-print-blank"></span>'}</td>`;
+            rows += `<td rowspan="${RATE_LEVELS.length}"><span class="eopcrf1-print-objective-label">${letter}.</span>${obj.text ? escapeHtml(obj.text) : "—"}</td>`;
+            rows += `<td rowspan="${RATE_LEVELS.length}">${obj.timeline ? escapeHtml(obj.timeline) : '<span class="eopcrf1-print-blank"></span>'}</td>`;
           }
           if (subRowIndex === 0) {
-            rows += `<td class="irc8a-print-weight" rowspan="${RATE_LEVELS.length}">${objIndex === 0 ? fmtWeight(kra.weight) : ""}</td>`;
+            rows += `<td class="eopcrf1-print-weight" rowspan="${RATE_LEVELS.length}">${objIndex === 0 ? fmtWeight(kra.weight) : ""}</td>`;
           }
           rows += renderPrintRubricCell(qualityByRate, rate);
           rows += renderPrintRubricCell(efficiencyByRate, rate);
           rows += renderPrintRubricCell(timelinessByRate, rate);
           if (subRowIndex === 0) {
-            rows += `<td rowspan="${RATE_LEVELS.length}">${obj.mov ? escapeHtml(obj.mov) : '<span class="irc8a-print-blank"></span>'}</td>`;
-            rows += `<td rowspan="${RATE_LEVELS.length}">${obj.actualResults ? escapeHtml(obj.actualResults) : '<span class="irc8a-print-blank"></span>'}</td>`;
-            rows += `<td class="irc8a-print-rating-cell" rowspan="${RATE_LEVELS.length}">${fmtRatingCell(obj.ratings.quality)}</td>`;
-            rows += `<td class="irc8a-print-rating-cell" rowspan="${RATE_LEVELS.length}">${fmtRatingCell(obj.ratings.efficiency)}</td>`;
-            rows += `<td class="irc8a-print-rating-cell" rowspan="${RATE_LEVELS.length}">${fmtRatingCell(obj.ratings.timeliness)}</td>`;
-            rows += `<td class="irc8a-print-rating-cell" rowspan="${RATE_LEVELS.length}">${avg === null ? '<span class="irc8a-print-blank"></span>' : fmtNum(avg)}</td>`;
-            rows += `<td class="irc8a-print-rating-cell" rowspan="${RATE_LEVELS.length}">${score === null ? '<span class="irc8a-print-blank"></span>' : fmtNum(score)}</td>`;
+            rows += `<td rowspan="${RATE_LEVELS.length}">${obj.mov ? escapeHtml(obj.mov) : '<span class="eopcrf1-print-blank"></span>'}</td>`;
+            rows += `<td rowspan="${RATE_LEVELS.length}">${obj.actualResults ? escapeHtml(obj.actualResults) : '<span class="eopcrf1-print-blank"></span>'}</td>`;
+            rows += `<td class="eopcrf1-print-rating-cell" rowspan="${RATE_LEVELS.length}">${fmtRatingCell(obj.ratings.quality)}</td>`;
+            rows += `<td class="eopcrf1-print-rating-cell" rowspan="${RATE_LEVELS.length}">${fmtRatingCell(obj.ratings.efficiency)}</td>`;
+            rows += `<td class="eopcrf1-print-rating-cell" rowspan="${RATE_LEVELS.length}">${fmtRatingCell(obj.ratings.timeliness)}</td>`;
+            rows += `<td class="eopcrf1-print-rating-cell" rowspan="${RATE_LEVELS.length}">${avg === null ? '<span class="eopcrf1-print-blank"></span>' : fmtNum(avg)}</td>`;
+            rows += `<td class="eopcrf1-print-rating-cell" rowspan="${RATE_LEVELS.length}">${score === null ? '<span class="eopcrf1-print-blank"></span>' : fmtNum(score)}</td>`;
           }
           rows += "</tr>";
         });
@@ -1210,7 +1308,7 @@
     });
 
     if (totalObjectives === 0) {
-      rows = `<tr><td colspan="15" class="irc8a-print-empty">No KRAs yet.</td></tr>`;
+      rows = `<tr><td colspan="15" class="eopcrf1-print-empty">No KRAs yet.</td></tr>`;
     }
 
     let scoreSum = 0;
@@ -1229,66 +1327,66 @@
     // Overall Rating for Accomplishments -- part of the main table itself
     // (its own last row), not a floating box below it: total weight under
     // Weight, the label spanning Actual Results through Ave, and the
-    // total score lined up under Score -- matches irc8a_pdf_format.pdf.
+    // total score lined up under Score -- matches eopcrf1_pdf_format.pdf.
     rows += `
-      <tr class="irc8a-print-total-row">
+      <tr class="eopcrf1-print-total-row">
         <td colspan="4"></td>
-        <td class="irc8a-print-weight">${fmtWeight(totalWeight)}</td>
+        <td class="eopcrf1-print-weight">${fmtWeight(totalWeight)}</td>
         <td colspan="3"></td>
         <td></td>
-        <td colspan="5" class="irc8a-print-overall-label">Overall Rating for Accomplishments</td>
-        <td class="irc8a-print-rating-cell irc8a-print-overall-score">${hasAnyScore ? fmtNum(scoreSum) : "—"}</td>
+        <td colspan="5" class="eopcrf1-print-overall-label">Overall Rating for Accomplishments</td>
+        <td class="eopcrf1-print-rating-cell eopcrf1-print-overall-score">${hasAnyScore ? fmtNum(scoreSum) : "—"}</td>
       </tr>
     `;
 
     container.innerHTML = `
-      <div class="irc8a-print-page">
-        <div class="irc8a-print-title">Individual Performance Commitment &amp; Review Form (IPCRF)</div>
-        <table class="irc8a-print-header-table">
+      <div class="eopcrf1-print-page">
+        <div class="eopcrf1-print-title">Individual Performance Commitment &amp; Review Form (IPCRF)</div>
+        <table class="eopcrf1-print-header-table">
           <tr>
-            <td class="irc8a-print-header-label">Name of Employee</td>
-            <td class="irc8a-print-header-value">${escapeHtml(rh.nameOfEmployee)}</td>
-            <td class="irc8a-print-header-label">Name of Rater</td>
-            <td class="irc8a-print-header-value">${escapeHtml(rh.nameOfRater)}</td>
+            <td class="eopcrf1-print-header-label">Name of Employee</td>
+            <td class="eopcrf1-print-header-value">${escapeHtml(rh.nameOfEmployee)}</td>
+            <td class="eopcrf1-print-header-label">Name of Rater</td>
+            <td class="eopcrf1-print-header-value">${escapeHtml(rh.nameOfRater)}</td>
           </tr>
           <tr>
-            <td class="irc8a-print-header-label">Position</td>
-            <td class="irc8a-print-header-value">${escapeHtml(rh.positionOfEmployee)}</td>
-            <td class="irc8a-print-header-label">Position</td>
-            <td class="irc8a-print-header-value">${escapeHtml(rh.positionOfRater)}</td>
+            <td class="eopcrf1-print-header-label">Position</td>
+            <td class="eopcrf1-print-header-value">${escapeHtml(rh.positionOfEmployee)}</td>
+            <td class="eopcrf1-print-header-label">Position</td>
+            <td class="eopcrf1-print-header-value">${escapeHtml(rh.positionOfRater)}</td>
           </tr>
           <tr>
-            <td class="irc8a-print-header-label">Bureau/Center/Service/Division</td>
-            <td class="irc8a-print-header-value">${escapeHtml(rh.bureau)}</td>
-            <td class="irc8a-print-header-label">Date of Review</td>
-            <td class="irc8a-print-header-value">${rh.dateOfReview ? escapeHtml(rh.dateOfReview) : ""}</td>
+            <td class="eopcrf1-print-header-label">Bureau/Center/Service/Division</td>
+            <td class="eopcrf1-print-header-value">${escapeHtml(rh.bureau)}</td>
+            <td class="eopcrf1-print-header-label">Date of Review</td>
+            <td class="eopcrf1-print-header-value">${rh.dateOfReview ? escapeHtml(rh.dateOfReview) : ""}</td>
           </tr>
           <tr>
-            <td class="irc8a-print-header-label">Rating Period</td>
-            <td class="irc8a-print-header-value" colspan="3">${escapeHtml(rh.ratingPeriod)}</td>
+            <td class="eopcrf1-print-header-label">Rating Period</td>
+            <td class="eopcrf1-print-header-value" colspan="3">${escapeHtml(rh.ratingPeriod)}</td>
           </tr>
         </table>
 
-        <table class="irc8a-print-table">
+        <table class="eopcrf1-print-table">
           <colgroup>
-            <col class="irc8a-col-mfo" />
-            <col class="irc8a-col-kra" />
-            <col class="irc8a-col-objectives" />
-            <col class="irc8a-col-timeline" />
-            <col class="irc8a-col-weight" />
-            <col class="irc8a-col-quality" />
-            <col class="irc8a-col-efficiency" />
-            <col class="irc8a-col-timeliness" />
-            <col class="irc8a-col-movs" />
-            <col class="irc8a-col-actual" />
-            <col class="irc8a-col-q" />
-            <col class="irc8a-col-e" />
-            <col class="irc8a-col-t" />
-            <col class="irc8a-col-ave" />
-            <col class="irc8a-col-score" />
+            <col class="eopcrf1-col-mfo" />
+            <col class="eopcrf1-col-kra" />
+            <col class="eopcrf1-col-objectives" />
+            <col class="eopcrf1-col-timeline" />
+            <col class="eopcrf1-col-weight" />
+            <col class="eopcrf1-col-quality" />
+            <col class="eopcrf1-col-efficiency" />
+            <col class="eopcrf1-col-timeliness" />
+            <col class="eopcrf1-col-movs" />
+            <col class="eopcrf1-col-actual" />
+            <col class="eopcrf1-col-q" />
+            <col class="eopcrf1-col-e" />
+            <col class="eopcrf1-col-t" />
+            <col class="eopcrf1-col-ave" />
+            <col class="eopcrf1-col-score" />
           </colgroup>
           <thead>
-            <tr class="irc8a-print-band-row">
+            <tr class="eopcrf1-print-band-row">
               <th colspan="8">To be filled during planning</th>
               <th colspan="7">To be filled during evaluation</th>
             </tr>
@@ -1342,7 +1440,7 @@
   // ================= Initial load =================
   async function init() {
     try {
-      const data = await apiCall("GET", "/irc/irc8a/data");
+      const data = await apiCall("GET", "/irc/eopcrf1/data");
       state.year = data.year;
       state.kras = data.kras;
       // Everything starts expanded on a fresh load, matching the old
@@ -1356,7 +1454,7 @@
       listEl.innerHTML = "";
       emptyStateEl.style.display = "none";
       const errBox = document.createElement("p");
-      errBox.className = "irc8a-indicator-empty";
+      errBox.className = "eopcrf1-indicator-empty";
       errBox.textContent = "Couldn't load this report: " + err.message;
       listEl.appendChild(errBox);
     }
