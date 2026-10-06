@@ -1,0 +1,384 @@
+{% extends "base.html" %} {% block title %}EOPCRF Part I - EOPCRF_SH{% endblock
+%} {% block content %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/eopcrf1.css') }}"
+/>
+
+<section id="eopcrf1-tab" class="tab-panel eopcrf1-panel">
+  <div class="eopcrf1-header">
+    <div class="eopcrf1-header-top">
+      <div class="eopcrf1-header-title-main">
+        <span class="eopcrf1-header-badge">
+          <span class="eopcrf1-header-badge-group">EOPCRF</span>
+          <span class="eopcrf1-header-badge-page">I</span>
+        </span>
+        <div class="eopcrf1-header-divider"></div>
+        <div>
+          <h2>Individual Performance Commitment &amp; Review Form</h2>
+          <p class="eopcrf1-subtitle">
+            Part I-A and Part I-C are the office's fixed structure — just rate
+            each indicator. Part I-B is yours to build: add your own KRAs and
+            objectives.
+          </p>
+        </div>
+      </div>
+      <div class="eopcrf1-header-actions">
+        <button type="button" class="eopcrf1-pdf-btn" id="eopcrf1-pdf-btn">
+          <i class="ti ti-file-type-pdf" aria-hidden="true"></i> Save to PDF
+        </button>
+        <button type="button" class="eopcrf1-reset-btn" id="eopcrf1-reset-btn">
+          <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset All Data
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IPCRF header info — the "Name of Rater / Position", "Name of
+       Employee / Position", "Bureau/Center/Service/Division", and
+       "Rating Period" / "Date of Review" fields printed across the top of
+       the official DEPED RPMS IPCRF sheet. Saved individually on blur to
+       /api/eopcrf1/report-header (see eopcrf1.js) so no field's edit can
+       clobber another's. Reproduced verbatim in the print-only report
+       built by eopcrf1.js's buildPrintReport(); not shown there, only in
+       #eopcrf1-print-report. -->
+  <div class="eopcrf1-report-header" id="eopcrf1-report-header">
+    <div class="eopcrf1-report-header-col">
+      <div class="eopcrf1-report-header-field">
+        <label for="eopcrf1-rh-rater-name">Name of Rater</label>
+        <input
+          type="text"
+          id="eopcrf1-rh-rater-name"
+          data-field="nameOfRater"
+          placeholder="Full name"
+          autocomplete="off"
+        />
+      </div>
+      <div class="eopcrf1-report-header-field">
+        <label for="eopcrf1-rh-rater-position">Position</label>
+        <input
+          type="text"
+          id="eopcrf1-rh-rater-position"
+          data-field="positionOfRater"
+          placeholder="e.g. SGOD Chief"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+    <div class="eopcrf1-report-header-col">
+      <div class="eopcrf1-report-header-field">
+        <label for="eopcrf1-rh-employee-name">Name of Employee</label>
+        <input
+          type="text"
+          id="eopcrf1-rh-employee-name"
+          data-field="nameOfEmployee"
+          placeholder="Full name"
+          autocomplete="off"
+        />
+      </div>
+      <div class="eopcrf1-report-header-field">
+        <label for="eopcrf1-rh-employee-position">Position</label>
+        <input
+          type="text"
+          id="eopcrf1-rh-employee-position"
+          data-field="positionOfEmployee"
+          placeholder="e.g. Nurse II"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+    <div class="eopcrf1-report-header-col eopcrf1-report-header-col--wide">
+      <div class="eopcrf1-report-header-field">
+        <label for="eopcrf1-rh-bureau">Bureau/Center/Service/Division</label>
+        <input
+          type="text"
+          id="eopcrf1-rh-bureau"
+          data-field="bureau"
+          placeholder="e.g. City Schools Division Office of Antipolo – SGOD"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+    <div class="eopcrf1-report-header-col">
+      <div class="eopcrf1-report-header-field">
+        <label for="eopcrf1-rh-rating-period">Rating Period</label>
+        <input
+          type="text"
+          id="eopcrf1-rh-rating-period"
+          data-field="ratingPeriod"
+          placeholder="e.g. January 2026 - December 2026"
+          autocomplete="off"
+        />
+      </div>
+      <div class="eopcrf1-report-header-field">
+        <label for="eopcrf1-rh-date-of-review">Date of Review</label>
+        <input
+          type="date"
+          id="eopcrf1-rh-date-of-review"
+          data-field="dateOfReview"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Part I-A / I-B / I-C tabs. Part I-A and Part I-C are the office's
+       fixed structure (seeded, rating-only); Part I-B is where the "Add
+       KRA" button and KRA/objective/indicator editing actually apply.
+       Populated by eopcrf1.js so the active-tab state stays in one place. -->
+  <div id="eopcrf1-part-tabs" class="eopcrf1-part-tabs" role="tablist"></div>
+
+  <!-- MFO banner (constant, uneditable) — reads as the main title for the
+       form below. Add KRA lives here too, pinned to the right, and only
+       shows while Part I-B's tab is active (see eopcrf1.js). -->
+  <div class="eopcrf1-mfo-banner">
+    <span class="eopcrf1-mfo-label">MFOs</span>
+    <span class="eopcrf1-mfo-value">Basic Education Services</span>
+    <button
+      type="button"
+      class="eopcrf1-add-btn eopcrf1-add-btn--banner"
+      id="addKraBtn"
+    >
+      <svg
+        class="eopcrf1-inline-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+      Add KRA
+    </button>
+  </div>
+
+  <div id="eopcrf1-kra-list" class="eopcrf1-kra-list">
+    <!-- KRA cards are rendered here by eopcrf1.js -->
+  </div>
+
+  <div
+    id="eopcrf1-empty-state"
+    class="eopcrf1-empty-state"
+    style="display: none"
+  >
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M9 11l3 3L22 4"></path>
+      <path
+        d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+      ></path>
+    </svg>
+    <p id="eopcrf1-empty-state-text">
+      No KRAs yet. Click <strong>Add KRA</strong> to start planning.
+    </p>
+  </div>
+
+  <!-- Overall summary footer -->
+  <div id="eopcrf1-summary" class="eopcrf1-summary" style="display: none">
+    <div class="eopcrf1-summary-item">
+      <span class="eopcrf1-summary-label" id="eopcrf1-summary-weight-label"
+        >Total KRA Weight</span
+      >
+      <span class="eopcrf1-summary-value" id="eopcrf1-summary-weight">0%</span>
+      <span class="eopcrf1-summary-hint" id="eopcrf1-summary-weight-hint"
+        >Should total 100%</span
+      >
+    </div>
+    <div class="eopcrf1-summary-item">
+      <span class="eopcrf1-summary-label">Overall Rating</span>
+      <span class="eopcrf1-summary-value" id="eopcrf1-summary-rating"
+        >&mdash;</span
+      >
+    </div>
+  </div>
+
+  <!-- Print-only replica of the official DEPED RPMS IPCRF sheet -- built
+       fresh from `state` right before window.print() by
+       buildPrintReport() in eopcrf1.js. Invisible on screen (see
+       .eopcrf1-print-only in eopcrf1.css); the on-screen KRA cards above are
+       hidden the other way around, only in @media print. Left empty here
+       since it's entirely JS-generated. -->
+  <div
+    id="eopcrf1-print-report"
+    class="eopcrf1-print-only"
+    aria-hidden="true"
+  ></div>
+
+  <!-- ============= Generic entry modal (KRA / Objective / Rubric / MOV / Actual Results) ============= -->
+  <div id="eopcrf1-entry-modal" class="eopcrf1-modal" style="display: none">
+    <div class="eopcrf1-modal-content">
+      <div class="eopcrf1-modal-header">
+        <h2 id="eopcrf1-entry-modal-title">Add Entry</h2>
+        <button
+          type="button"
+          class="eopcrf1-modal-close"
+          id="eopcrf1EntryModalClose"
+        >
+          &times;
+        </button>
+      </div>
+      <div class="eopcrf1-modal-body">
+        <p class="eopcrf1-modal-hint" id="eopcrf1-entry-modal-hint"></p>
+
+        <div id="eopcrf1-field-primary" class="eopcrf1-field-group">
+          <label
+            class="eopcrf1-field-label"
+            id="eopcrf1-field-primary-label"
+            for="eopcrf1-entry-text"
+            >Description</label
+          >
+          <textarea
+            id="eopcrf1-entry-text"
+            class="eopcrf1-field-textarea"
+            rows="4"
+            placeholder="Type here..."
+          ></textarea>
+        </div>
+
+        <div
+          id="eopcrf1-field-url"
+          class="eopcrf1-field-group"
+          style="display: none"
+        >
+          <label class="eopcrf1-field-label" for="eopcrf1-entry-url"
+            >Link (MOV)</label
+          >
+          <input
+            type="url"
+            id="eopcrf1-entry-url"
+            class="eopcrf1-field-input"
+            placeholder="https://..."
+          />
+        </div>
+
+        <div
+          id="eopcrf1-field-rate"
+          class="eopcrf1-field-group"
+          style="display: none"
+        >
+          <label class="eopcrf1-field-label" for="eopcrf1-entry-rate"
+            >Rating Level</label
+          >
+          <select id="eopcrf1-entry-rate" class="eopcrf1-field-input"></select>
+        </div>
+
+        <div
+          id="eopcrf1-field-weight"
+          class="eopcrf1-field-group"
+          style="display: none"
+        >
+          <label
+            class="eopcrf1-field-label"
+            id="eopcrf1-field-weight-label"
+            for="eopcrf1-entry-weight"
+            >Weight (%)</label
+          >
+          <input
+            type="number"
+            id="eopcrf1-entry-weight"
+            class="eopcrf1-field-input"
+            min="0"
+            max="100"
+            step="0.01"
+            placeholder="e.g. 25"
+          />
+        </div>
+      </div>
+      <div class="eopcrf1-modal-footer">
+        <button
+          type="button"
+          class="eopcrf1-modal-btn eopcrf1-modal-btn-cancel"
+          id="eopcrf1EntryModalCancel"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="eopcrf1-modal-btn eopcrf1-modal-btn-submit"
+          id="eopcrf1EntryModalSubmit"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+    <div class="eopcrf1-modal-overlay" id="eopcrf1EntryModalOverlay"></div>
+  </div>
+</section>
+
+<!-- ================= RESET-PAGE CONFIRMATION MODAL ================= -->
+<div id="eopcrf1-reset-confirm-overlay" class="eopcrf1-confirm-overlay">
+  <div class="eopcrf1-confirm-box eopcrf1-confirm-box--reset">
+    <h4>Reset this IPCRF form?</h4>
+
+    <div class="eopcrf1-reset-options">
+      <label class="eopcrf1-reset-option">
+        <input
+          type="radio"
+          name="eopcrf1-reset-scope"
+          value="ratings_mov"
+          id="eopcrf1-reset-scope-ratings"
+          checked
+        />
+        <span class="eopcrf1-reset-option-text">
+          <strong>Clear ratings &amp; MOV links only</strong>
+          <small
+            >Clears every Quality/Efficiency/Timeliness rating and MOV link.
+            KRAs, objectives, weights, indicators, timeline, and actual results
+            stay exactly as they are.</small
+          >
+        </span>
+      </label>
+      <label class="eopcrf1-reset-option">
+        <input
+          type="radio"
+          name="eopcrf1-reset-scope"
+          value="all"
+          id="eopcrf1-reset-scope-all"
+        />
+        <span class="eopcrf1-reset-option-text">
+          <strong>Reset entire form</strong>
+          <small
+            >Also removes every KRA, objective, and rubric indicator you added
+            in Part I-B, back to a blank form. Part I-A and Part I-C's fixed
+            structure can't be removed, so their ratings and MOV links are
+            cleared too, same as the option above.</small
+          >
+        </span>
+      </label>
+    </div>
+
+    <p id="eopcrf1-reset-confirm-warning">
+      This will clear every rating and MOV link, but keeps your KRAs,
+      objectives, and their weights. This cannot be undone.
+    </p>
+
+    <div class="eopcrf1-confirm-actions">
+      <button
+        type="button"
+        id="eopcrf1-reset-confirm-cancel"
+        class="eopcrf1-btn-secondary"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        id="eopcrf1-reset-confirm-confirm"
+        class="eopcrf1-btn-danger"
+      >
+        Yes, Reset
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/eopcrf1.js') }}"></script>
+
+{% endblock %}

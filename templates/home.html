@@ -20,8 +20,8 @@ block extra_css %}
   <div class="header-title-bar">
     <div class="header-title-bar-main">
       <img
-        src="{{ url_for('static', filename='images/project_irc.png') }}"
-        alt="Project IRC Logo"
+        src="{{ url_for('static', filename='images/project_measure.png') }}"
+        alt="Project MEASURE Logo"
         class="masthead-irc-logo"
       />
       <div class="masthead-divider"></div>
@@ -30,7 +30,7 @@ block extra_css %}
            the title-block row it sits beside: row 1 = title / greeting,
            row 2 = subtitle / position (see .masthead-row-grid, home.css). -->
       <div class="masthead-row-grid">
-        <h1 class="dashboard-title">TITLE</h1>
+        <h1 class="dashboard-title">Project MEASURE</h1>
 
         <!-- "Prepared by" name, shown at the bottom of every IRC8a-8d
              page (see base.html). Saved automatically as the user types
@@ -47,7 +47,9 @@ block extra_css %}
           />!
         </p>
 
-        <p class="dashboard-subtitle">SUBTITLE</p>
+        <p class="dashboard-subtitle">
+          Monitoring and Evaluation of Systematic Updates & Results
+        </p>
 
         <input
           type="text"
@@ -78,7 +80,7 @@ block extra_css %}
       </div>
       <div class="carousel-card__rows">
         {% for tab in tabs %}
-        
+        <a
           href="{{ url_for('view_tab', tab_id=tab.id) }}"
           class="carousel-card__row"
           title="{{ tab.desc }}"

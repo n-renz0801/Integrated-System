@@ -1,12 +1,12 @@
-/* IRC8A - IPCRF (Individual Performance Commitment and Review Form) */
+/* EOPCRF1 - IPCRF (Individual Performance Commitment and Review Form) */
 
-.irc8a-header {
+.eopcrf1-header {
   margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1.5px solid #e0e0e0;
 }
 
-.irc8a-header-top {
+.eopcrf1-header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -16,13 +16,13 @@
 
 /* Title block: badge + divider + title/subtitle, mirroring IRC1a's
    .irc1a-header-title-main. */
-.irc8a-header-title-main {
+.eopcrf1-header-title-main {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.irc8a-header-badge {
+.eopcrf1-header-badge {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -36,21 +36,21 @@
   line-height: 1.1;
 }
 
-.irc8a-header-badge-group {
+.eopcrf1-header-badge-group {
   color: rgba(255, 255, 255, 0.65);
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
 }
 
-.irc8a-header-badge-page {
+.eopcrf1-header-badge-page {
   color: #fff;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.03em;
 }
 
-.irc8a-header-divider {
+.eopcrf1-header-divider {
   width: 4px;
   height: 54px;
   background: var(--navy-deep, #001550);
@@ -58,7 +58,7 @@
   flex-shrink: 0;
 }
 
-.irc8a-header h2 {
+.eopcrf1-header h2 {
   font-size: 32px;
   font-weight: 600;
   /* Decreased title/subtitle gap -- was 8px. */
@@ -67,14 +67,14 @@
   text-transform: uppercase;
 }
 
-.irc8a-subtitle {
+.eopcrf1-subtitle {
   font-size: 13px;
   color: #666;
   margin: 0;
   line-height: 1.4;
 }
 
-.irc8a-header-actions {
+.eopcrf1-header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -83,10 +83,10 @@
 
 /* ---------- IPCRF header info (Name of Rater/Employee, Bureau, Rating
    Period, Date of Review) — plain on-screen inputs, no modal, saved
-   individually on blur (see irc8a.js). Reproduced in the printed report;
+   individually on blur (see eopcrf1.js). Reproduced in the printed report;
    this panel itself is hidden in @media print (see further down). ---------- */
 
-.irc8a-report-header {
+.eopcrf1-report-header {
   display: flex;
   flex-wrap: wrap;
   gap: 18px 28px;
@@ -97,7 +97,7 @@
   margin-bottom: 22px;
 }
 
-.irc8a-report-header-col {
+.eopcrf1-report-header-col {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -105,11 +105,11 @@
   min-width: 180px;
 }
 
-.irc8a-report-header-col--wide {
+.eopcrf1-report-header-col--wide {
   flex: 2 1 320px;
 }
 
-.irc8a-report-header-field label {
+.eopcrf1-report-header-field label {
   display: block;
   font-size: 11px;
   font-weight: 700;
@@ -119,7 +119,7 @@
   margin-bottom: 5px;
 }
 
-.irc8a-report-header-field input {
+.eopcrf1-report-header-field input {
   width: 100%;
   box-sizing: border-box;
   padding: 8px 11px;
@@ -131,19 +131,76 @@
   color: #1a1a1a;
 }
 
-.irc8a-report-header-field input::placeholder {
+.eopcrf1-report-header-field input::placeholder {
   color: #aab1bb;
 }
 
-.irc8a-report-header-field input:focus {
+.eopcrf1-report-header-field input:focus {
   outline: none;
   border-color: #4a6fa5;
   box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.15);
 }
 
+/* ---------- Part I-A / I-B / I-C tabs ---------- */
+
+.eopcrf1-part-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.eopcrf1-part-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 18px;
+  border: 1px solid #e2e5ea;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.eopcrf1-part-tab:hover {
+  border-color: #b7c6dd;
+}
+
+.eopcrf1-part-tab-label {
+  font-weight: 700;
+  font-size: 14px;
+  color: #384252;
+}
+
+.eopcrf1-part-tab-score {
+  font-weight: 700;
+  font-size: 13px;
+  color: #8a93a3;
+  font-variant-numeric: tabular-nums;
+}
+
+.eopcrf1-part-tab.is-active {
+  background: linear-gradient(135deg, #1f2937, #131c28);
+  border-color: #131c28;
+  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.18);
+}
+
+.eopcrf1-part-tab.is-active .eopcrf1-part-tab-label {
+  color: #fff;
+}
+
+.eopcrf1-part-tab.is-active .eopcrf1-part-tab-score {
+  color: #7fa8e0;
+}
+
 /* ---------- MFO banner (reads as the page's main title; also hosts Add KRA) ---------- */
 
-.irc8a-mfo-banner {
+.eopcrf1-mfo-banner {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -155,7 +212,7 @@
   box-shadow: 0 6px 18px rgba(17, 24, 39, 0.22);
 }
 
-.irc8a-mfo-label {
+.eopcrf1-mfo-label {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -164,23 +221,23 @@
   flex-shrink: 0;
 }
 
-.irc8a-mfo-value {
+.eopcrf1-mfo-value {
   font-weight: 700;
   font-size: 24px;
   letter-spacing: -0.01em;
   color: #fff;
 }
 
-.irc8a-mfo-banner .irc8a-add-btn--banner {
+.eopcrf1-mfo-banner .eopcrf1-add-btn--banner {
   margin-left: auto;
   flex-shrink: 0;
 }
 
 /* Save to PDF button — same treatment as irc1a-pdf-btn (see irc1a.css),
-   just namespaced to irc8a. Triggers window.print() (see irc8a.js); the
+   just namespaced to eopcrf1. Triggers window.print() (see eopcrf1.js); the
    @media print block further down builds the actual printed layout. */
 
-.irc8a-pdf-btn {
+.eopcrf1-pdf-btn {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -200,19 +257,19 @@
     border-color 0.15s ease;
 }
 
-.irc8a-pdf-btn i {
+.eopcrf1-pdf-btn i {
   font-size: 13px;
 }
 
-.irc8a-pdf-btn:hover {
+.eopcrf1-pdf-btn:hover {
   background: #eaf2fb;
   border-color: #185fa5;
 }
 
-/* Reset button — sits in .irc8a-header, on the page's plain white
+/* Reset button — sits in .eopcrf1-header, on the page's plain white
    background, so it uses the same appearance as IRC7's .irc7-reset-btn. */
 
-.irc8a-reset-btn {
+.eopcrf1-reset-btn {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -232,18 +289,18 @@
     border-color 0.15s ease;
 }
 
-.irc8a-reset-btn i {
+.eopcrf1-reset-btn i {
   font-size: 13px;
 }
 
-.irc8a-reset-btn:hover {
+.eopcrf1-reset-btn:hover {
   background: #fee2e2;
   border-color: #dc2626;
 }
 
 /* ---------- Weight warning banners ---------- */
 
-.irc8a-weight-banner-inline {
+.eopcrf1-weight-banner-inline {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -259,7 +316,7 @@
 
 /* ---------- Buttons ---------- */
 
-.irc8a-add-btn {
+.eopcrf1-add-btn {
   background: #4a6fa5;
   color: white;
   border: none;
@@ -273,26 +330,26 @@
   transition: background 0.2s ease;
 }
 
-.irc8a-add-btn:hover {
+.eopcrf1-add-btn:hover {
   background: #3d5a8a;
 }
 
-.irc8a-add-btn--ghost {
+.eopcrf1-add-btn--ghost {
   background: white;
   color: #4a6fa5;
   border: 1px dashed #a8b8d8;
 }
 
-.irc8a-add-btn--ghost:hover {
+.eopcrf1-add-btn--ghost:hover {
   background: #f0f5ff;
 }
 
-.irc8a-add-btn--sm {
+.eopcrf1-add-btn--sm {
   padding: 6px 12px;
   font-size: 12px;
 }
 
-.irc8a-inline-icon {
+.eopcrf1-inline-icon {
   width: 14px;
   height: 14px;
   vertical-align: -2px;
@@ -302,7 +359,7 @@
 
 /* ---------- Icon buttons (edit / delete / chevron) ---------- */
 
-.irc8a-icon-btn {
+.eopcrf1-icon-btn {
   background: none;
   border: 1px solid transparent;
   color: #6b7280;
@@ -317,24 +374,24 @@
   flex-shrink: 0;
 }
 
-.irc8a-icon-btn svg {
+.eopcrf1-icon-btn svg {
   width: 15px;
   height: 15px;
 }
 
-.irc8a-icon-btn:hover {
+.eopcrf1-icon-btn:hover {
   background: #eef1f5;
   color: #333;
 }
 
-.irc8a-icon-btn--danger:hover {
+.eopcrf1-icon-btn--danger:hover {
   background: #fdecea;
   color: #c0392b;
 }
 
 /* ---------- Empty state ---------- */
 
-.irc8a-empty-state {
+.eopcrf1-empty-state {
   text-align: center;
   padding: 48px 20px;
   color: #9aa3af;
@@ -343,14 +400,14 @@
   background: #fafbfc;
 }
 
-.irc8a-empty-state svg {
+.eopcrf1-empty-state svg {
   width: 36px;
   height: 36px;
   margin-bottom: 10px;
   color: #c2cad4;
 }
 
-.irc8a-empty-state p {
+.eopcrf1-empty-state p {
   margin: 0;
   font-size: 14px;
 }
@@ -358,7 +415,7 @@
 /* ================================================================
    KRA color palette
    Cycles by list position (kraIndex % 4), assigned via a
-   irc8a-kra-palette-N class added in JS. Coral has been removed —
+   eopcrf1-kra-palette-N class added in JS. Coral has been removed —
    only 4 hues remain: Violet, Teal, Pink, Amber.
 
    Each KRA hue has FOUR lightness tiers (t1 darkest → t4 lightest),
@@ -366,10 +423,10 @@
    in the card reads from a fixed pair of adjacent tiers, so the
    color visibly fades the deeper you go:
 
-     irc8a-kra-header / irc8a-score-strip   -> t1 -> t2 (darkest)
-     irc8a-objective-header                  -> t2 -> t3
-     irc8a-obj-banner--planning              -> t3 -> t4 (lightest)
-     irc8a-obj-banner--evaluation             -> t4 -> t3 (reversed,
+     eopcrf1-kra-header / eopcrf1-score-strip   -> t1 -> t2 (darkest)
+     eopcrf1-objective-header                  -> t2 -> t3
+     eopcrf1-obj-banner--planning              -> t3 -> t4 (lightest)
+     eopcrf1-obj-banner--evaluation             -> t4 -> t3 (reversed,
                                                 so siblings at the
                                                 same depth still
                                                 read as distinct)
@@ -378,7 +435,7 @@
    the card's white-ish body fill and border, unchanged from before.
 
    ---> To retune any KRA's color, edit its six variables below.
-   Nothing else in this file, irc8a.js, or irc8a.html needs to
+   Nothing else in this file, eopcrf1.js, or eopcrf1.html needs to
    change — everything downstream cascades from these variables.
    ================================================================ */
 
@@ -416,7 +473,7 @@
   --gold-light-soft: rgba(240, 207, 125, 0.7);
 }
 
-.irc8a-kra-card.irc8a-kra-palette-1 {
+.eopcrf1-kra-card.eopcrf1-kra-palette-1 {
   --kra-light: var(--kra-1-light);
   --kra-border: var(--kra-1-border);
   --kra-t1: var(--kra-1-t1);
@@ -424,7 +481,7 @@
   --kra-t3: var(--kra-1-t3);
   --kra-t4: var(--kra-1-t4);
 }
-.irc8a-kra-card.irc8a-kra-palette-2 {
+.eopcrf1-kra-card.eopcrf1-kra-palette-2 {
   --kra-light: var(--kra-2-light);
   --kra-border: var(--kra-2-border);
   --kra-t1: var(--kra-2-t1);
@@ -432,7 +489,7 @@
   --kra-t3: var(--kra-2-t3);
   --kra-t4: var(--kra-2-t4);
 }
-.irc8a-kra-card.irc8a-kra-palette-3 {
+.eopcrf1-kra-card.eopcrf1-kra-palette-3 {
   --kra-light: var(--kra-3-light);
   --kra-border: var(--kra-3-border);
   --kra-t1: var(--kra-3-t1);
@@ -440,7 +497,7 @@
   --kra-t3: var(--kra-3-t3);
   --kra-t4: var(--kra-3-t4);
 }
-.irc8a-kra-card.irc8a-kra-palette-4 {
+.eopcrf1-kra-card.eopcrf1-kra-palette-4 {
   --kra-light: var(--kra-4-light);
   --kra-border: var(--kra-4-border);
   --kra-t1: var(--kra-4-t1);
@@ -451,24 +508,24 @@
 
 /* Card border reads the assigned mid-tone, tying the dark header
    and pastel body together as one unit. */
-.irc8a-kra-card[class*="irc8a-kra-palette-"] {
+.eopcrf1-kra-card[class*="eopcrf1-kra-palette-"] {
   border: 1px solid var(--kra-border);
 }
 
 /* Body gets the pale tint fill */
-.irc8a-kra-card[class*="irc8a-kra-palette-"] .irc8a-kra-body {
+.eopcrf1-kra-card[class*="eopcrf1-kra-palette-"] .eopcrf1-kra-body {
   background: var(--kra-light);
 }
 
 /* ---------- KRA cards ---------- */
 
-.irc8a-kra-list {
+.eopcrf1-kra-list {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.irc8a-kra-card {
+.eopcrf1-kra-card {
   background: white;
   border: 1px solid #e2e5ea;
   border-radius: 12px;
@@ -480,7 +537,7 @@
    a small uppercase eyebrow ("Key Result Area 1") on top, then the
    index/text/weight/actions row below — plus a bottom shadow so the
    header visibly "lifts" off the body beneath it. */
-.irc8a-kra-header {
+.eopcrf1-kra-header {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -496,19 +553,19 @@
   transition: filter 0.15s ease;
 }
 
-.irc8a-kra-header:hover {
+.eopcrf1-kra-header:hover {
   filter: brightness(1.12);
 }
 
-.irc8a-kra-card.is-open .irc8a-kra-header {
+.eopcrf1-kra-card.is-open .eopcrf1-kra-header {
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-.irc8a-kra-header-top {
+.eopcrf1-kra-header-top {
   display: flex;
 }
 
-.irc8a-kra-eyebrow {
+.eopcrf1-kra-eyebrow {
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -516,13 +573,13 @@
   color: var(--gold-light-soft);
 }
 
-.irc8a-kra-header-main {
+.eopcrf1-kra-header-main {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.irc8a-kra-index {
+.eopcrf1-kra-index {
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -535,7 +592,7 @@
   border-radius: 6px;
 }
 
-.irc8a-kra-text {
+.eopcrf1-kra-text {
   flex: 1;
   font-size: 14.5px;
   font-weight: 600;
@@ -544,7 +601,7 @@
   white-space: pre-wrap;
 }
 
-.irc8a-weight-badge {
+.eopcrf1-weight-badge {
   flex-shrink: 0;
   background: #eaf1fb;
   color: #1f4f8a;
@@ -556,7 +613,7 @@
   white-space: nowrap;
 }
 
-.irc8a-weight-badge--kra {
+.eopcrf1-weight-badge--kra {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -570,39 +627,69 @@
   box-shadow: none;
 }
 
-.irc8a-kra-actions {
+.eopcrf1-kra-actions {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
 }
 
+/* "Fixed" badge shown instead of Add/Edit/Delete on Part I-A/I-C KRAs */
+.eopcrf1-locked-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.eopcrf1-locked-badge svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* A slightly muted card treatment marks a KRA as part of the fixed
+   structure at a glance, even before its "Fixed" badge is noticed. */
+.eopcrf1-kra-card--locked {
+  opacity: 0.97;
+}
+
+.eopcrf1-kra-card--locked .eopcrf1-kra-header {
+  background: linear-gradient(135deg, #384252, #1f2733);
+}
+
 /* Icon buttons in the KRA header sit on the gradient background */
-.irc8a-kra-header .irc8a-icon-btn {
+.eopcrf1-kra-header .eopcrf1-icon-btn {
   color: rgba(255, 255, 255, 0.75);
 }
 
-.irc8a-kra-header .irc8a-icon-btn:hover {
+.eopcrf1-kra-header .eopcrf1-icon-btn:hover {
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
 }
 
-.irc8a-kra-header .irc8a-icon-btn--danger:hover {
+.eopcrf1-kra-header .eopcrf1-icon-btn--danger:hover {
   background: rgba(220, 53, 69, 0.35);
   color: #ffb3ab;
 }
 
-.irc8a-kra-body {
+.eopcrf1-kra-body {
   display: none;
   padding: 16px 18px 18px;
   background: #fff; /* fallback if no palette class present */
 }
 
-.irc8a-kra-card.is-open .irc8a-kra-body {
+.eopcrf1-kra-card.is-open .eopcrf1-kra-body {
   display: block;
 }
 
-.irc8a-objectives-list {
+.eopcrf1-objectives-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -610,7 +697,7 @@
 
 /* ---------- Objective cards ---------- */
 
-.irc8a-objective-card {
+.eopcrf1-objective-card {
   border: 1px solid #e8eaee;
   border-radius: 10px;
   background: #fcfcfd;
@@ -619,7 +706,7 @@
 
 /* Second tier: t2 -> t3, one step lighter than the KRA header. Same
    two-row eyebrow + content stack as the KRA header above. */
-.irc8a-objective-header {
+.eopcrf1-objective-header {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -633,16 +720,16 @@
   transition: filter 0.15s ease;
 }
 
-.irc8a-objective-header:hover {
+.eopcrf1-objective-header:hover {
   filter: brightness(1.12);
 }
 
-.irc8a-objective-header-top {
+.eopcrf1-objective-header-top {
   display: flex;
   color: var(--gold-light);
 }
 
-.irc8a-objective-eyebrow {
+.eopcrf1-objective-eyebrow {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -650,15 +737,15 @@
   color: var(--gold-light-soft);
 }
 
-.irc8a-objective-header-main {
+.eopcrf1-objective-header-main {
   display: flex;
   align-items: flex-start;
   gap: 10px;
 }
 
-/* Styled after .irc8a-kra-index, with a light gold accent so it
+/* Styled after .eopcrf1-kra-index, with a light gold accent so it
    pops against every KRA palette rather than matching any of them. */
-.irc8a-objective-index {
+.eopcrf1-objective-index {
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -673,7 +760,7 @@
   border-radius: 6px;
 }
 
-.irc8a-objective-text {
+.eopcrf1-objective-text {
   flex: 1;
   font-size: 13.5px;
   font-weight: 600;
@@ -683,7 +770,7 @@
   padding-top: 3px;
 }
 
-.irc8a-objective-meta {
+.eopcrf1-objective-meta {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -693,13 +780,13 @@
 
 /* Weight badge reads white-on-translucent when it's sitting on the
    objective header's colored gradient. */
-.irc8a-objective-header .irc8a-weight-badge {
+.eopcrf1-objective-header .eopcrf1-weight-badge {
   background: rgba(255, 255, 255, 0.92);
   color: var(--kra-t2, #1f4f8a);
   border: none;
 }
 
-.irc8a-objective-actions {
+.eopcrf1-objective-actions {
   display: flex;
   align-items: center;
   gap: 2px;
@@ -707,36 +794,36 @@
 }
 
 /* Icon buttons in the objective header sit on a colored gradient too */
-.irc8a-objective-header .irc8a-icon-btn {
+.eopcrf1-objective-header .eopcrf1-icon-btn {
   color: rgba(255, 255, 255, 0.75);
 }
 
-.irc8a-objective-header .irc8a-icon-btn:hover {
+.eopcrf1-objective-header .eopcrf1-icon-btn:hover {
   background: rgba(255, 255, 255, 0.16);
   color: #fff;
 }
 
-.irc8a-objective-header .irc8a-icon-btn--danger:hover {
+.eopcrf1-objective-header .eopcrf1-icon-btn--danger:hover {
   background: rgba(220, 53, 69, 0.35);
   color: #ffb3ab;
 }
 
-.irc8a-objective-body {
+.eopcrf1-objective-body {
   display: none;
   padding: 4px 14px 16px;
 }
 
-.irc8a-objective-card.is-open .irc8a-objective-body {
+.eopcrf1-objective-card.is-open .eopcrf1-objective-body {
   display: block;
 }
 
 /* ---------- In-page sections (Planning / Evaluation) ---------- */
 
-.irc8a-obj-section {
+.eopcrf1-obj-section {
   margin: 0 0 20px;
 }
 
-.irc8a-obj-section:last-child {
+.eopcrf1-obj-section:last-child {
   margin-bottom: 0;
 }
 
@@ -745,7 +832,7 @@
    gradient direction is reversed between them so they still read
    as two distinct, related bands rather than identical blocks. Both
    get a bottom shadow so they lift slightly off the content below. */
-.irc8a-obj-banner {
+.eopcrf1-obj-banner {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -758,13 +845,13 @@
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
 }
 
-.irc8a-obj-banner svg {
+.eopcrf1-obj-banner svg {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
 }
 
-.irc8a-obj-banner--planning {
+.eopcrf1-obj-banner--planning {
   background: linear-gradient(
     120deg,
     var(--kra-t3, #4a6fa5),
@@ -772,7 +859,7 @@
   );
 }
 
-.irc8a-obj-banner--evaluation {
+.eopcrf1-obj-banner--evaluation {
   background: linear-gradient(
     120deg,
     var(--kra-t4, #6a8fc9),
@@ -782,34 +869,34 @@
 
 /* ---------- Performance indicator groups (Quality / Efficiency / Timeliness) ---------- */
 
-.irc8a-indicator-groups {
+.eopcrf1-indicator-groups {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-bottom: 16px;
 }
 
-.irc8a-indicator-group {
+.eopcrf1-indicator-group {
   border: 1px solid #e8eaee;
   border-radius: 8px;
   padding: 10px 12px;
   background: white;
 }
 
-.irc8a-indicator-group-header {
+.eopcrf1-indicator-group-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
 }
 
-.irc8a-indicator-group-title {
+.eopcrf1-indicator-group-title {
   font-size: 12px;
   font-weight: 700;
   color: #374151;
 }
 
-.irc8a-indicator-list {
+.eopcrf1-indicator-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -819,7 +906,7 @@
 /* Indicator items are clickable — selecting one sets the matching
    rating dropdown to its rate. Only one item per category can be
    selected at a time. */
-.irc8a-indicator-item {
+.eopcrf1-indicator-item {
   display: flex;
   align-items: flex-start;
   gap: 6px;
@@ -836,18 +923,18 @@
     box-shadow 0.15s ease;
 }
 
-.irc8a-indicator-item:hover {
+.eopcrf1-indicator-item:hover {
   background: #eef2f9;
   border-color: #d5deea;
 }
 
-.irc8a-indicator-item--selected {
+.eopcrf1-indicator-item--selected {
   background: #eaf1fb;
   border-color: #4a6fa5;
   box-shadow: 0 0 0 1px #4a6fa5 inset;
 }
 
-.irc8a-indicator-rate {
+.eopcrf1-indicator-rate {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
@@ -862,33 +949,33 @@
   margin-top: 1px;
 }
 
-.irc8a-indicator-item--selected .irc8a-indicator-rate {
+.eopcrf1-indicator-item--selected .eopcrf1-indicator-rate {
   background: #4a6fa5;
 }
 
-.irc8a-indicator-text {
+.eopcrf1-indicator-text {
   flex: 1;
   color: #333;
   white-space: pre-wrap;
 }
 
-.irc8a-indicator-item-actions {
+.eopcrf1-indicator-item-actions {
   display: flex;
   gap: 2px;
   flex-shrink: 0;
 }
 
-.irc8a-indicator-item-actions .irc8a-icon-btn {
+.eopcrf1-indicator-item-actions .eopcrf1-icon-btn {
   width: 22px;
   height: 22px;
 }
 
-.irc8a-indicator-item-actions .irc8a-icon-btn svg {
+.eopcrf1-indicator-item-actions .eopcrf1-icon-btn svg {
   width: 12px;
   height: 12px;
 }
 
-.irc8a-indicator-empty {
+.eopcrf1-indicator-empty {
   font-size: 11.5px;
   color: #aab1bb;
   font-style: italic;
@@ -897,30 +984,30 @@
 
 /* ---------- Field row (MOV + Actual Results side by side) ---------- */
 
-.irc8a-field-row {
+.eopcrf1-field-row {
   display: flex;
   gap: 14px;
 }
 
-.irc8a-field-row .irc8a-field-block {
+.eopcrf1-field-row .eopcrf1-field-block {
   flex: 1;
   min-width: 0;
 }
 
 /* ---------- MOV ---------- */
 
-.irc8a-field-block {
+.eopcrf1-field-block {
   margin-bottom: 16px;
 }
 
-.irc8a-field-block-header {
+.eopcrf1-field-block-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
 }
 
-.irc8a-field-block-title {
+.eopcrf1-field-block-title {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -928,7 +1015,7 @@
   color: #6b7280;
 }
 
-.irc8a-mov-row {
+.eopcrf1-mov-row {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -938,7 +1025,7 @@
   border-radius: 8px;
 }
 
-.irc8a-mov-link {
+.eopcrf1-mov-link {
   flex: 1;
   color: #1f4f8a;
   font-size: 12.5px;
@@ -952,17 +1039,17 @@
   gap: 6px;
 }
 
-.irc8a-mov-link:hover {
+.eopcrf1-mov-link:hover {
   text-decoration: underline;
 }
 
-.irc8a-mov-link svg {
+.eopcrf1-mov-link svg {
   width: 13px;
   height: 13px;
   flex-shrink: 0;
 }
 
-.irc8a-mov-empty {
+.eopcrf1-mov-empty {
   font-size: 12px;
   color: #9aa3af;
   font-style: italic;
@@ -970,7 +1057,7 @@
 
 /* ---------- Actual results / Timeline ---------- */
 
-.irc8a-actual-box {
+.eopcrf1-actual-box {
   padding: 10px 12px;
   background: #f7f9fc;
   border: 1px solid #eef0f3;
@@ -982,21 +1069,21 @@
   min-height: 20px;
 }
 
-.irc8a-actual-box.is-empty {
+.eopcrf1-actual-box.is-empty {
   color: #9aa3af;
   font-style: italic;
 }
 
 /* ---------- Ratings ---------- */
 
-.irc8a-ratings-grid {
+.eopcrf1-ratings-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr) 1fr;
   gap: 10px;
   margin-bottom: 12px;
 }
 
-.irc8a-rating-field label {
+.eopcrf1-rating-field label {
   display: block;
   font-size: 11px;
   font-weight: 700;
@@ -1006,7 +1093,7 @@
   margin-bottom: 5px;
 }
 
-.irc8a-rating-select {
+.eopcrf1-rating-select {
   width: 100%;
   box-sizing: border-box;
   padding: 7px 8px;
@@ -1016,13 +1103,13 @@
   background: white;
 }
 
-.irc8a-rating-select:focus {
+.eopcrf1-rating-select:focus {
   outline: none;
   border-color: #4a6fa5;
   box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.15);
 }
 
-.irc8a-rating-readonly {
+.eopcrf1-rating-readonly {
   padding: 7px 8px;
   border: 1px solid #e2e5ea;
   border-radius: 6px;
@@ -1036,7 +1123,7 @@
 /* Score strip matches the KRA header — same darkest tier gradient
    (t1 -> t2) — so the score reads as tied directly back to the KRA
    it belongs to. */
-.irc8a-score-strip {
+.eopcrf1-score-strip {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1050,26 +1137,26 @@
   color: #f3f4f6;
 }
 
-.irc8a-score-strip-label {
+.eopcrf1-score-strip-label {
   font-size: 12px;
   font-weight: 600;
   color: #b7c3d4;
 }
 
-.irc8a-score-strip-value {
+.eopcrf1-score-strip-value {
   font-size: 16px;
   font-weight: 700;
   color: #fff;
 }
 
-.irc8a-score-strip-formula {
+.eopcrf1-score-strip-formula {
   font-size: 11px;
   color: #8695a8;
 }
 
 /* ---------- Overall summary footer ---------- */
 
-.irc8a-summary {
+.eopcrf1-summary {
   display: flex;
   gap: 24px;
   margin-top: 20px;
@@ -1078,13 +1165,13 @@
   border-radius: 12px;
 }
 
-.irc8a-summary-item {
+.eopcrf1-summary-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.irc8a-summary-label {
+.eopcrf1-summary-label {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -1092,28 +1179,28 @@
   color: #9fb3d1;
 }
 
-.irc8a-summary-value {
+.eopcrf1-summary-value {
   font-size: 20px;
   font-weight: 700;
   color: #fff;
 }
 
-.irc8a-summary-value--warn {
+.eopcrf1-summary-value--warn {
   color: #ffb020;
 }
 
-.irc8a-summary-value--ok {
+.eopcrf1-summary-value--ok {
   color: #6fd68a;
 }
 
-.irc8a-summary-hint {
+.eopcrf1-summary-hint {
   font-size: 11px;
   color: #8695a8;
 }
 
 /* ---------- Modal ---------- */
 
-.irc8a-modal {
+.eopcrf1-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -1125,14 +1212,14 @@
   justify-content: center;
 }
 
-.irc8a-modal-overlay {
+.eopcrf1-modal-overlay {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: -1;
 }
 
-.irc8a-modal-content {
+.eopcrf1-modal-content {
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
@@ -1144,7 +1231,7 @@
   z-index: 1001;
 }
 
-.irc8a-modal-header {
+.eopcrf1-modal-header {
   padding: 20px 24px;
   border-bottom: 1px solid #e0e0e0;
   display: flex;
@@ -1152,14 +1239,14 @@
   align-items: center;
 }
 
-.irc8a-modal-header h2 {
+.eopcrf1-modal-header h2 {
   font-size: 17px;
   font-weight: 600;
   margin: 0;
   color: #1a1a1a;
 }
 
-.irc8a-modal-close {
+.eopcrf1-modal-close {
   background: none;
   border: none;
   font-size: 26px;
@@ -1169,36 +1256,36 @@
   line-height: 1;
 }
 
-.irc8a-modal-close:hover {
+.eopcrf1-modal-close:hover {
   color: #333;
 }
 
-.irc8a-modal-body {
+.eopcrf1-modal-body {
   padding: 22px 24px;
   overflow-y: auto;
   flex: 1;
 }
 
-.irc8a-modal-hint {
+.eopcrf1-modal-hint {
   font-size: 12.5px;
   color: #666;
   margin: 0 0 16px 0;
   line-height: 1.5;
 }
 
-.irc8a-modal-hint:empty {
+.eopcrf1-modal-hint:empty {
   display: none;
 }
 
-.irc8a-field-group {
+.eopcrf1-field-group {
   margin-bottom: 16px;
 }
 
-.irc8a-field-group:last-child {
+.eopcrf1-field-group:last-child {
   margin-bottom: 0;
 }
 
-.irc8a-field-label {
+.eopcrf1-field-label {
   display: block;
   font-size: 12.5px;
   font-weight: 700;
@@ -1206,8 +1293,8 @@
   margin-bottom: 6px;
 }
 
-.irc8a-field-textarea,
-.irc8a-field-input {
+.eopcrf1-field-textarea,
+.eopcrf1-field-input {
   width: 100%;
   box-sizing: border-box;
   padding: 9px 12px;
@@ -1218,21 +1305,21 @@
   background: #fbfbfc;
 }
 
-.irc8a-field-textarea {
+.eopcrf1-field-textarea {
   resize: vertical;
   min-height: 80px;
   line-height: 1.5;
 }
 
-.irc8a-field-textarea:focus,
-.irc8a-field-input:focus {
+.eopcrf1-field-textarea:focus,
+.eopcrf1-field-input:focus {
   outline: none;
   border-color: #4a6fa5;
   background: white;
   box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.15);
 }
 
-.irc8a-modal-footer {
+.eopcrf1-modal-footer {
   padding: 16px 24px;
   border-top: 1px solid #e0e0e0;
   display: flex;
@@ -1240,7 +1327,7 @@
   gap: 12px;
 }
 
-.irc8a-modal-btn {
+.eopcrf1-modal-btn {
   padding: 10px 20px;
   border: 1px solid #d0d0d0;
   border-radius: 6px;
@@ -1250,23 +1337,23 @@
   transition: all 0.2s ease;
 }
 
-.irc8a-modal-btn-cancel {
+.eopcrf1-modal-btn-cancel {
   background: white;
   color: #333;
 }
 
-.irc8a-modal-btn-cancel:hover {
+.eopcrf1-modal-btn-cancel:hover {
   background: #f5f5f5;
   border-color: #999;
 }
 
-.irc8a-modal-btn-submit {
+.eopcrf1-modal-btn-submit {
   background: #4a6fa5;
   color: white;
   border-color: #4a6fa5;
 }
 
-.irc8a-modal-btn-submit:hover {
+.eopcrf1-modal-btn-submit:hover {
   background: #3d5a8a;
   border-color: #3d5a8a;
 }
@@ -1274,7 +1361,7 @@
 /* ---------- Reset confirmation modal ---------- */
 /* Same visual pattern as IRC7's .irc7-confirm-* dialog. */
 
-.irc8a-confirm-overlay {
+.eopcrf1-confirm-overlay {
   display: none;
   position: fixed;
   inset: 0;
@@ -1285,11 +1372,11 @@
   padding: 16px;
 }
 
-.irc8a-confirm-overlay.visible {
+.eopcrf1-confirm-overlay.visible {
   display: flex;
 }
 
-.irc8a-confirm-box {
+.eopcrf1-confirm-box {
   background: #fff;
   border-radius: 12px;
   width: 100%;
@@ -1302,18 +1389,18 @@
 /* The reset modal has more content (option list) than a plain Yes/No
    confirmation, so it gets a little extra width and left-aligned body
    text -- the heading/buttons stay centered like every other confirm box. */
-.irc8a-confirm-box--reset {
+.eopcrf1-confirm-box--reset {
   max-width: 420px;
 }
 
-.irc8a-confirm-box h4 {
+.eopcrf1-confirm-box h4 {
   margin: 0 0 10px 0;
   font-size: 16px;
   font-weight: 700;
   color: #1a1a1a;
 }
 
-.irc8a-confirm-box p {
+.eopcrf1-confirm-box p {
   margin: 0 0 20px 0;
   font-size: 13.5px;
   color: #555;
@@ -1322,7 +1409,7 @@
 
 /* Reset-scope radio options */
 
-.irc8a-reset-options {
+.eopcrf1-reset-options {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1330,7 +1417,7 @@
   text-align: left;
 }
 
-.irc8a-reset-option {
+.eopcrf1-reset-option {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -1343,55 +1430,55 @@
     background 0.15s ease;
 }
 
-.irc8a-reset-option:hover {
+.eopcrf1-reset-option:hover {
   background: #fafbfc;
 }
 
-.irc8a-reset-option:has(input:checked) {
+.eopcrf1-reset-option:has(input:checked) {
   border-color: #4a6fa5;
   background: #eef2f8;
 }
 
-.irc8a-reset-option input[type="radio"] {
+.eopcrf1-reset-option input[type="radio"] {
   margin-top: 3px;
   accent-color: #4a6fa5;
   flex-shrink: 0;
   cursor: pointer;
 }
 
-.irc8a-reset-option-text {
+.eopcrf1-reset-option-text {
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
-.irc8a-reset-option-text strong {
+.eopcrf1-reset-option-text strong {
   font-size: 13.5px;
   color: #1a1a1a;
 }
 
-.irc8a-reset-option-text small {
+.eopcrf1-reset-option-text small {
   font-size: 12px;
   color: #666;
   line-height: 1.4;
 }
 
 /* When "Reset entire form" is picked, the warning copy below turns red to
-   signal the heavier, structural action -- see irc8a.js's radio change
+   signal the heavier, structural action -- see eopcrf1.js's radio change
    listener. */
-#irc8a-reset-confirm-warning.irc8a-reset-warning--danger {
+#eopcrf1-reset-confirm-warning.eopcrf1-reset-warning--danger {
   color: #b91c1c;
   font-weight: 600;
 }
 
-.irc8a-confirm-actions {
+.eopcrf1-confirm-actions {
   display: flex;
   justify-content: center;
   gap: 10px;
 }
 
-.irc8a-btn-secondary,
-.irc8a-btn-danger {
+.eopcrf1-btn-secondary,
+.eopcrf1-btn-danger {
   border: none;
   border-radius: 8px;
   padding: 10px 20px;
@@ -1400,114 +1487,114 @@
   cursor: pointer;
 }
 
-.irc8a-btn-secondary {
+.eopcrf1-btn-secondary {
   background: #f3f4f6;
   color: #374151;
 }
 
-.irc8a-btn-secondary:hover {
+.eopcrf1-btn-secondary:hover {
   background: #e5e7eb;
 }
 
-.irc8a-btn-danger {
+.eopcrf1-btn-danger {
   background: #dc2626;
   color: #fff;
 }
 
-.irc8a-btn-danger:hover {
+.eopcrf1-btn-danger:hover {
   background: #b91c1c;
 }
 
 /* ---------- Responsive ---------- */
 
 @media (max-width: 900px) {
-  .irc8a-indicator-groups {
+  .eopcrf1-indicator-groups {
     grid-template-columns: 1fr;
   }
 
-  .irc8a-ratings-grid {
+  .eopcrf1-ratings-grid {
     grid-template-columns: 1fr 1fr;
   }
 
-  .irc8a-field-row {
+  .eopcrf1-field-row {
     flex-direction: column;
     gap: 0;
   }
 }
 
 @media (max-width: 640px) {
-  .irc8a-header h2 {
+  .eopcrf1-header h2 {
     font-size: 21px;
   }
 
-  .irc8a-header-badge {
+  .eopcrf1-header-badge {
     height: 44px;
     padding: 0 12px;
   }
 
-  .irc8a-header-badge-group {
+  .eopcrf1-header-badge-group {
     font-size: 9px;
   }
 
-  .irc8a-header-badge-page {
+  .eopcrf1-header-badge-page {
     font-size: 15px;
   }
 
-  .irc8a-header-divider {
+  .eopcrf1-header-divider {
     height: 44px;
   }
 
-  .irc8a-header-actions {
+  .eopcrf1-header-actions {
     width: 100%;
   }
 
-  .irc8a-reset-btn {
+  .eopcrf1-reset-btn {
     flex: 1;
     justify-content: center;
   }
 
-  .irc8a-mfo-banner {
+  .eopcrf1-mfo-banner {
     flex-wrap: wrap;
   }
 
-  .irc8a-mfo-banner .irc8a-add-btn--banner {
+  .eopcrf1-mfo-banner .eopcrf1-add-btn--banner {
     margin-left: 0;
   }
 
-  .irc8a-add-btn {
+  .eopcrf1-add-btn {
     justify-content: center;
   }
 
-  .irc8a-ratings-grid {
+  .eopcrf1-ratings-grid {
     grid-template-columns: 1fr 1fr;
   }
 
-  .irc8a-summary {
+  .eopcrf1-summary {
     flex-direction: column;
     gap: 12px;
   }
 }
 
 /* ---------- Print-only container: hidden on screen, shown only inside
-   @media print below (see #irc8a-print-report in irc8a.html and
-   buildPrintReport() in irc8a.js). ---------- */
+   @media print below (see #eopcrf1-print-report in eopcrf1.html and
+   buildPrintReport() in eopcrf1.js). ---------- */
 
-.irc8a-print-only {
+.eopcrf1-print-only {
   display: none;
 }
 
 /* ------------------------------------------------------------------
    Print / Save-to-PDF
-   Triggered by #irc8a-pdf-btn -> window.print() (see irc8a.js). Unlike
+   Triggered by #eopcrf1-pdf-btn -> window.print() (see eopcrf1.js). Unlike
    IRC1a's print stylesheet, which prints the same on-screen table,
-   IRC8A's on-screen layout is an editable accordion of KRA/objective
+   EOPCRF1's on-screen layout is an editable accordion of KRA/objective
    cards that looks nothing like the official DEPED RPMS "Individual
    Performance Commitment and Review Form" (IPCRF) sheet it's required
-   to match (see irc8a_pdf_format.pdf). So instead of reflowing the
-   on-screen DOM, buildPrintReport() in irc8a.js rebuilds a dedicated
-   replica of that sheet into #irc8a-print-report right before print,
+   to match (see eopcrf1_pdf_format.pdf). So instead of reflowing the
+   on-screen DOM, buildPrintReport() in eopcrf1.js rebuilds a dedicated
+   replica of that sheet into #eopcrf1-print-report right before print,
    and this stylesheet swaps it in for the whole interactive page. Only
-   ever active on this page since irc8a.css is only loaded here, so
+   ever active on this page since eopcrf1.css is only loaded here, so
    these rules can safely target the shared <header>/<nav> from
    base.html without leaking into other tabs.
 ------------------------------------------------------------------ */
@@ -1543,17 +1630,17 @@
   /* Everything on screen inside the tab (header + its actions, the
      editable report-header panel, the MFO banner, KRA cards, empty
      state, bottom summary) is replaced wholesale by
-     #irc8a-print-report -- hide every other direct child of the tab
+     #eopcrf1-print-report -- hide every other direct child of the tab
      section and show only the printed replica. */
-  #irc8a-tab > *:not(#irc8a-print-report) {
+  #eopcrf1-tab > *:not(#eopcrf1-print-report) {
     display: none !important;
   }
 
   /* Belt-and-suspenders: only ever shown via a style toggle and default
      to display:none already, but force them off in case a print is
      triggered while one is open. */
-  #irc8a-entry-modal,
-  #irc8a-reset-confirm-overlay {
+  #eopcrf1-entry-modal,
+  #eopcrf1-reset-confirm-overlay {
     display: none !important;
   }
 
@@ -1576,16 +1663,16 @@
     color-adjust: exact !important;
   }
 
-  .irc8a-print-only {
+  .eopcrf1-print-only {
     display: block !important;
   }
 
-  .irc8a-print-page {
+  .eopcrf1-print-page {
     font-size: 8px;
     color: #000;
   }
 
-  .irc8a-print-title {
+  .eopcrf1-print-title {
     text-align: center;
     font-weight: 800;
     font-size: 13px;
@@ -1600,9 +1687,9 @@
   }
 
   /* Name of Rater / Employee, Positions, Bureau, Rating Period, Date of
-     Review -- values come straight from #irc8a-report-header's inputs
-     (see irc8a.js's buildPrintReport()). */
-  .irc8a-print-header-table {
+     Review -- values come straight from #eopcrf1-report-header's inputs
+     (see eopcrf1.js's buildPrintReport()). */
+  .eopcrf1-print-header-table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 6px;
@@ -1618,29 +1705,29 @@
     page-break-inside: avoid;
   }
 
-  .irc8a-print-header-table tr {
+  .eopcrf1-print-header-table tr {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  .irc8a-print-header-table td {
+  .eopcrf1-print-header-table td {
     padding: 3px 6px;
     vertical-align: top;
     border: 1px solid #000;
   }
 
-  .irc8a-print-header-label {
+  .eopcrf1-print-header-label {
     font-weight: 700;
     white-space: nowrap;
     width: 1%;
   }
 
-  .irc8a-print-header-value {
+  .eopcrf1-print-header-value {
     font-weight: 700;
     min-width: 120px;
   }
 
-  .irc8a-print-table {
+  .eopcrf1-print-table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
@@ -1650,60 +1737,60 @@
      COLUMN WIDTHS — edit here.
      table-layout: fixed above means the table takes widths only from
      these <col> rules (set via the <colgroup> in buildPrintReport(),
-     irc8a.js) and ignores cell content. Values are % of the table's
+     eopcrf1.js) and ignores cell content. Values are % of the table's
      total width and should add up to 100.
      Order matches the column order in buildPrintReport():
      MFOs, KRAs, Objectives, Timeline, Weight, Quality, Efficiency,
      Timeliness, MOVs, Actual Results, Q, E, T, Ave, Score.
      ================================================================== */
-  .irc8a-col-mfo {
+  .eopcrf1-col-mfo {
     width: 5%;
   }
-  .irc8a-col-kra {
+  .eopcrf1-col-kra {
     width: 6%;
   }
-  .irc8a-col-objectives {
+  .eopcrf1-col-objectives {
     width: 11%;
   }
-  .irc8a-col-timeline {
+  .eopcrf1-col-timeline {
     width: 5%;
   }
-  .irc8a-col-weight {
+  .eopcrf1-col-weight {
     width: 4%;
   }
-  .irc8a-col-quality {
+  .eopcrf1-col-quality {
     width: 13%;
   }
-  .irc8a-col-efficiency {
+  .eopcrf1-col-efficiency {
     width: 13%;
   }
-  .irc8a-col-timeliness {
+  .eopcrf1-col-timeliness {
     width: 13%;
   }
-  .irc8a-col-movs {
+  .eopcrf1-col-movs {
     width: 8%;
   }
-  .irc8a-col-actual {
+  .eopcrf1-col-actual {
     width: 8%;
   }
-  .irc8a-col-q {
+  .eopcrf1-col-q {
     width: 2.5%;
   }
-  .irc8a-col-e {
+  .eopcrf1-col-e {
     width: 2.5%;
   }
-  .irc8a-col-t {
+  .eopcrf1-col-t {
     width: 2.5%;
   }
-  .irc8a-col-ave {
+  .eopcrf1-col-ave {
     width: 3%;
   }
-  .irc8a-col-score {
+  .eopcrf1-col-score {
     width: 3.5%;
   }
 
-  .irc8a-print-table th,
-  .irc8a-print-table td {
+  .eopcrf1-print-table th,
+  .eopcrf1-print-table td {
     border: 1px solid #000;
     padding: 3px 4px;
     vertical-align: top;
@@ -1713,49 +1800,49 @@
     word-break: break-word;
   }
 
-  .irc8a-print-table thead th {
+  .eopcrf1-print-table thead th {
     text-align: center;
     font-weight: 700;
     background: #83cceb !important;
   }
 
-  .irc8a-print-band-row th {
+  .eopcrf1-print-band-row th {
     font-size: 8px;
     font-style: italic;
     text-transform: uppercase;
     background: #f2ceef !important;
   }
 
-  .irc8a-print-mfo,
-  .irc8a-print-kra,
-  .irc8a-print-weight {
+  .eopcrf1-print-mfo,
+  .eopcrf1-print-kra,
+  .eopcrf1-print-weight {
     text-align: center;
     font-weight: 700;
     vertical-align: middle;
   }
 
-  .irc8a-print-objective-label {
+  .eopcrf1-print-objective-label {
     font-weight: 700;
     margin-right: 3px;
   }
 
-  .irc8a-print-rate {
+  .eopcrf1-print-rate {
     font-weight: 700;
   }
 
   /* Cells with no indicator defined at that rate level (or no MOV/actual
      result/rating filled in) -- grayed out and empty, no "Not specified"
-     text, matching irc8a_pdf_format.pdf. */
-  .irc8a-print-blank {
+     text, matching eopcrf1_pdf_format.pdf. */
+  .eopcrf1-print-blank {
     background: #bfbfbf !important;
   }
 
-  .irc8a-print-rating-cell {
+  .eopcrf1-print-rating-cell {
     text-align: center;
     font-weight: 700;
   }
 
-  .irc8a-print-empty {
+  .eopcrf1-print-empty {
     color: #666;
     font-style: italic;
   }
@@ -1764,40 +1851,40 @@
      last row (not a separate box below it) so it's visually part of the
      main table: total weight sits in the Weight column, the label spans
      Actual Results through Ave, and the total score lines up under the
-     Score column, matching irc8a_pdf_format.pdf. */
-  .irc8a-print-total-row td {
+     Score column, matching eopcrf1_pdf_format.pdf. */
+  .eopcrf1-print-total-row td {
     background: #daf2d0 !important;
     font-weight: 700;
   }
 
-  .irc8a-print-overall-label {
+  .eopcrf1-print-overall-label {
     text-align: right;
     text-transform: uppercase;
     padding-right: 8px !important;
   }
 
-  .irc8a-print-overall-score {
+  .eopcrf1-print-overall-score {
     text-align: center;
     font-size: 9px;
   }
 
   /* Avoid splitting an objective's rate-level rows awkwardly across a
      page break. */
-  .irc8a-print-table tr {
+  .eopcrf1-print-table tr {
     break-inside: avoid;
   }
 
   /* Keep the main table attached to the header block above it instead of
      starting on its own page. */
-  .irc8a-print-header-table,
-  .irc8a-print-table {
+  .eopcrf1-print-header-table,
+  .eopcrf1-print-table {
     break-before: avoid;
     break-after: auto;
   }
 
   /* The report-signatory footer (Prepared by / Checked by / Approving
-     Authority) lives in base.html, outside #irc8a-tab, so the
-     "#irc8a-tab > *" hide rule above never reaches it. It's not part of
+     Authority) lives in base.html, outside #eopcrf1-tab, so the
+     "#eopcrf1-tab > *" hide rule above never reaches it. It's not part of
      the official IPCRF sheet this page reproduces, so hide it here. */
   .report-signatory {
     display: none !important;

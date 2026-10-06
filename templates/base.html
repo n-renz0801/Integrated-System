@@ -34,7 +34,7 @@
           alt="I Love SGOD Logo"
         />
         <img
-          src="{{ url_for('static', filename='images/project_irc.png') }}"
+          src="{{ url_for('static', filename='images/project_measure.png') }}"
           alt="Project IRC Logo"
         />
       </div>
@@ -69,14 +69,14 @@
 
       <!-- ===== REPORT SIGNATORY FOOTER =====
            Shown at the bottom of every IRC8a/8b/8d page (active_tab is set
-           by view_tab()) except IRC8c, which renders its own copy inline
-           inside its "Employee-Superior Agreement" card (see
-           tabs/irc8c.html) instead of down here. Hidden on Home, which has
+           by view_tab()) except IRC8c and EOPCRF3, which each render their own
+           agreement block inline (see tabs/irc8c.html and
+           tabs/eopcrf3.html) instead of down here. Hidden on Home, which has
            no report to sign. "Prepared by" is populated client-side from
            /api/preparer (see index.js) so it always reflects whatever was
            last saved on the Home page. "Checked by" never changes, so it's
            hardcoded here. -->
-      {% if active_tab and active_tab.id != 'irc8c' %}
+      {% if active_tab and active_tab.id not in ['irc8c', 'eopcrf3'] %}
       <div class="report-signatory">
         <div class="report-signatory-title">
           <i class="ti ti-clipboard-text" aria-hidden="true"></i>
@@ -137,7 +137,8 @@
                 <p class="report-signatory-position">
                   Assistant Schools Division Superintendent
                 </p>
-                {{ macros.signatory_date('approving_authority', 'Approving Authority') }}
+                {{ macros.signatory_date('approving_authority', 'Approving
+                Authority') }}
               </div>
             </div>
           </div>

@@ -7,19 +7,21 @@ from sqlalchemy.engine import Engine
 
 from models import (
     db,
-    IRC8BRating,
-    IRC8AKra,
-    IRC8AObjective,
-    IRC8AIndicator,
-    IRC8A_CATEGORIES,
+    EOPCRF2Rating,
+    EOPCRF1Kra,
+    EOPCRF1Objective,
+    EOPCRF1Indicator,
+    EOPCRF1_CATEGORIES,
+    EOPCRF1_PART_B,
+    seed_eopcrf1_defaults,
     IRC8CRow,
     IRC8C_SLOTS,
     ReportPreparer,
-    IRC8AApprovingAuthority,
-    IRC8AReportHeader,
+    EOPCRF1ApprovingAuthority,
+    EOPCRF1ReportHeader,
     ReportSignatoryDate,
-    IRC8B_SECTION_CBC,
-    IRC8B_SECTION_CS,
+    EOPCRF2_SECTION_LEADERSHIP,
+    EOPCRF2_SECTION_CBC,
 )
 
 
@@ -81,31 +83,100 @@ def _set_sqlite_pragma(dbapi_connection, connection_record):  # noqa: ARG001
     cursor.close()
 
 
+def _ensure_eopcrf1_schema():
+    """Lightweight, dependency-free migration for the `part` column added
+    to eopcrf1_kras when Part I-A/I-B/I-C was introduced. db.create_all()
+    only creates missing *tables*, never adds missing *columns* to a table
+    that already exists -- so on an existing eopcrf_sh.db (from before this
+    column existed) the ORM would otherwise error the first time it reads
+    or writes a KRA. Safe to call on every app start: a no-op once the
+    column is there, and a no-op on a brand-new DB where create_all()
+    already created the table with the column in place."""
+    with db.engine.connect() as conn:
+        cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(eopcrf1_kras)").fetchall()]
+        if cols and "part" not in cols:
+            conn.exec_driver_sql(
+                f"ALTER TABLE eopcrf1_kras ADD COLUMN part VARCHAR(1) NOT NULL DEFAULT '{EOPCRF1_PART_B}'"
+            )
+            conn.commit()
+
+
+def _ensure_seeded_kras(year):
+    """Makes sure the fixed Part I-A / Part I-C structure exists for this
+    year before it's read or written. See seed_eopcrf1_defaults() in
+    models.py -- idempotent, so calling this on every request is cheap
+    (one indexed lookup) once a year's KRAs already exist."""
+    seed_eopcrf1_defaults(year)
+
+
+def _ensure_eopcrf2_schema():
+    """One-time, idempotent carry-over from the old IRC8b tab to EOPCRF2.
+    Part II was re-based on the official form, so only the Core
+    Behavioural rows can be carried over (Core Skills no longer exists;
+    "result_focus" became "results_focus"). Also moves any
+    report_signatory_date rows saved under the old "irc8b" tab id.
+    Safe on every start: does nothing unless the old table/rows exist and
+    the new table is still empty for that row."""
+    with db.engine.connect() as conn:
+        tables = {r[0] for r in conn.exec_driver_sql("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+        if "irc8b_ratings" in tables and "eopcrf2_ratings" in tables:
+            conn.exec_driver_sql(
+                """
+                INSERT INTO eopcrf2_ratings (year, section_key, subsection_key, criterion_index, rating, remarks, updated_at)
+                SELECT o.year, 'cbc',
+                       CASE o.subsection_key WHEN 'result_focus' THEN 'results_focus' ELSE o.subsection_key END,
+                       o.criterion_index, o.rating, '', o.updated_at
+                FROM irc8b_ratings o
+                WHERE o.section_key = 'cbc'
+                  AND NOT EXISTS (
+                    SELECT 1 FROM eopcrf2_ratings n
+                    WHERE n.year = o.year
+                      AND n.subsection_key = CASE o.subsection_key WHEN 'result_focus' THEN 'results_focus' ELSE o.subsection_key END
+                      AND n.criterion_index = o.criterion_index
+                  )
+                """
+            )
+        if "report_signatory_date" in tables:
+            conn.exec_driver_sql(
+                """
+                UPDATE report_signatory_date SET tab_id = 'eopcrf2'
+                WHERE tab_id = 'irc8b'
+                  AND NOT EXISTS (
+                    SELECT 1 FROM report_signatory_date n
+                    WHERE n.tab_id = 'eopcrf2' AND n.role = report_signatory_date.role
+                  )
+                """
+            )
+        conn.commit()
+
+
 @app.cli.command("init-db")
 def init_db_command():
     """Usage: flask --app app init-db
     Creates all tables (if missing). Safe to run more than once."""
     with app.app_context():
         db.create_all()
+        _ensure_eopcrf1_schema()
+        _ensure_eopcrf2_schema()
         print(f"Database ready at {app.config['SQLALCHEMY_DATABASE_URI']}")
 
 
 # ---------------------------------------------------------------------------
 # Fixed list of tabs. This system has exactly 4 Individual Report Cards
-# (IRC8a-8d, the IPCRF series) and this list will not grow.
+# (EOPCRF1, EOPCRF2, IRC8c-8d, the IPCRF series) and this list will not grow.
 # ---------------------------------------------------------------------------
 TABS = [
-    {"id": "irc8a", "short": "EOPCRF I", "part": "Part I", "name": "EOPCRF Part I", "desc": "Individual Performance Commitment and Review Form (IPCRF)"},
-    {"id": "irc8b", "short": "EOPCRF II", "part": "Part II", "name": "EOPCRF Part II", "desc": "Core Behavioral Competencies and Core Skills"},
+    {"id": "eopcrf1", "short": "EOPCRF I", "part": "Part I", "name": "EOPCRF Part I", "desc": "Individual Performance Commitment and Review Form (IPCRF)"},
+    {"id": "eopcrf2", "short": "EOPCRF II", "part": "Part II", "name": "EOPCRF Part II", "desc": "Leadership and Core Behavioral Competencies"},
     {"id": "irc8c", "short": "EOPCRF III", "part": "Part III", "name": "EOPCRF Part III", "desc": "Summary of Ratings for Discussion"},
-    {"id": "irc8d", "short": "EOPCRF IV", "part": "Part IV", "name": "EOPCRF Part IV", "desc": "Summary of Ratings for Discussion (Read-Only Summary)"},
+    {"id": "eopcrf3", "short": "EOPCRF III", "part": "Part III", "name": "EOPCRF Part III", "desc": "Summary of Ratings"},
 ]
 
-# Quick lookup by id, e.g. TAB_LOOKUP["irc8a"]
+# Quick lookup by id, e.g. TAB_LOOKUP["eopcrf1"]
 TAB_LOOKUP = {tab["id"]: tab for tab in TABS}
 
 # Each tab renders its own template file under templates/tabs/, since every
-# report card has its own structure/functionality. E.g. "irc8a" -> "tabs/irc8a.html"
+# report card has its own structure/functionality. E.g. "eopcrf1" -> "tabs/eopcrf1.html"
 TEMPLATE_MAP = {tab["id"]: f"tabs/{tab['id']}.html" for tab in TABS}
 
 
@@ -125,26 +196,26 @@ def _get_preparer():
     return preparer
 
 
-def _get_irc8a_approving_authority():
-    """Single global row holding IRC8A's 'Approving Authority' name (see
-    IRC8AApprovingAuthority in models.py). Created lazily with a blank name
+def _get_eopcrf1_approving_authority():
+    """Single global row holding EOPCRF1's 'Approving Authority' name (see
+    EOPCRF1ApprovingAuthority in models.py). Created lazily with a blank name
     on first access, same convention as _get_preparer() above."""
-    authority = IRC8AApprovingAuthority.query.first()
+    authority = EOPCRF1ApprovingAuthority.query.first()
     if authority is None:
-        authority = IRC8AApprovingAuthority(name="")
+        authority = EOPCRF1ApprovingAuthority(name="")
         db.session.add(authority)
         db.session.commit()
     return authority
 
 
-def _get_irc8a_report_header():
-    """Single global row holding IRC8A's printed-report header fields (see
-    IRC8AReportHeader in models.py). Created lazily with blank fields on
+def _get_eopcrf1_report_header():
+    """Single global row holding EOPCRF1's printed-report header fields (see
+    EOPCRF1ReportHeader in models.py). Created lazily with blank fields on
     first access, same convention as _get_preparer() /
-    _get_irc8a_approving_authority() above."""
-    header = IRC8AReportHeader.query.first()
+    _get_eopcrf1_approving_authority() above."""
+    header = EOPCRF1ReportHeader.query.first()
     if header is None:
-        header = IRC8AReportHeader()
+        header = EOPCRF1ReportHeader()
         db.session.add(header)
         db.session.commit()
     return header
@@ -203,48 +274,48 @@ def save_preparer():
     return jsonify({"name": preparer.name, "position": preparer.position}), 200
 
 
-@app.route("/api/irc8a/approving-authority", methods=["GET"])
-def get_irc8a_approving_authority():
+@app.route("/api/eopcrf1/approving-authority", methods=["GET"])
+def get_eopcrf1_approving_authority():
     """Read-only fetch used by base.html's report-signatory footer, on the
-    IRC8A page only, to fill in the current 'Approving Authority' name."""
-    authority = _get_irc8a_approving_authority()
+    EOPCRF1 page only, to fill in the current 'Approving Authority' name."""
+    authority = _get_eopcrf1_approving_authority()
     return jsonify({"name": authority.name}), 200
 
 
-@app.route("/api/irc8a/approving-authority", methods=["POST"])
-def save_irc8a_approving_authority():
-    """Saves the 'Approving Authority' name typed directly in IRC8A's
+@app.route("/api/eopcrf1/approving-authority", methods=["POST"])
+def save_eopcrf1_approving_authority():
+    """Saves the 'Approving Authority' name typed directly in EOPCRF1's
     report-signatory footer. Single global row -- not year-scoped and
-    intentionally untouched by IRC8A's Reset."""
+    intentionally untouched by EOPCRF1's Reset."""
     data = request.get_json(silent=True) or {}
     name = (data.get("name") or "").strip()
 
-    authority = _get_irc8a_approving_authority()
+    authority = _get_eopcrf1_approving_authority()
     authority.name = name
     db.session.commit()
 
     return jsonify({"name": authority.name}), 200
 
 
-@app.route("/api/irc8a/report-header", methods=["GET"])
-def get_irc8a_report_header():
-    """Read-only fetch used by irc8a.js to fill in the printed-report
+@app.route("/api/eopcrf1/report-header", methods=["GET"])
+def get_eopcrf1_report_header():
+    """Read-only fetch used by eopcrf1.js to fill in the printed-report
     header fields (Name of Rater/Employee, their Positions, Bureau/Center/
     Service/Division, Rating Period, Date of Review) shown at the top of
-    the IRC8A page and reproduced in its Save-to-PDF output."""
-    header = _get_irc8a_report_header()
+    the EOPCRF1 page and reproduced in its Save-to-PDF output."""
+    header = _get_eopcrf1_report_header()
     return jsonify(header.to_dict()), 200
 
 
-@app.route("/api/irc8a/report-header", methods=["POST"])
-def save_irc8a_report_header():
-    """Saves IRC8A's printed-report header fields, typed directly on the
-    IRC8A page. Single global row -- not year-scoped and intentionally
-    untouched by IRC8A's Reset. Accepts a partial body -- any field
+@app.route("/api/eopcrf1/report-header", methods=["POST"])
+def save_eopcrf1_report_header():
+    """Saves EOPCRF1's printed-report header fields, typed directly on the
+    EOPCRF1 page. Single global row -- not year-scoped and intentionally
+    untouched by EOPCRF1's Reset. Accepts a partial body -- any field
     omitted is left as-is rather than cleared, so each input can save
     independently on blur without clobbering the others."""
     data = request.get_json(silent=True) or {}
-    header = _get_irc8a_report_header()
+    header = _get_eopcrf1_report_header()
 
     text_fields = {
         "nameOfRater": "name_of_rater",
@@ -277,7 +348,7 @@ def get_signatory_date(tab_id, role):
     """Read-only fetch used by base.html's report-signatory footer, on
     every tab, to fill in the calendar-picked date under whichever
     signatory block(s) it renders (Prepared by / Checked by, plus
-    Approving Authority on irc8a only)."""
+    Approving Authority on eopcrf1 only)."""
     if tab_id not in TAB_LOOKUP or role not in SIGNATORY_ROLES:
         return jsonify({"error": "Invalid tab or role"}), 400
     row = _get_signatory_date(tab_id, role)
@@ -313,8 +384,8 @@ def view_tab(tab_id):
     """Renders the dedicated template for whichever tab was requested.
     Templates are static markup with no server-side value binding -- each
     tab's own JS is responsible for fetching /irc/<tab_id>/data on load and
-    populating the page client-side (see irc8a.js, irc8b.js, irc8c.js,
-    irc8d.js)."""
+    populating the page client-side (see eopcrf1.js, eopcrf2.js, irc8c.js,
+    eopcrf3.js)."""
     active_tab = TAB_LOOKUP.get(tab_id)
     if active_tab is None:
         abort(404)
@@ -322,51 +393,71 @@ def view_tab(tab_id):
 
 
 # ---------------------------------------------------------------------------
-# IRC8b -- Core Behavioral Competencies and Core Skills
+# EOPCRF2 -- Part II: Leadership Competencies and Core Behavioural Competencies
 # ---------------------------------------------------------------------------
+@app.route("/irc/eopcrf2/data", methods=["GET"])
+# Back-compat alias: irc8c.js (not part of this rename pass) may
+# still fetch the old "/irc/irc8b/data" path. The "ratings" shape is
+# unchanged ({subsectionKey: {index: rating}}), so they keep working.
 @app.route("/irc/irc8b/data", methods=["GET"])
-def get_irc8b_data():
+def get_eopcrf2_data():
     year = request.args.get("year", type=int) or _current_year()
-    rows = IRC8BRating.query.filter_by(year=year).all()
+    rows = EOPCRF2Rating.query.filter_by(year=year).all()
 
     ratings = {}
+    remarks = {}
+    # subsection_key -> section_key ("leadership" | "cbc"), so eopcrf3.js
+    # can group subsection averages into Part II-A / II-B without
+    # duplicating eopcrf2.js's hardcoded DATA. Additive: existing callers
+    # that only read "ratings"/"remarks" are unaffected.
+    sections = {}
     for row in rows:
-        ratings.setdefault(row.subsection_key, {})[str(row.criterion_index)] = row.rating
+        sections[row.subsection_key] = row.section_key
+        if row.rating is not None:
+            ratings.setdefault(row.subsection_key, {})[str(row.criterion_index)] = row.rating
+        if row.remarks:
+            remarks.setdefault(row.subsection_key, {})[str(row.criterion_index)] = row.remarks
 
-    return jsonify({"year": year, "ratings": ratings}), 200
+    return jsonify({"year": year, "ratings": ratings, "remarks": remarks, "sections": sections}), 200
 
 
-@app.route("/irc/irc8b/rating", methods=["POST"])
-def save_irc8b_rating():
+@app.route("/irc/eopcrf2/rating", methods=["POST"])
+def save_eopcrf2_rating():
     """Expected JSON body:
         { "year": 2026, "sectionKey": "cbc", "subsectionKey": "self_management",
-          "criterionIndex": 0, "rating": 4 }
+          "criterionIndex": 0, "rating": 4, "remarks": "Optional text" }
 
-    'rating' may be null/omitted to clear a previously-set rating --
-    irc8b.js does this when the user clicks an already-selected button.
+    'rating' and 'remarks' are each optional -- only the fields present in
+    the body are changed. rating: null clears a previously-set rating
+    (eopcrf2.js does this when the user clicks an already-selected button);
+    remarks: "" clears the remark.
     """
     data = request.get_json(silent=True) or {}
     year = data.get("year") or _current_year()
     section_key = data.get("sectionKey")
     subsection_key = data.get("subsectionKey")
     criterion_index = data.get("criterionIndex")
-    rating = data.get("rating")
 
-    if section_key not in (IRC8B_SECTION_CBC, IRC8B_SECTION_CS):
+    if section_key not in (EOPCRF2_SECTION_LEADERSHIP, EOPCRF2_SECTION_CBC):
         return jsonify({"error": f"Invalid sectionKey: {section_key!r}"}), 400
     if not subsection_key or criterion_index is None:
         return jsonify({"error": "'subsectionKey' and 'criterionIndex' are required"}), 400
-    if rating is not None and rating not in (1, 2, 3, 4, 5):
-        return jsonify({"error": f"Invalid rating: {rating!r}"}), 400
+    if "rating" in data and data["rating"] is not None and data["rating"] not in (1, 2, 3, 4, 5):
+        return jsonify({"error": f"Invalid rating: {data['rating']!r}"}), 400
+    if "remarks" in data and data["remarks"] is not None and not isinstance(data["remarks"], str):
+        return jsonify({"error": "'remarks' must be a string"}), 400
 
-    row = IRC8BRating.query.filter_by(
+    row = EOPCRF2Rating.query.filter_by(
         year=year, subsection_key=subsection_key, criterion_index=criterion_index
     ).first()
     if row is None:
-        row = IRC8BRating(year=year, subsection_key=subsection_key, criterion_index=criterion_index)
+        row = EOPCRF2Rating(year=year, subsection_key=subsection_key, criterion_index=criterion_index, remarks="")
         db.session.add(row)
     row.section_key = section_key
-    row.rating = rating
+    if "rating" in data:
+        row.rating = data["rating"]
+    if "remarks" in data:
+        row.remarks = (data["remarks"] or "")[:500]
     db.session.commit()
 
     return jsonify({
@@ -374,19 +465,20 @@ def save_irc8b_rating():
         "sectionKey": section_key,
         "subsectionKey": subsection_key,
         "criterionIndex": criterion_index,
-        "rating": rating,
+        "rating": row.rating,
+        "remarks": row.remarks,
     }), 200
 
 
 # ---------------------------------------------------------------------------
-# IRC8a -- Individual Performance Commitment and Review Form (IPCRF)
+# EOPCRF1 -- Individual Performance Commitment and Review Form (IPCRF)
 #
 # These routes just persist whatever the KRA / Objective / rubric-indicator
-# modals in irc8a.js submit. See the IRC8A* section of models.py for the
+# modals in eopcrf1.js submit. See the EOPCRF1* section of models.py for the
 # full rationale behind the KRA -> Objective -> Indicator shape.
 # ---------------------------------------------------------------------------
 def _validate_weight(raw):
-    """Returns (weight_or_None, error_message_or_None). Mirrors irc8a.js's
+    """Returns (weight_or_None, error_message_or_None). Mirrors eopcrf1.js's
     own "Weight must be a number between 0 and 100" client-side check."""
     if raw in (None, ""):
         return None, None
@@ -399,19 +491,24 @@ def _validate_weight(raw):
     return weight, None
 
 
+@app.route("/irc/eopcrf1/data", methods=["GET"])
+# Back-compat alias: the old "/irc/irc8a/data" path. Keeping both routes
+# alive means any page still fetching it keeps working even though this
+# tab moved to "eopcrf1".
 @app.route("/irc/irc8a/data", methods=["GET"])
-def get_irc8a_data():
+def get_eopcrf1_data():
     year = request.args.get("year", type=int) or _current_year()
+    _ensure_seeded_kras(year)
     kras = (
-        IRC8AKra.query.filter_by(year=year)
-        .order_by(IRC8AKra.sort_order.asc(), IRC8AKra.id.asc())
+        EOPCRF1Kra.query.filter_by(year=year)
+        .order_by(EOPCRF1Kra.sort_order.asc(), EOPCRF1Kra.id.asc())
         .all()
     )
     return jsonify({"year": year, "kras": [k.to_dict() for k in kras]}), 200
 
 
-@app.route("/irc/irc8a/kra", methods=["POST"])
-def save_irc8a_kra():
+@app.route("/irc/eopcrf1/kra", methods=["POST"])
+def save_eopcrf1_kra():
     """Creates a new KRA (id omitted), or updates an existing one's text/
     weight (id included) -- a KRA's `year` is fixed at creation and never
     changes here.
@@ -430,13 +527,17 @@ def save_irc8a_kra():
         return jsonify({"error": err}), 400
 
     if kra_id:
-        kra = IRC8AKra.query.get(kra_id)
+        kra = EOPCRF1Kra.query.get(kra_id)
         if kra is None:
             return jsonify({"error": "KRA not found"}), 404
+        if kra.locked:
+            return jsonify({"error": "This KRA is part of the fixed evaluation structure (Part I-A/I-C) and can't be edited."}), 403
     else:
+        # Every KRA created through this endpoint lands in Part I-B --
+        # Part I-A/I-C KRAs only ever come from seed_eopcrf1_defaults().
         year = data.get("year") or _current_year()
-        max_order = db.session.query(db.func.max(IRC8AKra.sort_order)).filter_by(year=year).scalar() or 0
-        kra = IRC8AKra(year=year, sort_order=max_order + 1)
+        max_order = db.session.query(db.func.max(EOPCRF1Kra.sort_order)).filter_by(year=year).scalar() or 0
+        kra = EOPCRF1Kra(year=year, part=EOPCRF1_PART_B, sort_order=max_order + 1)
         db.session.add(kra)
 
     kra.text = text
@@ -445,18 +546,20 @@ def save_irc8a_kra():
     return jsonify(kra.to_dict()), 200
 
 
-@app.route("/irc/irc8a/kra/<int:kra_id>", methods=["DELETE"])
-def delete_irc8a_kra(kra_id):
-    kra = IRC8AKra.query.get(kra_id)
+@app.route("/irc/eopcrf1/kra/<int:kra_id>", methods=["DELETE"])
+def delete_eopcrf1_kra(kra_id):
+    kra = EOPCRF1Kra.query.get(kra_id)
     if kra is None:
         return jsonify({"error": "KRA not found"}), 404
+    if kra.locked:
+        return jsonify({"error": "This KRA is part of the fixed evaluation structure (Part I-A/I-C) and can't be deleted."}), 403
     db.session.delete(kra)  # cascades to its objectives and their indicators
     db.session.commit()
     return jsonify({"deleted": True, "id": kra_id}), 200
 
 
-@app.route("/irc/irc8a/objective", methods=["POST"])
-def save_irc8a_objective():
+@app.route("/irc/eopcrf1/objective", methods=["POST"])
+def save_eopcrf1_objective():
     """Creates a new Objective under `kraId` (id omitted), or updates an
     existing one's text/weight (id included).
 
@@ -474,19 +577,23 @@ def save_irc8a_objective():
         return jsonify({"error": err}), 400
 
     if obj_id:
-        objective = IRC8AObjective.query.get(obj_id)
+        objective = EOPCRF1Objective.query.get(obj_id)
         if objective is None:
             return jsonify({"error": "Objective not found"}), 404
+        if objective.kra.locked:
+            return jsonify({"error": "This objective is part of the fixed evaluation structure (Part I-A/I-C) and can't be edited."}), 403
     else:
         kra_id = data.get("kraId")
-        kra = IRC8AKra.query.get(kra_id) if kra_id else None
+        kra = EOPCRF1Kra.query.get(kra_id) if kra_id else None
         if kra is None:
             return jsonify({"error": "KRA not found"}), 404
+        if kra.locked:
+            return jsonify({"error": "Objectives can't be added here -- this KRA is part of the fixed evaluation structure (Part I-A/I-C)."}), 403
         max_order = (
-            db.session.query(db.func.max(IRC8AObjective.sort_order))
+            db.session.query(db.func.max(EOPCRF1Objective.sort_order))
             .filter_by(kra_id=kra.id).scalar() or 0
         )
-        objective = IRC8AObjective(kra_id=kra.id, sort_order=max_order + 1)
+        objective = EOPCRF1Objective(kra_id=kra.id, sort_order=max_order + 1)
         db.session.add(objective)
 
     objective.text = text
@@ -495,22 +602,24 @@ def save_irc8a_objective():
     return jsonify(objective.to_dict()), 200
 
 
-@app.route("/irc/irc8a/objective/<int:obj_id>", methods=["DELETE"])
-def delete_irc8a_objective(obj_id):
-    objective = IRC8AObjective.query.get(obj_id)
+@app.route("/irc/eopcrf1/objective/<int:obj_id>", methods=["DELETE"])
+def delete_eopcrf1_objective(obj_id):
+    objective = EOPCRF1Objective.query.get(obj_id)
     if objective is None:
         return jsonify({"error": "Objective not found"}), 404
+    if objective.kra.locked:
+        return jsonify({"error": "This objective is part of the fixed evaluation structure (Part I-A/I-C) and can't be deleted."}), 403
     db.session.delete(objective)  # cascades to its rubric indicators
     db.session.commit()
     return jsonify({"deleted": True, "id": obj_id}), 200
 
 
-@app.route("/irc/irc8a/objective/<int:obj_id>/mov", methods=["POST"])
-def save_irc8a_objective_mov(obj_id):
+@app.route("/irc/eopcrf1/objective/<int:obj_id>/mov", methods=["POST"])
+def save_eopcrf1_objective_mov(obj_id):
     """Expected JSON body: { "url": "https://..." }
-    An empty/omitted url clears the MOV link, matching irc8a.js's
+    An empty/omitted url clears the MOV link, matching eopcrf1.js's
     delete-mov action."""
-    objective = IRC8AObjective.query.get(obj_id)
+    objective = EOPCRF1Objective.query.get(obj_id)
     if objective is None:
         return jsonify({"error": "Objective not found"}), 404
 
@@ -521,10 +630,10 @@ def save_irc8a_objective_mov(obj_id):
     return jsonify(objective.to_dict()), 200
 
 
-@app.route("/irc/irc8a/objective/<int:obj_id>/actual-results", methods=["POST"])
-def save_irc8a_objective_actual_results(obj_id):
+@app.route("/irc/eopcrf1/objective/<int:obj_id>/actual-results", methods=["POST"])
+def save_eopcrf1_objective_actual_results(obj_id):
     """Expected JSON body: { "text": "..." }"""
-    objective = IRC8AObjective.query.get(obj_id)
+    objective = EOPCRF1Objective.query.get(obj_id)
     if objective is None:
         return jsonify({"error": "Objective not found"}), 404
 
@@ -534,10 +643,10 @@ def save_irc8a_objective_actual_results(obj_id):
     return jsonify(objective.to_dict()), 200
 
 
-@app.route("/irc/irc8a/objective/<int:obj_id>/timeline", methods=["POST"])
-def save_irc8a_objective_timeline(obj_id):
+@app.route("/irc/eopcrf1/objective/<int:obj_id>/timeline", methods=["POST"])
+def save_eopcrf1_objective_timeline(obj_id):
     """Expected JSON body: { "text": "..." }"""
-    objective = IRC8AObjective.query.get(obj_id)
+    objective = EOPCRF1Objective.query.get(obj_id)
     if objective is None:
         return jsonify({"error": "Objective not found"}), 404
 
@@ -547,15 +656,15 @@ def save_irc8a_objective_timeline(obj_id):
     return jsonify(objective.to_dict()), 200
 
 
-@app.route("/irc/irc8a/objective/<int:obj_id>/rating", methods=["POST"])
-def save_irc8a_objective_rating(obj_id):
+@app.route("/irc/eopcrf1/objective/<int:obj_id>/rating", methods=["POST"])
+def save_eopcrf1_objective_rating(obj_id):
     """Sets (or clears) one category's selected rating on an objective --
     fired both by clicking a rubric indicator (select-indicator) and by
     picking a value directly from that category's dropdown.
 
     Expected JSON body: { "category": "quality", "rating": 4 }
     'rating' may be null/omitted to clear it."""
-    objective = IRC8AObjective.query.get(obj_id)
+    objective = EOPCRF1Objective.query.get(obj_id)
     if objective is None:
         return jsonify({"error": "Objective not found"}), 404
 
@@ -563,7 +672,7 @@ def save_irc8a_objective_rating(obj_id):
     category = data.get("category")
     rating = data.get("rating")
 
-    if category not in IRC8A_CATEGORIES:
+    if category not in EOPCRF1_CATEGORIES:
         return jsonify({"error": f"Invalid category: {category!r}"}), 400
     if rating is not None and rating not in (1, 2, 3, 4, 5):
         return jsonify({"error": f"Invalid rating: {rating!r}"}), 400
@@ -573,8 +682,8 @@ def save_irc8a_objective_rating(obj_id):
     return jsonify(objective.to_dict()), 200
 
 
-@app.route("/irc/irc8a/indicator", methods=["POST"])
-def save_irc8a_indicator():
+@app.route("/irc/eopcrf1/indicator", methods=["POST"])
+def save_eopcrf1_indicator():
     """Creates a new rubric indicator under `objectiveId` (id omitted), or
     updates an existing one's rate/label (id included). A category is
     fixed at creation and never changes here.
@@ -597,36 +706,40 @@ def save_irc8a_indicator():
         return jsonify({"error": "Please select a rating level."}), 400
 
     if indicator_id:
-        indicator = IRC8AIndicator.query.get(indicator_id)
+        indicator = EOPCRF1Indicator.query.get(indicator_id)
         if indicator is None:
             return jsonify({"error": "Indicator not found"}), 404
+        if indicator.objective.kra.locked:
+            return jsonify({"error": "This indicator is part of the fixed evaluation structure (Part I-A/I-C) and can't be edited."}), 403
         objective_id = indicator.objective_id
         category = indicator.category  # fixed at creation
     else:
         indicator = None
         objective_id = data.get("objectiveId")
         category = data.get("category")
-        if category not in IRC8A_CATEGORIES:
+        if category not in EOPCRF1_CATEGORIES:
             return jsonify({"error": f"Invalid category: {category!r}"}), 400
-        objective = IRC8AObjective.query.get(objective_id) if objective_id else None
+        objective = EOPCRF1Objective.query.get(objective_id) if objective_id else None
         if objective is None:
             return jsonify({"error": "Objective not found"}), 404
+        if objective.kra.locked:
+            return jsonify({"error": "Indicators can't be added here -- this objective is part of the fixed evaluation structure (Part I-A/I-C)."}), 403
         if len(objective.indicators_for(category)) >= 5:
             return jsonify({"error": "At most 5 indicators are allowed per category."}), 400
 
     # Dupe check runs before the new row is added to the session (and
     # before any field is set on an existing one), so autoflush never
     # tries to insert/update a half-filled row while this query runs.
-    dupe_query = IRC8AIndicator.query.filter_by(
+    dupe_query = EOPCRF1Indicator.query.filter_by(
         objective_id=objective_id, category=category, rate=rate
     )
     if indicator_id:
-        dupe_query = dupe_query.filter(IRC8AIndicator.id != indicator_id)
+        dupe_query = dupe_query.filter(EOPCRF1Indicator.id != indicator_id)
     if dupe_query.first() is not None:
         return jsonify({"error": f"Rating level {rate} is already used for this category."}), 400
 
     if indicator is None:
-        indicator = IRC8AIndicator(objective_id=objective_id, category=category)
+        indicator = EOPCRF1Indicator(objective_id=objective_id, category=category)
         db.session.add(indicator)
 
     indicator.rate = rate
@@ -635,20 +748,22 @@ def save_irc8a_indicator():
     return jsonify(indicator.to_dict()), 200
 
 
-@app.route("/irc/irc8a/indicator/<int:indicator_id>", methods=["DELETE"])
-def delete_irc8a_indicator(indicator_id):
-    indicator = IRC8AIndicator.query.get(indicator_id)
+@app.route("/irc/eopcrf1/indicator/<int:indicator_id>", methods=["DELETE"])
+def delete_eopcrf1_indicator(indicator_id):
+    indicator = EOPCRF1Indicator.query.get(indicator_id)
     if indicator is None:
         return jsonify({"error": "Indicator not found"}), 404
+    if indicator.objective.kra.locked:
+        return jsonify({"error": "This indicator is part of the fixed evaluation structure (Part I-A/I-C) and can't be deleted."}), 403
     db.session.delete(indicator)
     db.session.commit()
     return jsonify({"deleted": True, "id": indicator_id}), 200
 
 
-@app.route("/irc/irc8a/reset", methods=["DELETE"])
-def reset_irc8a_data():
+@app.route("/irc/eopcrf1/reset", methods=["DELETE"])
+def reset_eopcrf1_data():
     """Two reset scopes for the "Reset All Data" button/modal, chosen via
-    ?scope=ratings_mov|all (defaults to "ratings_mov"). irc8a.js reads the
+    ?scope=ratings_mov|all (defaults to "ratings_mov"). eopcrf1.js reads the
     returned "scope" back to decide whether to clear ratings in place or
     drop every KRA client-side.
 
@@ -658,29 +773,34 @@ def reset_irc8a_data():
         objectives, weights, rubric indicators, timeline, and actual
         results are left completely untouched.
 
-      - scope=all: the "Reset entire form" option. Deletes every KRA for
-        the given year outright, which cascades to delete its objectives
-        and their rubric indicators too.
+      - scope=all: the "Reset entire form" option. Deletes every Part I-B
+        KRA for the given year outright (cascading to its objectives and
+        their rubric indicators). Part I-A/I-C's fixed structure can't be
+        deleted, so it just falls through to the same ratings/MOV clearing
+        "ratings_mov" does.
     """
     scope = request.args.get("scope", "ratings_mov")
     year = request.args.get("year", type=int) or _current_year()
 
     if scope == "all":
-        IRC8AKra.query.filter_by(year=year).delete()
+        # Only Part I-B (part="b") is user-managed, so "reset entire form"
+        # only ever deletes those KRAs. Part I-A/I-C's fixed structure
+        # can't be deleted -- it falls through to the same ratings/MOV
+        # clearing the "ratings_mov" branch below does.
+        EOPCRF1Kra.query.filter_by(year=year, part=EOPCRF1_PART_B).delete()
         db.session.commit()
-        return jsonify({"reset": True, "scope": "all", "year": year}), 200
 
     objectives = (
-        IRC8AObjective.query.join(IRC8AKra, IRC8AObjective.kra_id == IRC8AKra.id)
-        .filter(IRC8AKra.year == year)
+        EOPCRF1Objective.query.join(EOPCRF1Kra, EOPCRF1Objective.kra_id == EOPCRF1Kra.id)
+        .filter(EOPCRF1Kra.year == year)
         .all()
     )
     for objective in objectives:
-        for category in IRC8A_CATEGORIES:
+        for category in EOPCRF1_CATEGORIES:
             objective.set_rating(category, None)
         objective.mov = None
     db.session.commit()
-    return jsonify({"reset": True, "scope": "ratings_mov", "year": year}), 200
+    return jsonify({"reset": True, "scope": scope, "year": year}), 200
 
 
 # ---------------------------------------------------------------------------
@@ -691,9 +811,9 @@ def reset_irc8a_data():
 # create/delete here -- see models.py's IRC8CRow docstring for why the four
 # rows are permanent slots rather than a user-managed list, and why
 # "top 5" ranking/label resolution is left to irc8c.js instead of computed
-# here (short version: IRC8b's subsection titles and per-subsection
-# criteria only exist in irc8b.js, so IRC8c's route can't resolve an
-# irc8b_* ref into a label without duplicating that list here too).
+# here (short version: EOPCRF2's subsection titles and per-subsection
+# criteria only exist in eopcrf2.js, so IRC8c's route can't resolve an
+# irc8b_* slot ref (slot name kept for irc8c.js) into a label without duplicating that list here too).
 # ---------------------------------------------------------------------------
 @app.route("/irc/irc8c/data", methods=["GET"])
 def get_irc8c_data():
@@ -713,12 +833,12 @@ def get_irc8c_data():
     rows = [existing[slot].to_dict() for slot in IRC8C_SLOTS]
 
     # Final Performance Results Rating = sum of every objective's Score
-    # (Average x Weight) for the year -- the same arithmetic irc8a.js's
-    # summary footer uses, just computed here via IRC8AObjective.score()
+    # (Average x Weight) for the year -- the same arithmetic eopcrf1.js's
+    # summary footer uses, just computed here via EOPCRF1Objective.score()
     # so IRC8c never has to re-derive it (or store a stale copy).
     objectives = (
-        IRC8AObjective.query.join(IRC8AKra, IRC8AObjective.kra_id == IRC8AKra.id)
-        .filter(IRC8AKra.year == year)
+        EOPCRF1Objective.query.join(EOPCRF1Kra, EOPCRF1Objective.kra_id == EOPCRF1Kra.id)
+        .filter(EOPCRF1Kra.year == year)
         .all()
     )
     scores = [s for s in (o.score() for o in objectives) if s is not None]
@@ -736,7 +856,7 @@ def save_irc8c_row():
 
     Expected JSON body (all fields but 'slot' optional):
         {
-          "year": 2026, "slot": "irc8a_1",
+          "year": 2026, "slot": "eopcrf1_1",
           "strengthRef": "17", "devNeedsRef": "42",
           "actionPlan": "...", "timeline": "...", "resourcesNeeded": "...",
           "isLocked": true
@@ -794,10 +914,11 @@ def reset_irc8c_data():
 
 
 # ---------------------------------------------------------------------------
-# IRC8d -- read-only, has no routes of its own: irc8d.js hits IRC8a's own
-# data endpoint (/irc/irc8a/data) directly, since there's nothing
-# IRC8d-specific to store -- it's a pure read-only view of whatever's
-# currently on IRC8a.
+# EOPCRF3 -- Part III: Summary of Ratings. Read-only, has no routes of its
+# own: eopcrf3.js reads EOPCRF1's data (/irc/eopcrf1/data), EOPCRF2's data
+# (/irc/eopcrf2/data) and EOPCRF1's report header
+# (/api/eopcrf1/report-header) directly, since there's nothing
+# EOPCRF3-specific to store.
 # ---------------------------------------------------------------------------
 
 
@@ -813,4 +934,6 @@ if __name__ == "__main__":
     # relying on this.
     with app.app_context():
         db.create_all()
+        _ensure_eopcrf1_schema()
+        _ensure_eopcrf2_schema()
     app.run(debug=True)
