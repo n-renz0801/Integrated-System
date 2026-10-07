@@ -25,20 +25,6 @@
         </div>
       </div>
       <div class="eopcrf1-header-actions">
-        <button type="button" class="eopcrf1-add-btn" id="addKraBtn">
-          <svg
-            class="eopcrf1-inline-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M12 5v14M5 12h14"></path>
-          </svg>
-          Add KRA
-        </button>
         <button type="button" class="eopcrf1-reset-btn" id="eopcrf1-reset-btn">
           <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset All Data
         </button>
@@ -109,7 +95,9 @@
   <div id="eopcrf1-part-tabs" class="eopcrf1-part-tabs" role="tablist"></div>
 
   <div id="eopcrf1-workspace" class="eopcrf1-workspace">
-    <nav id="eopcrf1-nav" class="eopcrf1-nav" aria-label="Objectives"></nav>
+    <div class="eopcrf1-nav-col">
+      <nav id="eopcrf1-nav" class="eopcrf1-nav" aria-label="Objectives"></nav>
+    </div>
     <div id="eopcrf1-detail" class="eopcrf1-detail"></div>
   </div>
 
@@ -134,34 +122,27 @@
     <p id="eopcrf1-empty-state-text">
       No KRAs yet. Click <strong>Add KRA</strong> to start planning.
     </p>
-  </div>
-
-  <!-- Totals for the active part -->
-  <div id="eopcrf1-summary" class="eopcrf1-summary" style="display: none">
-    <div class="eopcrf1-summary-item">
-      <span class="eopcrf1-label" id="eopcrf1-summary-weight-label"
-        >Total KRA weight</span
+    <!-- Shown for Part I-B only. Once a KRA exists, "Add KRA" lives at the top
+         of the sidebar nav instead. -->
+    <button
+      type="button"
+      class="eopcrf1-add-btn eopcrf1-empty-add-btn"
+      id="eopcrf1-empty-add-kra"
+      style="display: none"
+    >
+      <svg
+        class="eopcrf1-inline-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
       >
-      <span class="eopcrf1-summary-value" id="eopcrf1-summary-weight">0%</span>
-      <span
-        class="eopcrf1-summary-hint"
-        id="eopcrf1-summary-weight-hint"
-      ></span>
-    </div>
-    <div class="eopcrf1-summary-item">
-      <span class="eopcrf1-label" id="eopcrf1-summary-rating-label"
-        >Part total score</span
-      >
-      <span class="eopcrf1-summary-value" id="eopcrf1-summary-rating"
-        >&mdash;</span
-      >
-    </div>
-    <div class="eopcrf1-summary-item">
-      <span class="eopcrf1-label">Overall (I-A + I-B + I-C)</span>
-      <span class="eopcrf1-summary-value" id="eopcrf1-summary-overall"
-        >&mdash;</span
-      >
-    </div>
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+      Add KRA
+    </button>
   </div>
 
   <!-- ============= Entry modal (KRA / Objective / Rubric / MOV / Actual results / Timeline) ============= -->

@@ -15,6 +15,13 @@
   --e1-warn: #a45a06;
   --e1-danger: #b42318;
   --e1-radius: 8px;
+  /* Section colors for the objective card (title band + text) */
+  --e1-plan-fg: #1f4fa3;
+  --e1-plan-bg: #dfe9fa;
+  --e1-perf-fg: #4b3a9e;
+  --e1-perf-bg: #ebe7fb;
+  --e1-eval-fg: #1b7a4b;
+  --e1-eval-bg: #dcf1e5;
   color: var(--e1-ink);
   font-size: 14px;
   line-height: 1.5;
@@ -329,51 +336,102 @@ textarea.eopcrf1-input {
   grid-column: 1 / -1;
 }
 
-/* ---------- Part tabs ---------- */
+/* ---------- Part tabs: top-level cards with weight and score ---------- */
 .eopcrf1-part-tabs {
-  display: flex;
-  gap: 0;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--e1-line);
-  overflow-x: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
 }
 .eopcrf1-part-tab {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 10px 16px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 14px 18px 14px;
   font: inherit;
-  color: var(--e1-muted);
-  background: none;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  text-align: left;
+  color: var(--e1-ink);
+  background: var(--e1-surface);
+  border: 1px solid var(--e1-line-strong);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(11, 42, 91, 0.06);
   cursor: pointer;
-  white-space: nowrap;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 .eopcrf1-part-tab:hover {
-  color: var(--e1-ink);
+  border-color: var(--e1-accent);
+  background: var(--e1-subtle);
+}
+.eopcrf1-part-tab:focus-visible {
+  outline: 2px solid var(--e1-accent);
+  outline-offset: 2px;
 }
 .eopcrf1-part-tab.is-active {
-  color: var(--e1-ink);
-  border-bottom-color: var(--e1-accent);
+  color: #fff;
+  background: var(--e1-accent);
+  border-color: var(--e1-accent);
+  box-shadow: 0 2px 8px rgba(11, 42, 91, 0.25);
 }
 .eopcrf1-part-tab-label {
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--e1-accent);
+}
+.eopcrf1-part-tab.is-active .eopcrf1-part-tab-label {
+  color: rgba(255, 255, 255, 0.75);
 }
 .eopcrf1-part-tab-name {
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
 }
-.eopcrf1-part-tab-score {
-  font-size: 12px;
-  padding: 1px 8px;
-  border-radius: 10px;
-  background: var(--e1-subtle);
+.eopcrf1-part-tab-stats {
+  display: flex;
+  gap: 28px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+.eopcrf1-part-tab-name + .eopcrf1-part-tab-stats {
+  margin-top: 10px;
+}
+.eopcrf1-part-tab-stat {
+  display: flex;
+  flex-direction: column;
+}
+.eopcrf1-part-tab-k {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--e1-muted);
+  line-height: 1.3;
+}
+.eopcrf1-part-tab.is-active .eopcrf1-part-tab-k {
+  color: rgba(255, 255, 255, 0.7);
+}
+.eopcrf1-part-tab-v {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
-.eopcrf1-part-tab.is-active .eopcrf1-part-tab-score {
-  background: var(--e1-accent-soft);
-  color: var(--e1-accent);
+.eopcrf1-part-tab-v.is-warn {
+  color: var(--e1-warn);
+}
+.eopcrf1-part-tab.is-active .eopcrf1-part-tab-v.is-warn {
+  color: #ffd699;
+}
+.eopcrf1-part-tab-v.is-empty {
+  color: var(--e1-muted);
+  font-weight: 500;
+}
+.eopcrf1-part-tab.is-active .eopcrf1-part-tab-v.is-empty {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* ---------- Workspace: sidebar + detail ---------- */
@@ -381,25 +439,136 @@ textarea.eopcrf1-input {
   display: grid;
   grid-template-columns: clamp(260px, 26%, 340px) minmax(0, 1fr);
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
+  /* Always full height, even with no objectives yet, so the nav column (which
+     is capped to the row height) has room to show all of its contents. */
+  min-height: max(560px, calc(100vh - 260px));
 }
+/* Grid cell for the nav. It has no in-flow content, so its height is the row
+   height, i.e. the height of .eopcrf1-detail. */
+.eopcrf1-nav-col {
+  position: relative;
+  min-width: 0;
+}
+/* NOTE: this element is a <nav>, so base.css's global `nav { ... }` rule
+   (the top navbar: display:flex; align-items:center; justify-content:center;
+   z-index:100; box-shadow; navy background) also applies to it. Centering a
+   column that is taller than its max-height pushes the first items above the
+   box where they can't be scrolled to -- that is what hid KRA 1. The
+   resets below undo those inherited navbar styles. */
 .eopcrf1-nav {
-  position: sticky;
-  top: 12px;
-  max-height: calc(100vh - 24px);
+  /* Absolutely placed inside .eopcrf1-nav-col so it never makes the row taller:
+     natural height when short, capped at the detail panel's height (and
+     scrolling) when long. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: auto;
+  max-height: 100%;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--e1-surface);
   border: 1px solid var(--e1-line);
   border-radius: var(--e1-radius);
+  box-shadow: none;
+  z-index: 1;
 }
 .eopcrf1-nav {
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+/* Sticky strip at the top of the nav: Add KRA + KRA weight meter. */
+.eopcrf1-nav-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 10px;
+  background: var(--e1-surface);
+  border-bottom: 1px solid var(--e1-line-strong);
+}
+.eopcrf1-nav-add {
+  width: 100%;
+  justify-content: center;
+  padding: 9px 14px;
+}
+.eopcrf1-nav-add svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
+}
+.eopcrf1-nav-total {
+  padding: 8px 10px;
+  border: 1px solid var(--e1-line);
+  border-radius: 6px;
+  background: var(--e1-subtle);
+  font-size: 12.5px;
+}
+.eopcrf1-nav-total-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 600;
+}
+.eopcrf1-nav-total-head span {
+  color: var(--e1-ink);
+}
+.eopcrf1-nav-total-head strong {
+  font-variant-numeric: tabular-nums;
+}
+.eopcrf1-nav-total-bar {
+  height: 6px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--e1-line);
+}
+.eopcrf1-nav-total-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+}
+.eopcrf1-nav-total-msg {
+  margin: 6px 0 0;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.eopcrf1-nav-total.is-warn {
+  color: var(--e1-warn);
+  background: #fff8ec;
+  border-color: #f0d9b0;
+}
+.eopcrf1-nav-total.is-over {
+  color: var(--e1-danger);
+  background: #fdeceb;
+  border-color: #f3c3bf;
+}
+/* Objective-weight warning inside a KRA group in the nav */
+.eopcrf1-nav-warn {
+  padding: 8px 10px 8px 11px;
+  font-size: 12px;
+  line-height: 1.4;
+  border-top: 0;
+  border-bottom: 1px solid var(--e1-line);
+  border-left: 4px solid var(--e1-warn);
+}
+.eopcrf1-empty-add-btn {
+  margin-top: 12px;
 }
 .eopcrf1-nav-group {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  flex-shrink: 0;
 }
 .eopcrf1-nav-group + .eopcrf1-nav-group {
   border-top: 1px solid var(--e1-line);
@@ -408,36 +577,59 @@ textarea.eopcrf1-input {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 12px 10px 8px 14px;
-  background: var(--e1-subtle);
+  padding: 12px 10px 10px 11px;
+  background: #d6e2f6;
+  border-left: 4px solid var(--e1-accent);
+  border-bottom: 1px solid var(--e1-line-strong);
 }
 .eopcrf1-nav-group-head.is-selected {
-  background: var(--e1-accent-soft);
+  background: #bdd1f1;
+}
+.eopcrf1-nav-group-label {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--e1-accent);
 }
 .eopcrf1-nav-group-title {
   display: block;
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 0;
   text-align: left;
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   line-height: 1.4;
   color: var(--e1-ink);
   background: none;
   border: 0;
   cursor: pointer;
 }
-.eopcrf1-nav-group-meta {
+.eopcrf1-nav-group-row {
   display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 10px;
 }
 .eopcrf1-nav-group-weight {
+  flex-shrink: 0;
+  padding: 2px 9px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--e1-accent);
+  border-radius: 999px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.eopcrf1-nav-weight {
+  flex-shrink: 0;
   font-size: 12px;
-  font-weight: 500;
   color: var(--e1-muted);
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 .eopcrf1-nav-group-actions {
@@ -445,22 +637,12 @@ textarea.eopcrf1-input {
   align-items: center;
   margin-left: -6px;
 }
-.eopcrf1-fixed {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: var(--e1-muted);
-}
-.eopcrf1-fixed svg {
-  width: 11px;
-  height: 11px;
-}
 .eopcrf1-nav-item {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   width: 100%;
   padding: 8px 14px 8px 28px;
   text-align: left;
@@ -490,12 +672,49 @@ textarea.eopcrf1-input {
   background: var(--e1-subtle);
 }
 .eopcrf1-nav-item.is-selected {
-  background: var(--e1-accent-soft);
+  background: #f1f5fc;
   border-left-color: var(--e1-accent);
 }
 .eopcrf1-nav-item:focus-visible {
   outline: 2px solid var(--e1-accent);
   outline-offset: -2px;
+}
+.eopcrf1-nav-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.eopcrf1-nav-progress {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+.eopcrf1-ring {
+  width: 100%;
+  height: 100%;
+}
+.eopcrf1-ring-track {
+  fill: none;
+  stroke: var(--e1-line-strong);
+  stroke-width: 3;
+}
+.eopcrf1-ring-arc {
+  fill: none;
+  stroke: var(--e1-warn);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.eopcrf1-ring-fill {
+  fill: var(--e1-ok);
+}
+.eopcrf1-ring-check {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .eopcrf1-nav-code {
   font-size: 12px;
@@ -503,13 +722,13 @@ textarea.eopcrf1-input {
   color: var(--e1-muted);
   font-variant-numeric: tabular-nums;
 }
+.eopcrf1-nav-item.is-selected .eopcrf1-nav-weight {
+  color: var(--e1-accent);
+  font-weight: 600;
+}
 .eopcrf1-nav-item.is-selected .eopcrf1-nav-code {
   color: var(--e1-accent);
-}
-.eopcrf1-nav-score {
-  font-size: 12px;
-  color: var(--e1-muted);
-  font-variant-numeric: tabular-nums;
+  font-weight: 700;
 }
 
 .eopcrf1-detail {
@@ -519,106 +738,217 @@ textarea.eopcrf1-input {
   gap: 16px;
 }
 
-/* ---------- KRA block ---------- */
+/* ---------- Navy gradient tiers (one fixed scheme for every KRA/objective) ----------
+   Darker = higher in the hierarchy:
+     KRA header        t1 -> t2   (navy-deep -> navy-dark)
+     Objective header  t2 -> t3   (navy-dark -> navy)
+     Section banners   t3 -> t4  (navy -> lighter navy tint)
+   t4 is the only derived colour (a lighter tint of --navy) so the section
+   banners can sit below the objective header. */
+.eopcrf1-panel {
+  --kra-t1: #001550; /* navy-deep */
+  --kra-t2: #00247a; /* navy-dark */
+  --kra-t3: #0033a0; /* navy */
+  --kra-t4: #2f5fc4; /* navy, lightened */
+  --kra-light: #eef2fb;
+  --kra-border: #0033a0;
+  /* Selected rating row: pale tints of the same navy, one step below the
+     section banners (t3 -> t4), still dark-left to light-right. */
+  --kra-sel-1: #c6d6f4;
+  --kra-sel-2: #e9f0fc;
+}
+
+/* ---------- KRA block: darkest gradient banner + neutral alignment strip ---------- */
 .eopcrf1-kra-block {
-  padding: 14px 16px;
-  background: var(--e1-subtle);
-  border: 1px solid var(--e1-line);
+  overflow: hidden;
+  background: var(--e1-surface);
+  border: 1px solid var(--kra-border, var(--e1-accent));
   border-radius: var(--e1-radius);
 }
 .eopcrf1-kra-block-head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(90deg, var(--kra-t1), var(--kra-t2, #1d3f7a));
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
 }
-.eopcrf1-kra-block h3 {
-  font-size: 15px;
+.eopcrf1-kra-block-head .eopcrf1-label {
+  margin-bottom: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #b9c9e6;
+}
+.eopcrf1-panel .eopcrf1-kra-block-head h3 {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #fff;
 }
 .eopcrf1-kra-block-side {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 .eopcrf1-weight-chip {
   padding: 2px 10px;
   font-size: 13px;
-  font-weight: 600;
-  background: var(--e1-surface);
-  border: 1px solid var(--e1-line-strong);
+  font-weight: 700;
+  color: var(--kra-t2, var(--e1-accent));
+  background: #fff;
+  border: 0;
   border-radius: 12px;
   font-variant-numeric: tabular-nums;
 }
+.eopcrf1-kra-block-head .eopcrf1-icon-btn {
+  color: #b9c9e6;
+}
+.eopcrf1-kra-block-head .eopcrf1-icon-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Alignment: neutral cards only, no color */
 .eopcrf1-align {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px 20px;
-  margin-top: 12px;
-  padding-top: 12px;
+  gap: 10px;
+  padding: 12px;
+  background: var(--kra-light, var(--e1-subtle));
   border-top: 1px solid var(--e1-line);
 }
-.eopcrf1-warn {
-  margin: 10px 0 0;
-  font-size: 13px;
-  color: var(--e1-warn);
-}
-
-/* ---------- Objective ---------- */
-.eopcrf1-obj {
+.eopcrf1-align .eopcrf1-fact {
+  padding: 10px 12px;
   background: var(--e1-surface);
   border: 1px solid var(--e1-line);
+  border-radius: 6px;
+}
+.eopcrf1-align .eopcrf1-label {
+  margin-bottom: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.eopcrf1-align .eopcrf1-fact-value {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.eopcrf1-warn {
+  margin: 0;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--e1-warn);
+  background: #fff8ec;
+  border-top: 1px solid var(--e1-line);
+}
+
+/* ---------- Objective: same width as the KRA block, same header layout,
+   but a lighter slate banner and smaller type so the KRA stays on top ---------- */
+.eopcrf1-obj {
+  overflow: hidden;
+  background: var(--e1-surface);
+  border: 1px solid var(--kra-t3, #3f5273);
   border-radius: var(--e1-radius);
 }
 .eopcrf1-obj-head {
   display: flex;
-  align-items: flex-start;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
-  padding: 16px;
-  border-bottom: 1px solid var(--e1-line);
+  padding: 10px 16px;
+  background: linear-gradient(
+    90deg,
+    var(--kra-t2, #2f4468),
+    var(--kra-t3, #3f5273)
+  );
 }
-.eopcrf1-obj-code {
-  padding: 2px 8px;
-  font-size: 13px;
+.eopcrf1-obj-head .eopcrf1-label {
+  margin-bottom: 2px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--e1-accent);
-  background: var(--e1-accent-soft);
-  border-radius: 6px;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #d3dcec;
 }
-.eopcrf1-obj-head h3 {
-  flex: 1;
-  font-size: 16px;
-  line-height: 1.4;
+.eopcrf1-panel .eopcrf1-obj-head h3 {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #fff;
 }
 .eopcrf1-obj-actions {
   display: flex;
+  align-items: center;
+  gap: 4px;
   flex-shrink: 0;
 }
+.eopcrf1-obj-head .eopcrf1-icon-btn {
+  color: #d3dcec;
+}
+.eopcrf1-obj-head .eopcrf1-icon-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+}
 
+/* ---------- Sections: colored title band + padded body ---------- */
 .eopcrf1-group {
-  padding: 16px;
+  --sec-g1: var(--kra-t3, #3f5273);
+  --sec-g2: var(--kra-t4, #5a6f95);
+  border-top: 1px solid var(--e1-line-strong);
 }
-.eopcrf1-group + .eopcrf1-group {
-  border-top: 1px solid var(--e1-line);
+/* Same two tiers (t3 -> t4) for every section, dark on the left. */
+.eopcrf1-group--plan,
+.eopcrf1-group--perf,
+.eopcrf1-group--eval {
+  --sec-g1: var(--kra-t3, #3f5273);
+  --sec-g2: var(--kra-t4, #5a6f95);
 }
-.eopcrf1-group-title {
-  font-size: 13px;
-  margin-bottom: 10px;
+.eopcrf1-panel .eopcrf1-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  position: relative;
+  color: #fff;
+  background: linear-gradient(90deg, var(--sec-g1), var(--sec-g2));
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
 }
-.eopcrf1-group-hint {
-  margin: -6px 0 12px;
-  font-size: 12.5px;
-  color: var(--e1-muted);
+.eopcrf1-group-title .ti {
+  font-size: 18px;
+}
+.eopcrf1-group-body {
+  padding: 14px;
 }
 
+/* Facts: one row, 4 columns (target description gets the most room) */
 .eopcrf1-facts {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 20px;
+  grid-template-columns:
+    minmax(120px, 1.1fr) minmax(70px, 0.7fr) minmax(90px, 0.8fr)
+    minmax(0, 1.9fr);
+  border: 1px solid var(--e1-line);
+  border-radius: var(--e1-radius);
+  overflow: hidden;
+}
+.eopcrf1-facts > .eopcrf1-fact {
+  min-width: 0;
+  padding: 10px 12px;
+}
+.eopcrf1-facts > .eopcrf1-fact + .eopcrf1-fact {
+  border-left: 1px solid var(--e1-line);
 }
 .eopcrf1-fact-value {
   font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
 }
 .eopcrf1-fact--inline .eopcrf1-fact-value {
   display: flex;
@@ -630,27 +960,33 @@ textarea.eopcrf1-input {
 .eopcrf1-cat + .eopcrf1-cat {
   margin-top: 18px;
 }
+.eopcrf1-cat {
+  overflow: hidden;
+  border: 1px solid var(--e1-line-strong);
+  border-radius: var(--e1-radius);
+}
 .eopcrf1-cat-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 6px;
+  padding: 8px 12px;
+  background: #e9edf3;
+  border-bottom: 1px solid var(--e1-line-strong);
 }
 .eopcrf1-cat-head h4 {
   font-size: 14px;
+  font-weight: 700;
 }
 .eopcrf1-cat-rating {
   font-size: 12.5px;
-  font-weight: 600;
-  color: var(--e1-accent);
+  font-weight: 700;
+  color: var(--e1-perf-fg);
 }
 .eopcrf1-cat-rating.is-empty {
   font-weight: 400;
   color: var(--e1-muted);
 }
 .eopcrf1-levels {
-  border: 1px solid var(--e1-line);
-  border-radius: var(--e1-radius);
   overflow: hidden;
 }
 .eopcrf1-level {
@@ -673,8 +1009,11 @@ textarea.eopcrf1-input {
   outline-offset: -2px;
 }
 .eopcrf1-level.is-selected {
-  background: var(--e1-accent-soft);
-  border-left-color: var(--e1-accent);
+  background: linear-gradient(90deg, var(--kra-sel-1), var(--kra-sel-2));
+  border-left-color: var(--kra-t3);
+  border-left-width: 5px;
+  padding-left: 10px; /* offsets the wider border so columns stay aligned */
+  box-shadow: inset 0 0 0 1px rgba(0, 51, 160, 0.14);
 }
 .eopcrf1-level-num {
   display: grid;
@@ -688,10 +1027,26 @@ textarea.eopcrf1-input {
   border-radius: 50%;
   align-self: start;
 }
+.eopcrf1-level {
+  transition:
+    opacity 0.15s ease,
+    background-color 0.15s ease;
+}
+/* Once a level is chosen, fade the others: still readable, but the chosen
+   row stands out. They return to full strength on hover/focus so the user
+   can read them properly before changing the rating. */
+.eopcrf1-levels.has-selection .eopcrf1-level:not(.is-selected) {
+  opacity: 0.55;
+}
+.eopcrf1-levels.has-selection .eopcrf1-level:not(.is-selected):hover,
+.eopcrf1-levels.has-selection .eopcrf1-level:not(.is-selected):focus-visible,
+.eopcrf1-levels.has-selection .eopcrf1-level:not(.is-selected):focus-within {
+  opacity: 1;
+}
 .eopcrf1-level.is-selected .eopcrf1-level-num {
   color: #fff;
-  background: var(--e1-accent);
-  border-color: var(--e1-accent);
+  background: linear-gradient(90deg, var(--kra-t2), var(--kra-t3));
+  border-color: var(--kra-t2);
 }
 .eopcrf1-level-name {
   font-size: 12.5px;
@@ -699,7 +1054,12 @@ textarea.eopcrf1-input {
   color: var(--e1-muted);
 }
 .eopcrf1-level.is-selected .eopcrf1-level-name {
-  color: var(--e1-accent);
+  font-weight: 700;
+  color: var(--kra-t2);
+}
+.eopcrf1-level.is-selected .eopcrf1-level-text {
+  font-weight: 500;
+  color: var(--kra-t1);
 }
 .eopcrf1-level-text {
   font-size: 13.5px;
@@ -713,7 +1073,28 @@ textarea.eopcrf1-input {
 .eopcrf1-eval {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  column-gap: 16px;
+  row-gap: 0;
+}
+/* Both columns share the same three rows (label / box / extra) via subgrid,
+   so the labels, the boxes and the boxes' bottom edges line up. */
+.eopcrf1-eval > .eopcrf1-fact {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  align-content: start;
+  row-gap: 0;
+  min-width: 0;
+}
+/* The edit button makes one label taller; give both the same height */
+.eopcrf1-eval > .eopcrf1-fact > .eopcrf1-label {
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+  margin-bottom: 2px;
+}
+.eopcrf1-eval > .eopcrf1-fact > .eopcrf1-box {
+  height: 100%;
 }
 .eopcrf1-box {
   padding: 9px 11px;
@@ -774,11 +1155,12 @@ textarea.eopcrf1-input {
   border-left: 1px solid var(--e1-line);
 }
 .eopcrf1-result--total {
-  background: var(--e1-subtle);
+  background: var(--e1-eval-bg);
 }
 .eopcrf1-result-value {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--e1-eval-fg);
   font-variant-numeric: tabular-nums;
 }
 
@@ -804,40 +1186,6 @@ textarea.eopcrf1-input {
   width: 40px;
   height: 40px;
   margin-bottom: 8px;
-}
-
-/* ---------- Summary bar ---------- */
-.eopcrf1-summary {
-  display: flex;
-  gap: 0;
-  margin-top: 20px;
-  background: var(--e1-surface);
-  border: 1px solid var(--e1-line);
-  border-radius: var(--e1-radius);
-  overflow: hidden;
-}
-.eopcrf1-summary-item {
-  flex: 1;
-  padding: 12px 18px;
-}
-.eopcrf1-summary-item + .eopcrf1-summary-item {
-  border-left: 1px solid var(--e1-line);
-}
-.eopcrf1-summary-value {
-  display: block;
-  font-size: 22px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.eopcrf1-summary-value.is-ok {
-  color: var(--e1-ok);
-}
-.eopcrf1-summary-value.is-warn {
-  color: var(--e1-warn);
-}
-.eopcrf1-summary-hint {
-  font-size: 12px;
-  color: var(--e1-warn);
 }
 
 /* ---------- Entry modal ---------- */
@@ -984,6 +1332,10 @@ textarea.eopcrf1-input {
 @media (max-width: 900px) {
   .eopcrf1-workspace {
     grid-template-columns: 1fr;
+    min-height: 0; /* stacked layout: nav is static, no forced height */
+  }
+  .eopcrf1-nav-col {
+    position: static;
   }
   .eopcrf1-nav {
     position: static;
@@ -991,9 +1343,29 @@ textarea.eopcrf1-input {
   }
   .eopcrf1-eval {
     grid-template-columns: 1fr;
+    row-gap: 16px;
   }
-  .eopcrf1-part-tab-name {
-    display: none;
+  .eopcrf1-eval > .eopcrf1-fact {
+    display: block;
+    grid-row: auto;
+    grid-template-rows: none;
+  }
+  .eopcrf1-eval > .eopcrf1-fact > .eopcrf1-box {
+    height: auto;
+  }
+}
+@media (max-width: 760px) {
+  .eopcrf1-facts {
+    grid-template-columns: 1fr 1fr;
+  }
+  .eopcrf1-facts > .eopcrf1-fact + .eopcrf1-fact {
+    border-left: 0;
+  }
+  .eopcrf1-facts > .eopcrf1-fact:nth-child(even) {
+    border-left: 1px solid var(--e1-line);
+  }
+  .eopcrf1-facts > .eopcrf1-fact:nth-child(n + 3) {
+    border-top: 1px solid var(--e1-line);
   }
 }
 @media (max-width: 640px) {
@@ -1026,6 +1398,11 @@ textarea.eopcrf1-input {
   .eopcrf1-facts {
     grid-template-columns: 1fr;
   }
+  .eopcrf1-facts > .eopcrf1-fact + .eopcrf1-fact,
+  .eopcrf1-facts > .eopcrf1-fact:nth-child(even) {
+    border-left: 0;
+    border-top: 1px solid var(--e1-line);
+  }
   .eopcrf1-level {
     grid-template-columns: 28px minmax(0, 1fr);
   }
@@ -1045,15 +1422,13 @@ textarea.eopcrf1-input {
   .eopcrf1-result {
     border-top: 1px solid var(--e1-line);
   }
-  .eopcrf1-summary {
-    flex-direction: column;
-  }
-  .eopcrf1-summary-item + .eopcrf1-summary-item {
-    border-left: 0;
-    border-top: 1px solid var(--e1-line);
-  }
 }
 @media print {
+  .eopcrf1-panel,
+  .eopcrf1-panel * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
   .eopcrf1-header-actions,
   .eopcrf1-nav,
   .eopcrf1-icon-btn,

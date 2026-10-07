@@ -7,21 +7,7 @@
   const emptyStateEl = document.getElementById("eopcrf1-empty-state");
   const emptyStateTextEl = document.getElementById("eopcrf1-empty-state-text");
   const partTabsEl = document.getElementById("eopcrf1-part-tabs");
-  const addKraBtn = document.getElementById("addKraBtn");
-
-  const summaryEl = document.getElementById("eopcrf1-summary");
-  const summaryWeightLabelEl = document.getElementById(
-    "eopcrf1-summary-weight-label",
-  );
-  const summaryWeightEl = document.getElementById("eopcrf1-summary-weight");
-  const summaryWeightHintEl = document.getElementById(
-    "eopcrf1-summary-weight-hint",
-  );
-  const summaryRatingLabelEl = document.getElementById(
-    "eopcrf1-summary-rating-label",
-  );
-  const summaryRatingEl = document.getElementById("eopcrf1-summary-rating");
-  const summaryOverallEl = document.getElementById("eopcrf1-summary-overall");
+  const emptyAddKraBtn = document.getElementById("eopcrf1-empty-add-kra");
 
   // ================= Reset button + confirmation modal =================
   const resetBtn = document.getElementById("eopcrf1-reset-btn");
@@ -85,6 +71,31 @@
     '<rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>',
     "eopcrf1-inline-icon",
   );
+
+  // Progress ring shown on each objective in the sidebar. The arc length is
+  // done/total, so the ring fills as the objective is completed:
+  //   none    -> empty track
+  //   partial -> arc proportional to what is filled in
+  //   done    -> solid ring with a check mark
+  const RING_R = 8;
+  const RING_C = 2 * Math.PI * RING_R;
+  function progressRing(prog) {
+    const track = `<circle class="eopcrf1-ring-track" cx="12" cy="12" r="${RING_R}"></circle>`;
+    if (prog.state === "done") {
+      return `<svg class="eopcrf1-ring" viewBox="0 0 24 24" aria-hidden="true"><circle class="eopcrf1-ring-fill" cx="12" cy="12" r="10.5"></circle><path class="eopcrf1-ring-check" d="M7.8 12.4l3 3 5.4-6"></path></svg>`;
+    }
+    const frac = prog.total ? prog.done / prog.total : 0;
+    const arc =
+      prog.state === "partial"
+        ? `<circle class="eopcrf1-ring-arc" cx="12" cy="12" r="${RING_R}" stroke-dasharray="${(RING_C * frac).toFixed(2)} ${RING_C.toFixed(2)}" transform="rotate(-90 12 12)"></circle>`
+        : "";
+    return `<svg class="eopcrf1-ring" viewBox="0 0 24 24" aria-hidden="true">${track}${arc}</svg>`;
+  }
+  const PROGRESS_LABELS = {
+    none: "Not started",
+    partial: "In progress",
+    done: "Complete",
+  };
 
   const INDICATOR_CATEGORIES = [
     { key: "quality", label: "Quality" },
@@ -162,6 +173,14 @@
     return label;
   }
 
+  // 1-based position of a KRA within its own part (I-A, I-B or I-C)
+  function kraNumber(kra) {
+    const idx = state.kras
+      .filter((k) => k.part === kra.part)
+      .findIndex((k) => id(k.id) === id(kra.id));
+    return idx === -1 ? 1 : idx + 1;
+  }
+
   const hasVal = (v) => v !== null && v !== undefined && v !== "" && !isNaN(v);
   const fmtWeight = (w) =>
     hasVal(w) ? Math.round(Number(w) * 100) / 100 + "%" : "—";
@@ -178,6 +197,17 @@
       const w = parseFloat(item.weight);
       return sum + (isNaN(w) ? 0 : w);
     }, 0);
+  }
+
+  // Objective weights should add up to their KRA's weight.
+  function objectiveWeightMismatch(kra) {
+    const totalObj = sumWeights(kra.objectives);
+    const kraW = parseFloat(kra.weight);
+    const mismatch =
+      kra.objectives.length > 0 &&
+      !isNaN(kraW) &&
+      Math.abs(totalObj - kraW) >= 0.005;
+    return { mismatch, totalObj, kraW };
   }
 
   function computeAverage(obj) {
@@ -254,11 +284,25 @@
   function renderPartTabs() {
     partTabsEl.innerHTML = PARTS.map((p) => {
       const t = partTotals(p.key);
+      const expected = PART_EXPECTED_TOTAL[p.key];
+      const weightOk = Math.abs(t.weight - expected) < 0.005;
+      const weightTip = weightOk
+        ? `Part weight (target ${expected}%)`
+        : `Part weight is ${fmtWeight(t.weight)}. It should total ${expected}%`;
       return `
-        <button type="button" class="eopcrf1-part-tab${p.key === activePart ? " is-active" : ""}" data-part="${p.key}" role="tab" aria-selected="${p.key === activePart}" title="${escapeHtml(p.full)}">
+        <button type="button" class="eopcrf1-part-tab${p.key === activePart ? " is-active" : ""}" data-part="${p.key}" role="tab" aria-selected="${p.key === activePart}">
           <span class="eopcrf1-part-tab-label">${p.label}</span>
           <span class="eopcrf1-part-tab-name">${escapeHtml(p.full)}</span>
-          <span class="eopcrf1-part-tab-score">${t.score === null ? "—" : fmt3(t.score)}</span>
+          <span class="eopcrf1-part-tab-stats">
+            <span class="eopcrf1-part-tab-stat" title="${escapeHtml(weightTip)}">
+              <span class="eopcrf1-part-tab-k">Weight</span>
+              <span class="eopcrf1-part-tab-v${weightOk ? "" : " is-warn"}">${fmtWeight(t.weight)}</span>
+            </span>
+            <span class="eopcrf1-part-tab-stat" title="Total score for this part">
+              <span class="eopcrf1-part-tab-k">Score</span>
+              <span class="eopcrf1-part-tab-v${t.score === null ? " is-empty" : ""}">${t.score === null ? "—" : fmt3(t.score)}</span>
+            </span>
+          </span>
         </button>`;
     }).join("");
   }
@@ -293,44 +337,133 @@
     }
   }
 
+  // ================= Objective progress =================
+  // Tracks the three things the user has to fill in on every objective:
+  //   1. Timeline
+  //   2. Performance measures and rating scale: for each of Quality /
+  //      Efficiency / Timeliness a rating is chosen, and (on KRAs the user
+  //      builds, i.e. not locked) all five level descriptors are written
+  //   3. Actual accomplishments
+  // Returns { state: "none" | "partial" | "done", done, total, missing[] }.
+  function objectiveProgress(kra, obj) {
+    const filled = (v) => typeof v === "string" && v.trim() !== "";
+    const checks = [{ label: "Timeline", ok: filled(obj.timeline) }];
+    INDICATOR_CATEGORIES.forEach((c) => {
+      checks.push({
+        label: `${c.label} rating`,
+        ok: hasVal(obj.ratings && obj.ratings[c.key]),
+      });
+      if (!kra.locked) {
+        const items = obj[c.key] || [];
+        checks.push({
+          label: `${c.label} descriptors`,
+          ok: LEVELS.every((l) =>
+            items.some((i) => i.rate === l.n && filled(i.label)),
+          ),
+        });
+      }
+    });
+    checks.push({
+      label: "Actual accomplishments",
+      ok: filled(obj.actualResults),
+    });
+    const done = checks.filter((c) => c.ok).length;
+    const total = checks.length;
+    return {
+      state: done === 0 ? "none" : done === total ? "done" : "partial",
+      done,
+      total,
+      missing: checks.filter((c) => !c.ok).map((c) => c.label),
+    };
+  }
+
   // ================= Render: sidebar =================
+  // Sticky strip at the top of the nav (Part I-B only): the Add KRA button plus
+  // a live meter of the KRA weight total against the 20% cap.
+  function renderNavToolbar() {
+    if (activePart !== "b") return "";
+    const expected = PART_EXPECTED_TOTAL.b;
+    const total = partTotals("b").weight;
+    const diff = Math.round((expected - total) * 100) / 100;
+    // Weight met (20%): no indicator at all, just the Add KRA button.
+    let stateCls = "";
+    let msg = "";
+    if (diff > 0.005) {
+      stateCls = "is-warn";
+      msg = `KRA weights total ${fmtWeight(total)}, not ${expected}%. Allocate ${fmtWeight(diff)} more.`;
+    } else if (diff < -0.005) {
+      stateCls = "is-over";
+      msg = `KRA weights total ${fmtWeight(total)}, which is ${fmtWeight(-diff)} over the ${expected}% target. Reduce a KRA's weight.`;
+    }
+    const pct = Math.max(0, Math.min(100, (total / expected) * 100));
+    const meter = stateCls
+      ? `<div class="eopcrf1-nav-total ${stateCls}" role="status">
+          <div class="eopcrf1-nav-total-head">
+            <span>KRA weight</span>
+            <strong>${fmtWeight(total)} / ${expected}%</strong>
+          </div>
+          <div class="eopcrf1-nav-total-bar" aria-hidden="true"><span style="width:${pct}%"></span></div>
+          <p class="eopcrf1-nav-total-msg">${escapeHtml(msg)}</p>
+        </div>`
+      : "";
+    return `
+      <div class="eopcrf1-nav-toolbar">
+        <button type="button" class="eopcrf1-add-btn eopcrf1-nav-add" data-action="add-kra">${ICON_PLUS}Add KRA</button>
+        ${meter}
+      </div>`;
+  }
+
   function renderNav(visibleKras) {
-    navEl.innerHTML = visibleKras
+    const groups = visibleKras
       .map((kra) => {
         const isSelKra = id(kra.id) === id(sel.kraId);
         const actions = kra.locked
-          ? `<span class="eopcrf1-fixed" title="Fixed by office mandate">${ICON_LOCK}Fixed</span>`
+          ? ""
           : `<button type="button" class="eopcrf1-icon-btn" data-action="add-objective" data-kra-id="${kra.id}" title="Add objective">${ICON_PLUS}</button>
              <button type="button" class="eopcrf1-icon-btn" data-action="edit-kra" data-kra-id="${kra.id}" title="Edit KRA">${ICON_EDIT}</button>
              <button type="button" class="eopcrf1-icon-btn eopcrf1-icon-btn--danger" data-action="delete-kra" data-kra-id="${kra.id}" title="Delete KRA">${ICON_TRASH}</button>`;
+        const mm = objectiveWeightMismatch(kra);
+        const navWarn = mm.mismatch
+          ? `<p class="eopcrf1-warn eopcrf1-nav-warn" role="alert">Objective weights total ${fmtWeight(mm.totalObj)}, but this KRA is ${fmtWeight(mm.kraW)}. They should match.</p>`
+          : "";
         const items = kra.objectives
           .map((obj, i) => {
             const { code, title } = splitObjectiveText(
               obj.text,
-              letterLabel(i),
+              `${kraNumber(kra)}.${i + 1}`,
             );
-            const avg = computeAverage(obj);
             const isSel = isSelKra && id(obj.id) === id(sel.objId);
+            const prog = objectiveProgress(kra, obj);
+            const progTip =
+              prog.state === "done"
+                ? "Complete"
+                : `${PROGRESS_LABELS[prog.state]} (${prog.done}/${prog.total}). Still needed: ${prog.missing.join(", ")}`;
             return `
               <button type="button" class="eopcrf1-nav-item${isSel ? " is-selected" : ""}" data-action="select-obj" data-kra-id="${kra.id}" data-obj-id="${obj.id}" title="${escapeHtml(title || "Untitled objective")}"${isSel ? ' aria-current="true"' : ""}>
-                <span class="eopcrf1-nav-code">Objective ${escapeHtml(code)}</span>
-                <span class="eopcrf1-nav-score" title="Average rating">${avg === null ? "Not rated" : "Avg " + avg.toFixed(2)}</span>
+                <span class="eopcrf1-nav-main">
+                  <span class="eopcrf1-nav-progress eopcrf1-nav-progress--${prog.state}" title="${escapeHtml(progTip)}" role="img" aria-label="${escapeHtml(PROGRESS_LABELS[prog.state] + " (" + prog.done + " of " + prog.total + ")")}">${progressRing(prog)}</span>
+                  <span class="eopcrf1-nav-code">Objective ${escapeHtml(code)}</span>
+                </span>
+                <span class="eopcrf1-nav-weight" title="Objective weight">${fmtWeight(obj.weight)}</span>
               </button>`;
           })
           .join("");
         return `
           <div class="eopcrf1-nav-group">
             <div class="eopcrf1-nav-group-head${isSelKra && sel.objId === null ? " is-selected" : ""}">
-              <button type="button" class="eopcrf1-nav-group-title" data-action="select-kra" data-kra-id="${kra.id}">${kra.text ? escapeHtml(kra.text) : "Untitled KRA"}</button>
-              <div class="eopcrf1-nav-group-meta">
-                <span class="eopcrf1-nav-group-weight">Weight ${fmtWeight(kra.weight)}</span>
-                <div class="eopcrf1-nav-group-actions">${actions}</div>
+              <span class="eopcrf1-nav-group-label">KRA ${kraNumber(kra)}</span>
+              <div class="eopcrf1-nav-group-row">
+                <button type="button" class="eopcrf1-nav-group-title" data-action="select-kra" data-kra-id="${kra.id}">${kra.text ? escapeHtml(kra.text) : "Untitled KRA"}</button>
+                <span class="eopcrf1-nav-group-weight" title="KRA weight">${fmtWeight(kra.weight)}</span>
               </div>
+              ${actions ? `<div class="eopcrf1-nav-group-actions">${actions}</div>` : ""}
             </div>
+            ${navWarn}
             ${items}
           </div>`;
       })
       .join("");
+    navEl.innerHTML = renderNavToolbar() + groups;
   }
 
   // ================= Render: detail panel =================
@@ -342,18 +475,13 @@
 
   function renderKraBlock(kra) {
     const isC = kra.part === "c";
-    const totalObj = sumWeights(kra.objectives);
-    const kraW = parseFloat(kra.weight);
-    const mismatch =
-      kra.objectives.length > 0 &&
-      !isNaN(kraW) &&
-      Math.abs(totalObj - kraW) >= 0.005;
     const editBtn = kra.locked
       ? ""
-      : `<button type="button" class="eopcrf1-icon-btn" data-action="edit-kra" data-kra-id="${kra.id}" title="Edit KRA and alignment">${ICON_EDIT}</button>`;
-    const align = isC
-      ? ""
-      : `<div class="eopcrf1-align">
+      : `<button type="button" class="eopcrf1-icon-btn" data-action="edit-kra" data-kra-id="${kra.id}" title="Edit KRA">${ICON_EDIT}</button>`;
+    const align =
+      isC || kra.part === "b"
+        ? ""
+        : `<div class="eopcrf1-align">
            ${field("GAA programs / subprograms", textOrDash(kra.gaaProgram))}
            ${field("BEDP pillars", textOrDash(kra.bedpPillars))}
            ${field("Current administration agenda", textOrDash(kra.adminAgenda))}
@@ -362,7 +490,7 @@
       <section class="eopcrf1-kra-block">
         <div class="eopcrf1-kra-block-head">
           <div>
-            <span class="eopcrf1-label">${isC ? "Organizational effectiveness area" : "Key result area"}</span>
+            <span class="eopcrf1-label">${isC ? "Area" : "KRA"} ${kraNumber(kra)}</span>
             <h3>${kra.text ? escapeHtml(kra.text) : "Untitled KRA"}</h3>
           </div>
           <div class="eopcrf1-kra-block-side">
@@ -371,7 +499,6 @@
           </div>
         </div>
         ${align}
-        ${mismatch ? `<p class="eopcrf1-warn">Objective weights total ${fmtWeight(totalObj)}, but this ${isC ? "area" : "KRA"} is weighted ${fmtWeight(kra.weight)}. They should match.</p>` : ""}
       </section>`;
   }
 
@@ -405,7 +532,7 @@
           <h4>${cat.label}</h4>
           <span class="eopcrf1-cat-rating${selectedRate === null ? " is-empty" : ""}">${selectedRate === null ? "Not rated" : `${selectedRate} · ${levelName(selectedRate)}`}</span>
         </div>
-        <div class="eopcrf1-levels" role="radiogroup" aria-label="${cat.label} rating">
+        <div class="eopcrf1-levels${selectedRate === null ? "" : " has-selection"}" role="radiogroup" aria-label="${cat.label} rating">
           ${LEVELS.map((l) => renderLevelRow(obj, cat, l, selectedRate, locked)).join("")}
         </div>
       </section>`;
@@ -426,7 +553,10 @@
   function renderObjective(kra, obj) {
     const locked = !!kra.locked;
     const objIndex = kra.objectives.findIndex((o) => id(o.id) === id(obj.id));
-    const { code, title } = splitObjectiveText(obj.text, letterLabel(objIndex));
+    const { code, title } = splitObjectiveText(
+      obj.text,
+      `${kraNumber(kra)}.${objIndex + 1}`,
+    );
     const avg = computeAverage(obj);
     const score = computeScore(obj);
     const chip = (label, key) => {
@@ -441,29 +571,35 @@
     return `
       <section class="eopcrf1-obj" data-kra-id="${kra.id}" data-obj-id="${obj.id}">
         <div class="eopcrf1-obj-head">
-          <span class="eopcrf1-obj-code">${escapeHtml(code)}</span>
-          <h3>${title ? escapeHtml(title) : "Untitled objective"}</h3>
+          <div>
+            <span class="eopcrf1-label">Objective ${escapeHtml(code)}</span>
+            <h3>${title ? escapeHtml(title) : "Untitled objective"}</h3>
+          </div>
           <div class="eopcrf1-obj-actions">${objActions}</div>
         </div>
 
-        <div class="eopcrf1-group">
-          <h4 class="eopcrf1-group-title">Planning</h4>
+        <div class="eopcrf1-group eopcrf1-group--plan">
+          <h4 class="eopcrf1-group-title"><i class="ti ti-calendar-event" aria-hidden="true"></i>Planning</h4>
+          <div class="eopcrf1-group-body">
           <div class="eopcrf1-facts">
             ${field("Timeline", `<span>${textOrDash(obj.timeline)}</span><button type="button" class="eopcrf1-icon-btn" data-action="edit-timeline" title="Edit timeline">${ICON_EDIT}</button>`, "eopcrf1-fact--inline")}
             ${field("Weight allocation", escapeHtml(fmtWeight(obj.weight)))}
             ${field("Target value", textOrDash(obj.targetValue))}
             ${field("Target description", textOrDash(obj.targetDescription))}
           </div>
+          </div>
         </div>
 
-        <div class="eopcrf1-group">
-          <h4 class="eopcrf1-group-title">Performance measures and rating scale</h4>
-          <p class="eopcrf1-group-hint">Select the level that matches the actual result. Select it again to clear.</p>
+        <div class="eopcrf1-group eopcrf1-group--perf">
+          <h4 class="eopcrf1-group-title"><i class="ti ti-list-check" aria-hidden="true"></i>Performance measures and rating scale</h4>
+          <div class="eopcrf1-group-body">
           ${INDICATOR_CATEGORIES.map((c) => renderCategory(obj, c, locked)).join("")}
+          </div>
         </div>
 
-        <div class="eopcrf1-group">
-          <h4 class="eopcrf1-group-title">Evaluation</h4>
+        <div class="eopcrf1-group eopcrf1-group--eval">
+          <h4 class="eopcrf1-group-title"><i class="ti ti-clipboard-check" aria-hidden="true"></i>Evaluation</h4>
+          <div class="eopcrf1-group-body">
           <div class="eopcrf1-eval">
             <div class="eopcrf1-fact">
               <span class="eopcrf1-label">Means of verification</span>
@@ -479,6 +615,7 @@
             ${chip("Quality", "quality")}${chip("Efficiency", "efficiency")}${chip("Timeliness", "timeliness")}
             <div class="eopcrf1-result eopcrf1-result--total"><span class="eopcrf1-label">Average (QET)</span><span class="eopcrf1-result-value">${avg === null ? "—" : fmt3(avg)}</span></div>
             <div class="eopcrf1-result eopcrf1-result--total"><span class="eopcrf1-label">Weighted average</span><span class="eopcrf1-result-value">${score === null ? "—" : fmt3(score)}</span></div>
+          </div>
           </div>
         </div>
       </section>`;
@@ -503,18 +640,18 @@
   // ================= Render: all =================
   function render() {
     renderPartTabs();
-    addKraBtn.style.display = activePart === "b" ? "" : "none";
 
     const visibleKras = state.kras.filter((k) => k.part === activePart);
     const isEmpty = visibleKras.length === 0;
     emptyStateEl.style.display = isEmpty ? "block" : "none";
+    emptyAddKraBtn.style.display =
+      isEmpty && activePart === "b" ? "inline-flex" : "none";
     workspaceEl.style.display = isEmpty ? "none" : "";
     if (isEmpty) {
       emptyStateTextEl.innerHTML =
         activePart === "b"
           ? "No KRAs yet. Click <strong>Add KRA</strong> to start planning."
           : "Nothing here yet. This part's fixed structure is created the first time data loads for this rating year.";
-      summaryEl.style.display = "none";
       navEl.innerHTML = "";
       detailEl.innerHTML = "";
       return;
@@ -523,31 +660,6 @@
     ensureSelection(visibleKras);
     renderNav(visibleKras);
     renderDetail(visibleKras);
-    renderSummary(visibleKras);
-  }
-
-  function renderSummary(visibleKras) {
-    summaryEl.style.display = "flex";
-    const part = PARTS.find((p) => p.key === activePart);
-    const expected = PART_EXPECTED_TOTAL[activePart];
-    const total = sumWeights(visibleKras);
-    const ok = Math.abs(total - expected) < 0.005;
-    summaryWeightLabelEl.textContent = `${part.label} weight`;
-    summaryWeightEl.textContent = fmtWeight(total);
-    summaryWeightEl.classList.toggle("is-ok", ok);
-    summaryWeightEl.classList.toggle("is-warn", !ok);
-    summaryWeightHintEl.textContent = ok ? "" : `Should total ${expected}%`;
-
-    const t = partTotals(activePart);
-    summaryRatingLabelEl.textContent = `${part.label} total score`;
-    summaryRatingEl.textContent = t.score === null ? "—" : fmt3(t.score);
-
-    const scores = PARTS.map((p) => partTotals(p.key).score).filter(
-      (s) => s !== null,
-    );
-    summaryOverallEl.textContent = scores.length
-      ? fmt3(scores.reduce((a, b) => a + b, 0))
-      : "—";
   }
 
   // ================= Modal control =================
@@ -615,26 +727,6 @@
         primaryInput.value = kra.text || "";
         weightInput.value = kra.weight ?? "";
       }
-      setExtraFields([
-        {
-          key: "gaaProgram",
-          label: "GAA programs / subprograms (optional)",
-          type: "text",
-          value: kra ? kra.gaaProgram : "",
-        },
-        {
-          key: "bedpPillars",
-          label: "BEDP pillars (optional)",
-          type: "text",
-          value: kra ? kra.bedpPillars : "",
-        },
-        {
-          key: "adminAgenda",
-          label: "Current administration agenda (optional)",
-          type: "text",
-          value: kra ? kra.adminAgenda : "",
-        },
-      ]);
     } else if (ctx.mode === "add-objective" || ctx.mode === "edit-objective") {
       const isEdit = ctx.mode === "edit-objective";
       const obj = isEdit ? findObjective(ctx.kraId, ctx.objId) : null;
@@ -766,9 +858,6 @@
         const body = {
           text,
           weight: w.weight,
-          gaaProgram: extraVal("gaaProgram"),
-          bedpPillars: extraVal("bedpPillars"),
-          adminAgenda: extraVal("adminAgenda"),
         };
         if (mode === "edit-kra") body.id = modalCtx.kraId;
         else body.year = state.year;
@@ -856,7 +945,9 @@
     }
   });
 
-  addKraBtn.addEventListener("click", () => openModal({ mode: "add-kra" }));
+  emptyAddKraBtn.addEventListener("click", () =>
+    openModal({ mode: "add-kra" }),
+  );
 
   // ================= Reset =================
   const RESET_WARNINGS = {
@@ -977,6 +1068,9 @@
         render();
         break;
       }
+      case "add-kra":
+        openModal({ mode: "add-kra" });
+        break;
       case "edit-kra":
         openModal({ mode: "edit-kra", kraId });
         break;
