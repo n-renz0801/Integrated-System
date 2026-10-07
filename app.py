@@ -784,45 +784,59 @@ def delete_eopcrf1_indicator(indicator_id):
 
 @app.route("/irc/eopcrf1/reset", methods=["DELETE"])
 def reset_eopcrf1_data():
-    """Two reset scopes for the "Reset All Data" button/modal, chosen via
-    ?scope=ratings_mov|all (defaults to "ratings_mov"). eopcrf1.js reads the
-    returned "scope" back to decide whether to clear ratings in place or
-    drop every KRA client-side.
+    """Reset EOPCRF1 data for one or more parts.
 
-      - scope=ratings_mov (default): clears every objective's three
-        ratings (quality/efficiency/timeliness) and its MOV link for the
-        given year -- the "Clear ratings & MOV links only" option. KRAs,
-        objectives, weights, rubric indicators, timeline, and actual
-        results are left completely untouched.
+    Query params:
+      parts   -- comma-separated subset of "a,b,c" (Part I-A / I-B / I-C).
+                 Required (at least one valid part).
+      partB   -- only matters when "b" is in parts:
+                   "data" (default): clear ratings, timeline, MOV link and
+                       actual accomplishments of Part I-B objectives; KRAs,
+                       objectives, weights and rubric indicators are kept.
+                   "all": delete every Part I-B KRA (cascading to its
+                       objectives and indicators).
+      year    -- rating year (defaults to the current year).
 
-      - scope=all: the "Reset entire form" option. Deletes every Part I-B
-        KRA for the given year outright (cascading to its objectives and
-        their rubric indicators). Part I-A/I-C's fixed structure can't be
-        deleted, so it just falls through to the same ratings/MOV clearing
-        "ratings_mov" does.
+    For every selected part that still exists, "reset" means clearing the
+    three ratings, the MOV link, the actual accomplishments and the
+    timeline. Part I-A / I-C have a fixed structure, so that is all that
+    can be reset for them. Not-selected parts are left untouched.
     """
-    scope = request.args.get("scope", "ratings_mov")
     year = request.args.get("year", type=int) or _current_year()
+    raw_parts = request.args.get("parts", "")
+    parts = [p for p in dict.fromkeys(x.strip().lower() for x in raw_parts.split(",")) if p in ("a", "b", "c")]
+    if not parts:
+        return jsonify({"error": "Select at least one part to reset."}), 400
 
-    if scope == "all":
-        # Only Part I-B (part="b") is user-managed, so "reset entire form"
-        # only ever deletes those KRAs. Part I-A/I-C's fixed structure
-        # can't be deleted -- it falls through to the same ratings/MOV
-        # clearing the "ratings_mov" branch below does.
-        EOPCRF1Kra.query.filter_by(year=year, part=EOPCRF1_PART_B).delete()
+    part_b_mode = request.args.get("partB", "data")
+    if part_b_mode not in ("data", "all"):
+        part_b_mode = "data"
+
+    remove_part_b = "b" in parts and part_b_mode == "all"
+    if remove_part_b:
+        # Load and delete through the ORM so cascades are honoured.
+        for kra in EOPCRF1Kra.query.filter_by(year=year, part=EOPCRF1_PART_B).all():
+            db.session.delete(kra)
         db.session.commit()
 
     objectives = (
         EOPCRF1Objective.query.join(EOPCRF1Kra, EOPCRF1Objective.kra_id == EOPCRF1Kra.id)
-        .filter(EOPCRF1Kra.year == year)
+        .filter(EOPCRF1Kra.year == year, EOPCRF1Kra.part.in_(parts))
         .all()
     )
     for objective in objectives:
         for category in EOPCRF1_CATEGORIES:
             objective.set_rating(category, None)
         objective.mov = None
+        objective.actual_results = None
+        objective.timeline = None
     db.session.commit()
-    return jsonify({"reset": True, "scope": scope, "year": year}), 200
+    return jsonify({
+        "reset": True,
+        "parts": parts,
+        "partB": part_b_mode if "b" in parts else None,
+        "year": year,
+    }), 200
 
 
 # ---------------------------------------------------------------------------

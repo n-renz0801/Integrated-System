@@ -2,7 +2,10 @@
    Minimal layout: one neutral palette plus a single accent (the app's navy).
    Selected rating = accent. Warnings use amber, nothing else carries color. */
 
-.eopcrf1-panel {
+/* The reset modal lives outside the .eopcrf1-panel <section>, so it needs
+   the same variables or its background resolves to nothing (transparent). */
+.eopcrf1-panel,
+.eopcrf1-confirm-overlay {
   --e1-ink: #1c2530;
   --e1-muted: #667282;
   --e1-line: #e2e6ec;
@@ -28,11 +31,15 @@
 }
 .eopcrf1-panel *,
 .eopcrf1-panel *::before,
-.eopcrf1-panel *::after {
+.eopcrf1-panel *::after,
+.eopcrf1-confirm-overlay *,
+.eopcrf1-confirm-overlay *::before,
+.eopcrf1-confirm-overlay *::after {
   box-sizing: border-box;
 }
 .eopcrf1-panel h3,
-.eopcrf1-panel h4 {
+.eopcrf1-panel h4,
+.eopcrf1-confirm-overlay h4 {
   margin: 0;
   font-weight: 600;
   color: var(--e1-ink);
@@ -1274,7 +1281,10 @@ textarea.eopcrf1-input {
 }
 .eopcrf1-confirm-box {
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 20px;
   background: var(--e1-surface);
   border-radius: 12px;
@@ -1292,10 +1302,27 @@ textarea.eopcrf1-input {
 .eopcrf1-reset-option {
   display: flex;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   cursor: pointer;
   border: 1px solid var(--e1-line);
   border-radius: var(--e1-radius);
+}
+.eopcrf1-reset-intro {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--e1-muted);
+}
+.eopcrf1-reset-suboptions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 22px;
+  padding-left: 12px;
+  border-left: 3px solid var(--e1-accent);
+}
+.eopcrf1-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .eopcrf1-reset-option:has(input:checked) {
   border-color: var(--e1-accent);
@@ -1326,6 +1353,11 @@ textarea.eopcrf1-input {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 16px;
+  position: sticky;
+  bottom: -20px;
+  margin-bottom: -20px;
+  padding: 12px 0 20px;
+  background: var(--e1-surface);
 }
 
 /* ---------- Responsive ---------- */
@@ -1438,4 +1470,14 @@ textarea.eopcrf1-input {
   .eopcrf1-workspace {
     display: block;
   }
+}
+
+/* Make the reset modal clearly visible */
+.eopcrf1-confirm-overlay {
+  background: rgba(16, 24, 40, 0.6);
+}
+.eopcrf1-confirm-box {
+  background: #ffffff;
+  border: 1px solid #cdd4dd;
+  box-shadow: 0 16px 48px rgba(16, 24, 40, 0.35);
 }
