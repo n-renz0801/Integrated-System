@@ -1,36 +1,32 @@
-/* IRC8c - Summary of Ratings for Discussion - CSS Stylesheet */
+/* EOPCRF4 - Part IV: Improvement and Development Plans - CSS Stylesheet */
 
-/* Theme colors live at :root (not on .irc8c-panel) on purpose: kept this
-   way even though the Add/Edit and delete-confirmation modals that
-   originally motivated it are gone now (IRC8c's Development Plans table
-   is a fixed 4-row table sourced from IRC8a/IRC8b, no add/delete/modal
-   any more) -- :root keeps these variables available to any future
-   sibling markup the same way, so there's no reason to narrow it back
-   down to .irc8c-panel. */
+/* Theme colors live at :root (not on .eopcrf4-panel) so they stay
+   available to any sibling markup (e.g. the reset-confirmation modal,
+   which sits outside the panel). */
 :root {
-  --irc8c-dedp: rgb(29, 78, 216);
-  --irc8c-dedp-light: rgb(59, 130, 246);
-  --irc8c-dedp-dark: #0b3a75;
+  --eopcrf4-dedp: rgb(29, 78, 216);
+  --eopcrf4-dedp-light: rgb(59, 130, 246);
+  --eopcrf4-dedp-dark: #0b3a75;
 
-  --irc8c-success-bg: #dcfce7;
-  --irc8c-success-text: #15803d;
-  --irc8c-success-border: #86efac;
+  --eopcrf4-success-bg: #dcfce7;
+  --eopcrf4-success-text: #15803d;
+  --eopcrf4-success-border: #86efac;
 
-  --irc8c-blue-bg: #dbeafe;
-  --irc8c-blue-text: #1d4ed8;
-  --irc8c-blue-border: #93c5fd;
+  --eopcrf4-blue-bg: #dbeafe;
+  --eopcrf4-blue-text: #1d4ed8;
+  --eopcrf4-blue-border: #93c5fd;
 
-  --irc8c-amber-bg: #fef9c3;
-  --irc8c-amber-text: #a16207;
-  --irc8c-amber-border: #fde047;
+  --eopcrf4-amber-bg: #fef9c3;
+  --eopcrf4-amber-text: #a16207;
+  --eopcrf4-amber-border: #fde047;
 
-  --irc8c-orange-bg: #ffedd5;
-  --irc8c-orange-text: #c2410c;
-  --irc8c-orange-border: #fdba74;
+  --eopcrf4-orange-bg: #ffedd5;
+  --eopcrf4-orange-text: #c2410c;
+  --eopcrf4-orange-border: #fdba74;
 
-  --irc8c-red-bg: #fee2e2;
-  --irc8c-red-text: #b91c1c;
-  --irc8c-red-border: #fca5a5;
+  --eopcrf4-red-bg: #fee2e2;
+  --eopcrf4-red-text: #b91c1c;
+  --eopcrf4-red-border: #fca5a5;
 }
 
 /* ------------------------------------------------------------------
@@ -38,13 +34,13 @@
    IRC1a/IRC8b's header so every page's top band reads identically.
 ------------------------------------------------------------------ */
 
-.irc8c-header {
+.eopcrf4-header {
   margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1.5px solid #e0e0e0;
 }
 
-.irc8c-header-top {
+.eopcrf4-header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -52,13 +48,13 @@
   flex-wrap: wrap;
 }
 
-.irc8c-header-title-main {
+.eopcrf4-header-title-main {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.irc8c-header-badge {
+.eopcrf4-header-badge {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -72,21 +68,21 @@
   line-height: 1.1;
 }
 
-.irc8c-header-badge-group {
+.eopcrf4-header-badge-group {
   color: rgba(255, 255, 255, 0.65);
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
 }
 
-.irc8c-header-badge-page {
+.eopcrf4-header-badge-page {
   color: #fff;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.03em;
 }
 
-.irc8c-header-divider {
+.eopcrf4-header-divider {
   width: 4px;
   height: 54px;
   background: var(--navy-deep, #001550);
@@ -94,7 +90,7 @@
   flex-shrink: 0;
 }
 
-.irc8c-header h2 {
+.eopcrf4-header h2 {
   font-size: 32px;
   font-weight: 600;
   /* Decreased title/subtitle gap -- was 8px. */
@@ -103,7 +99,7 @@
   text-transform: uppercase;
 }
 
-.irc8c-header-actions {
+.eopcrf4-header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -112,7 +108,7 @@
 
 /* Reset button — sized down to match IRC1a/IRC8b's smaller header
    action buttons (was 10px 18px / 14px font). */
-.irc8c-reset-btn {
+.eopcrf4-reset-btn {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -132,21 +128,21 @@
     border-color 0.15s ease;
 }
 
-.irc8c-reset-btn i {
+.eopcrf4-reset-btn i {
   font-size: 13px;
 }
 
-.irc8c-reset-btn:hover {
+.eopcrf4-reset-btn:hover {
   background: #fee2e2;
   border-color: #dc2626;
 }
 
-.irc8c-reset-btn:disabled {
+.eopcrf4-reset-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.irc8c-subtitle {
+.eopcrf4-subtitle {
   font-size: 14px;
   color: #666;
   margin: 0;
@@ -155,29 +151,28 @@
 }
 
 /* ------------------------------------------------------------------
-   Guided Flow — numbered rail (1-4) tying the final-rating dashboard,
-   the numerical-rating guide, the Employee-Superior Agreement, and the
-   Development Plans data entry together as a top-to-bottom sequence,
-   copied from IRC1a/IRC8b's .irc1a-flow / .irc8b-flow.
+   Guided Flow — numbered rail (1-3) tying Part IV-A, Part IV-B and the
+   signatory block together as a top-to-bottom sequence, copied from
+   IRC1a/IRC8b's .irc1a-flow / .irc8b-flow.
 ------------------------------------------------------------------ */
 
-.irc8c-flow {
+.eopcrf4-flow {
   display: grid;
   grid-template-columns: 40px 1fr;
-  grid-template-rows: auto auto auto auto;
+  grid-template-rows: auto auto auto;
   column-gap: 20px;
   row-gap: 1.25rem;
 }
 
-.irc8c-flow-rail {
+.eopcrf4-flow-rail {
   grid-column: 1;
-  grid-row: 1 / span 4;
+  grid-row: 1 / span 3;
   display: grid;
   grid-template-rows: subgrid;
   position: relative;
 }
 
-.irc8c-flow-rail::before {
+.eopcrf4-flow-rail::before {
   content: "";
   position: absolute;
   left: 50%;
@@ -188,7 +183,7 @@
   transform: translateX(-50%);
 }
 
-.irc8c-flow-badge {
+.eopcrf4-flow-badge {
   align-self: start;
   justify-self: center;
   margin-top: 20px;
@@ -206,31 +201,26 @@
   box-sizing: border-box;
 }
 
-.irc8c-flow-section-1,
-.irc8c-flow-section-2,
-.irc8c-flow-section-3,
-.irc8c-flow-section-4 {
+.eopcrf4-flow-section-1,
+.eopcrf4-flow-section-2,
+.eopcrf4-flow-section-3 {
   grid-column: 2;
   min-width: 0;
 }
 
-.irc8c-flow-section-1 {
+.eopcrf4-flow-section-1 {
   grid-row: 1;
 }
 
-.irc8c-flow-section-2 {
+.eopcrf4-flow-section-2 {
   grid-row: 2;
 }
 
-.irc8c-flow-section-3 {
+.eopcrf4-flow-section-3 {
   grid-row: 3;
 }
 
-.irc8c-flow-section-4 {
-  grid-row: 4;
-}
-
-.irc8c-flow-label {
+.eopcrf4-flow-label {
   margin: 20px 0 10px 2px;
   height: 36px;
   display: flex;
@@ -244,122 +234,10 @@
 }
 
 /* ------------------------------------------------------------------
-   Metric cards (Final Rating + Adjectival Rating)
------------------------------------------------------------------- */
-
-.irc8c-metric-row {
-  display: flex;
-  gap: 16px;
-}
-
-.irc8c-metric-card {
-  flex: 1;
-  background: #f8fafc;
-  border-radius: 12px;
-  padding: 18px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.irc8c-metric-label {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: #1f2937;
-  letter-spacing: 0.01em;
-}
-
-.irc8c-metric-input {
-  border: none;
-  background: transparent;
-  padding: 0;
-  font-size: 30px;
-  font-weight: 700;
-  color: #1a1a1a;
-  font-family: inherit;
-  width: 100%;
-  outline: none;
-}
-
-.irc8c-metric-input::placeholder {
-  color: #cbd5e1;
-  font-weight: 600;
-}
-
-/* Read-only: carried over automatically from IRC8a's Overall Rating (see
-   irc8c.js). Text input rather than type="number" so no increment/
-   decrement spinner ever appears, and the value is still selectable/
-   copyable -- just not typeable. */
-.irc8c-metric-input[readonly] {
-  cursor: default;
-}
-
-.irc8c-metric-card-badge {
-  background: #f3f4f6;
-  transition: background-color 0.15s ease;
-}
-
-.irc8c-metric-value {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-  color: #9ca3af;
-}
-
-.irc8c-metric-card-badge.irc8c-badge-1 {
-  background: var(--irc8c-red-bg);
-}
-.irc8c-metric-card-badge.irc8c-badge-1 .irc8c-metric-label,
-.irc8c-metric-card-badge.irc8c-badge-1 .irc8c-metric-value {
-  color: var(--irc8c-red-text);
-}
-
-.irc8c-metric-card-badge.irc8c-badge-2 {
-  background: var(--irc8c-orange-bg);
-}
-.irc8c-metric-card-badge.irc8c-badge-2 .irc8c-metric-label,
-.irc8c-metric-card-badge.irc8c-badge-2 .irc8c-metric-value {
-  color: var(--irc8c-orange-text);
-}
-
-.irc8c-metric-card-badge.irc8c-badge-3 {
-  background: var(--irc8c-amber-bg);
-}
-.irc8c-metric-card-badge.irc8c-badge-3 .irc8c-metric-label,
-.irc8c-metric-card-badge.irc8c-badge-3 .irc8c-metric-value {
-  color: var(--irc8c-amber-text);
-}
-
-.irc8c-metric-card-badge.irc8c-badge-4 {
-  background: var(--irc8c-blue-bg);
-}
-.irc8c-metric-card-badge.irc8c-badge-4 .irc8c-metric-label,
-.irc8c-metric-card-badge.irc8c-badge-4 .irc8c-metric-value {
-  color: var(--irc8c-blue-text);
-}
-
-.irc8c-metric-card-badge.irc8c-badge-5 {
-  background: var(--irc8c-success-bg);
-}
-.irc8c-metric-card-badge.irc8c-badge-5 .irc8c-metric-label,
-.irc8c-metric-card-badge.irc8c-badge-5 .irc8c-metric-value {
-  color: var(--irc8c-success-text);
-}
-
-.irc8c-metric-card-badge.irc8c-badge-invalid {
-  background: var(--irc8c-red-bg);
-}
-.irc8c-metric-card-badge.irc8c-badge-invalid .irc8c-metric-label,
-.irc8c-metric-card-badge.irc8c-badge-invalid .irc8c-metric-value {
-  color: var(--irc8c-red-text);
-}
-
-/* ------------------------------------------------------------------
    Cards (shared container for each section)
 ------------------------------------------------------------------ */
 
-.irc8c-card {
+.eopcrf4-card {
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
@@ -370,27 +248,27 @@
 /* Dark section header — same shared dark-analytics gradient as
    IRC1a/IRC8b's card headers, so every card on this page reads as an
    "organized section" instead of a plain white block. */
-.irc8c-card-header {
+.eopcrf4-card-header {
   padding: 16px 20px;
   box-sizing: border-box;
   background: linear-gradient(160deg, #1f2937 0%, #2d3f57 100%);
 }
 
-.irc8c-card-header h3 {
+.eopcrf4-card-header h3 {
   margin: 0 0 4px 0;
   font-size: 16px;
   font-weight: 600;
   color: #fff;
 }
 
-.irc8c-subtitle-dark {
+.eopcrf4-subtitle-dark {
   margin: 0;
   font-size: 12.5px;
   color: #9aa7b8;
   line-height: 1.5;
 }
 
-.irc8c-card-body {
+.eopcrf4-card-body {
   padding: 20px 22px;
   box-sizing: border-box;
 }
@@ -400,128 +278,20 @@
    classes (grid/block/person/avatar/name/position) for "Prepared by" /
    "Checked by" so they read identically to the old page-footer version,
    just without its dark .report-signatory-title bar. Sits directly
-   under the dark section header, same as .irc8c-table-wrapper below --
+   under the dark section header, same as .eopcrf4-table-wrapper below --
    .report-signatory-block already carries its own internal padding, so
    no extra card-body wrapper is needed here.
 ------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------
-   Criteria strip (Accomplishments of KRAs and Objectives)
------------------------------------------------------------------- */
-
-.irc8c-criteria-strip {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-}
-
-.irc8c-criteria-chip {
-  text-align: center;
-  padding: 12px 8px;
-  border-radius: 10px;
-  background: #f8fafc;
-  border: 1.5px solid transparent;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.irc8c-criteria-num {
-  display: block;
-  font-size: 17px;
-  font-weight: 700;
-  color: #9ca3af;
-  margin-bottom: 2px;
-}
-
-.irc8c-criteria-label {
-  display: block;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #9ca3af;
-}
-
-.irc8c-criteria-range {
-  display: block;
-  font-size: 10.5px;
-  color: #b0b7c3;
-  margin-top: 3px;
-}
-
-.irc8c-criteria-chip.irc8c-chip-1 {
-  background: var(--irc8c-red-bg);
-  border-color: var(--irc8c-red-border);
-}
-.irc8c-criteria-chip.irc8c-chip-1 .irc8c-criteria-num,
-.irc8c-criteria-chip.irc8c-chip-1 .irc8c-criteria-label {
-  color: var(--irc8c-red-text);
-}
-.irc8c-criteria-chip.irc8c-chip-1 .irc8c-criteria-range {
-  color: var(--irc8c-red-text);
-  opacity: 0.75;
-}
-
-.irc8c-criteria-chip.irc8c-chip-2 {
-  background: var(--irc8c-orange-bg);
-  border-color: var(--irc8c-orange-border);
-}
-.irc8c-criteria-chip.irc8c-chip-2 .irc8c-criteria-num,
-.irc8c-criteria-chip.irc8c-chip-2 .irc8c-criteria-label {
-  color: var(--irc8c-orange-text);
-}
-.irc8c-criteria-chip.irc8c-chip-2 .irc8c-criteria-range {
-  color: var(--irc8c-orange-text);
-  opacity: 0.75;
-}
-
-.irc8c-criteria-chip.irc8c-chip-3 {
-  background: var(--irc8c-amber-bg);
-  border-color: var(--irc8c-amber-border);
-}
-.irc8c-criteria-chip.irc8c-chip-3 .irc8c-criteria-num,
-.irc8c-criteria-chip.irc8c-chip-3 .irc8c-criteria-label {
-  color: var(--irc8c-amber-text);
-}
-.irc8c-criteria-chip.irc8c-chip-3 .irc8c-criteria-range {
-  color: var(--irc8c-amber-text);
-  opacity: 0.75;
-}
-
-.irc8c-criteria-chip.irc8c-chip-4 {
-  background: var(--irc8c-blue-bg);
-  border-color: var(--irc8c-blue-border);
-}
-.irc8c-criteria-chip.irc8c-chip-4 .irc8c-criteria-num,
-.irc8c-criteria-chip.irc8c-chip-4 .irc8c-criteria-label {
-  color: var(--irc8c-blue-text);
-}
-.irc8c-criteria-chip.irc8c-chip-4 .irc8c-criteria-range {
-  color: var(--irc8c-blue-text);
-  opacity: 0.75;
-}
-
-.irc8c-criteria-chip.irc8c-chip-5 {
-  background: var(--irc8c-success-bg);
-  border-color: var(--irc8c-success-border);
-}
-.irc8c-criteria-chip.irc8c-chip-5 .irc8c-criteria-num,
-.irc8c-criteria-chip.irc8c-chip-5 .irc8c-criteria-label {
-  color: var(--irc8c-success-text);
-}
-.irc8c-criteria-chip.irc8c-chip-5 .irc8c-criteria-range {
-  color: var(--irc8c-success-text);
-  opacity: 0.75;
-}
-
-/* ------------------------------------------------------------------
    Development Plans table
 ------------------------------------------------------------------ */
 
-.irc8c-table-wrapper {
+.eopcrf4-table-wrapper {
   overflow-x: auto;
 }
 
-.irc8c-dev-table {
+.eopcrf4-dev-table {
   width: 100%;
   min-width: 1000px;
   table-layout: fixed;
@@ -529,7 +299,7 @@
   font-size: 13px;
 }
 
-.irc8c-dev-table thead th {
+.eopcrf4-dev-table thead th {
   padding: 10px 10px;
   text-align: center;
   font-weight: 600;
@@ -538,16 +308,13 @@
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   border-bottom: 3px solid #4a6fa5;
   vertical-align: middle;
-  position: sticky;
-  top: 0;
-  z-index: 5;
 }
 
-.irc8c-dev-table thead th:last-child {
+.eopcrf4-dev-table thead th:last-child {
   border-right: none;
 }
 
-.irc8c-th-sub {
+.eopcrf4-th-sub {
   display: block;
   font-size: 11px;
   font-weight: 500;
@@ -556,57 +323,36 @@
 }
 
 /* Fixed column widths -- table-layout: fixed above means these widths
-   (set on the header cells) govern every row, including ones irc8c.js
-   injects into tbody later, so columns never reflow/jiggle as rows
-   switch between the locked text view and the unlocked
-   select/textarea view. Column order is: edit toggle, Strengths,
-   Development Needs, Action Plan, Timeline, Resources Needed -- the
-   five content columns are targeted by position (they don't need
-   dedicated classes, they're never referenced individually in
-   irc8c.js) and kept equal-width per design; the leading edit column
-   keeps its own narrow named class. */
-.irc8c-col-edit {
+   (set on the header cells of the FIRST header row, via <colgroup> in
+   eopcrf4.html) govern every row, including ones eopcrf4.js injects
+   into tbody later, so columns never reflow as rows switch between the
+   locked text view and the unlocked textarea/dropdown view. Column
+   order: edit toggle, then six equal content columns. */
+.eopcrf4-col-edit {
   width: 32px;
 }
-.irc8c-dev-table th:nth-child(2),
-.irc8c-dev-table td:nth-child(2) {
-  width: 19.3%; /* Strengths */
-}
-.irc8c-dev-table th:nth-child(3),
-.irc8c-dev-table td:nth-child(3) {
-  width: 19.3%; /* Development Needs */
-}
-.irc8c-dev-table th:nth-child(4),
-.irc8c-dev-table td:nth-child(4) {
-  width: 19.3%; /* Action Plan */
-}
-.irc8c-dev-table th:nth-child(5),
-.irc8c-dev-table td:nth-child(5) {
-  width: 19.3%; /* Timeline */
-}
-.irc8c-dev-table th:nth-child(6),
-.irc8c-dev-table td:nth-child(6) {
-  width: 19.3%; /* Resources Needed */
+.eopcrf4-dev-table col.eopcrf4-col-content {
+  width: 16.1%;
 }
 
-.irc8c-dev-table tbody tr {
+.eopcrf4-dev-table tbody tr {
   border-bottom: 1px solid #f0f0f0;
   transition: background-color 0.15s ease;
 }
 
-.irc8c-dev-table tbody tr:nth-child(odd) {
+.eopcrf4-dev-table tbody tr:nth-child(odd) {
   background: #fafbfc;
 }
 
-.irc8c-dev-table tbody tr:nth-child(even) {
+.eopcrf4-dev-table tbody tr:nth-child(even) {
   background: white;
 }
 
-.irc8c-dev-table tbody tr:hover {
+.eopcrf4-dev-table tbody tr:hover {
   background: #f0f5ff;
 }
 
-.irc8c-dev-table tbody td {
+.eopcrf4-dev-table tbody td {
   padding: 14px 16px 10px 16px;
   border-right: 1px solid #e8e8e8;
   text-align: left;
@@ -614,27 +360,27 @@
   word-wrap: break-word;
 }
 
-.irc8c-dev-table tbody td:last-child {
+.eopcrf4-dev-table tbody td:last-child {
   border-right: none;
 }
 
-.irc8c-cell-text {
+.eopcrf4-cell-text {
   color: #374151;
   font-size: 12.5px;
   line-height: 1.5;
 }
 
-.irc8c-cell-empty {
+.eopcrf4-cell-empty {
   color: #9ca3af;
 }
 
 /* Strength / Development Needs -- locked display. The dropdown (see
-   .irc8c-cell-select below) only exists while a row is unlocked; while
+   .eopcrf4-cell-select below) only exists while a row is unlocked; while
    locked, the saved pick renders as plain read text instead so nothing
    is clickable and nothing gets ellipsis-truncated the way a native
    <select> would. Main achievement text leads; source item and score
    sit together in one quiet line underneath. */
-.irc8c-ref-main {
+.eopcrf4-ref-main {
   display: block;
   margin: 0 0 4px 0;
   color: #374151;
@@ -642,7 +388,7 @@
   line-height: 1.5;
 }
 
-.irc8c-ref-meta {
+.eopcrf4-ref-meta {
   display: block;
   margin: 0;
   color: #9ca3af;
@@ -650,25 +396,25 @@
   line-height: 1.4;
 }
 
-.irc8c-empty-row td {
+.eopcrf4-empty-row td {
   text-align: center;
   color: #9ca3af;
   font-size: 13px;
   padding: 22px 10px;
 }
 
-/* Strength / Development Needs dropdowns -- populated by irc8c.js from
-   IRC8a's/IRC8b's top-5 highest/lowest rated items, ranked fresh on
+/* Strength / Development Needs dropdowns -- populated by eopcrf4.js from
+   EOPCRF I's and EOPCRF II's top-5 highest/lowest rated items, ranked fresh on
    every load. Custom trigger + listbox (not a native <select>) so each
    option can show the same two-line layout as the locked view: main
    achievement text prominent, source + score as a quiet line below --
    a native <select>'s <option> can't carry that formatting. */
-.irc8c-ref-dropdown {
+.eopcrf4-ref-dropdown {
   position: relative;
   width: 100%;
 }
 
-.irc8c-ref-trigger {
+.eopcrf4-ref-trigger {
   width: 100%;
   display: flex;
   align-items: flex-start;
@@ -688,36 +434,36 @@
     box-shadow 0.15s ease;
 }
 
-.irc8c-ref-trigger:hover {
-  border-color: var(--irc8c-dedp-light);
+.eopcrf4-ref-trigger:hover {
+  border-color: var(--eopcrf4-dedp-light);
 }
 
-.irc8c-ref-trigger[aria-expanded="true"] {
-  border-color: var(--irc8c-dedp);
+.eopcrf4-ref-trigger[aria-expanded="true"] {
+  border-color: var(--eopcrf4-dedp);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-.irc8c-ref-trigger-content {
+.eopcrf4-ref-trigger-content {
   flex: 1;
   min-width: 0;
 }
 
-.irc8c-ref-trigger-text {
+.eopcrf4-ref-trigger-text {
   flex: 1;
 }
 
-.irc8c-ref-trigger-text.irc8c-ref-placeholder {
+.eopcrf4-ref-trigger-text.eopcrf4-ref-placeholder {
   color: #9ca3af;
 }
 
-.irc8c-ref-trigger-caret {
+.eopcrf4-ref-trigger-caret {
   flex-shrink: 0;
   margin-top: 2px;
   color: #9ca3af;
   font-size: 10px;
 }
 
-.irc8c-ref-listbox {
+.eopcrf4-ref-listbox {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -734,7 +480,7 @@
   overflow-y: auto;
 }
 
-.irc8c-ref-option {
+.eopcrf4-ref-option {
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -745,29 +491,29 @@
   cursor: pointer;
 }
 
-.irc8c-ref-option:last-child {
+.eopcrf4-ref-option:last-child {
   margin-bottom: 0;
 }
 
-.irc8c-ref-option:hover {
+.eopcrf4-ref-option:hover {
   background: #f0f5ff;
   border-color: #c7d7f5;
 }
 
-.irc8c-ref-option.irc8c-ref-option-selected {
-  background: var(--irc8c-blue-bg);
-  border-color: var(--irc8c-blue-border);
+.eopcrf4-ref-option.eopcrf4-ref-option-selected {
+  background: var(--eopcrf4-blue-bg);
+  border-color: var(--eopcrf4-blue-border);
 }
 
-.irc8c-ref-option.irc8c-ref-option-selected .irc8c-ref-main {
-  color: var(--irc8c-dedp-dark);
+.eopcrf4-ref-option.eopcrf4-ref-option-selected .eopcrf4-ref-main {
+  color: var(--eopcrf4-dedp-dark);
 }
 
-.irc8c-ref-option.irc8c-ref-option-placeholder .irc8c-ref-main {
+.eopcrf4-ref-option.eopcrf4-ref-option-placeholder .eopcrf4-ref-main {
   color: #9ca3af;
 }
 
-.irc8c-ref-option-text {
+.eopcrf4-ref-option-text {
   flex: 1;
   min-width: 0;
 }
@@ -778,7 +524,7 @@
    reads at a glance without having to compare scores. Previously-saved
    picks that fell out of the ranked candidates get a neutral dash
    instead of a number. */
-.irc8c-ref-rank {
+.eopcrf4-ref-rank {
   flex-shrink: 0;
   width: 22px;
   height: 22px;
@@ -791,23 +537,23 @@
   font-weight: 700;
 }
 
-.irc8c-ref-rank-positive {
-  background: var(--irc8c-success-bg);
-  color: var(--irc8c-success-text);
+.eopcrf4-ref-rank-positive {
+  background: var(--eopcrf4-success-bg);
+  color: var(--eopcrf4-success-text);
 }
 
-.irc8c-ref-rank-negative {
-  background: var(--irc8c-red-bg);
-  color: var(--irc8c-red-text);
+.eopcrf4-ref-rank-negative {
+  background: var(--eopcrf4-red-bg);
+  color: var(--eopcrf4-red-text);
 }
 
-.irc8c-ref-rank-neutral {
+.eopcrf4-ref-rank-neutral {
   background: #f3f4f6;
   color: #9ca3af;
 }
 
 /* Action Plan / Timeline / Resources Needed -- shown as plain text
-   (.irc8c-cell-text above) while a row is locked; irc8c.js swaps the
+   (.eopcrf4-cell-text above) while a row is locked; eopcrf4.js swaps the
    cell to this textarea when the row's edit-toggle is unlocked.
    Deliberately NOT a plain fixed-height + scroll box, and NOT
    drag-resizable either:
@@ -823,12 +569,12 @@
      - In browsers without field-sizing support yet, this simply falls
        back to a normal fixed-height (min-height) box that scrolls once
        full -- still never resizable, just not auto-growing. */
-.irc8c-cell-edit {
+.eopcrf4-cell-edit {
   width: 100%;
   min-height: 34px;
   max-height: 160px;
   padding: 7px 8px;
-  border: 1.5px solid var(--irc8c-dedp-light);
+  border: 1.5px solid var(--eopcrf4-dedp-light);
   border-radius: 6px;
   font-size: 12.5px;
   font-family: inherit;
@@ -843,19 +589,19 @@
     box-shadow 0.15s ease;
 }
 
-.irc8c-cell-edit:focus {
+.eopcrf4-cell-edit:focus {
   outline: none;
-  border-color: var(--irc8c-dedp);
+  border-color: var(--eopcrf4-dedp);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
 }
 
-.irc8c-dev-table td.irc8c-col-edit {
+.eopcrf4-dev-table td.eopcrf4-col-edit {
   text-align: center;
   vertical-align: top;
   padding: 14px 6px 10px 6px;
 }
 
-.irc8c-icon-btn {
+.eopcrf4-icon-btn {
   border: none;
   background: #f3f4f6;
   color: #4b5563;
@@ -872,11 +618,11 @@
     color 0.15s ease;
 }
 
-.irc8c-icon-btn:hover {
+.eopcrf4-icon-btn:hover {
   background: #e5e7eb;
 }
 
-.irc8c-icon-btn:disabled {
+.eopcrf4-icon-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -886,25 +632,28 @@
    shows the pencil (locked, click to edit); green once it shows the
    checkmark (unlocked, click to save & lock again) so the two states
    read at a glance without having to parse the icon. */
-.irc8c-toggle-lock-btn {
-  background: var(--irc8c-blue-bg);
-  color: var(--irc8c-dedp);
+.eopcrf4-toggle-lock-btn {
+  background: var(--eopcrf4-blue-bg);
+  color: var(--eopcrf4-dedp);
 }
 
-.irc8c-toggle-lock-btn:hover {
-  background: var(--irc8c-blue-border);
+.eopcrf4-toggle-lock-btn:hover {
+  background: var(--eopcrf4-blue-border);
 }
 
-.irc8c-dev-table tbody tr:has(textarea.irc8c-cell-edit) .irc8c-toggle-lock-btn {
-  background: var(--irc8c-success-bg);
-  color: var(--irc8c-success-text);
-}
-
-.irc8c-dev-table
+.eopcrf4-dev-table
   tbody
-  tr:has(textarea.irc8c-cell-edit)
-  .irc8c-toggle-lock-btn:hover {
-  background: var(--irc8c-success-border);
+  tr:has(textarea.eopcrf4-cell-edit)
+  .eopcrf4-toggle-lock-btn {
+  background: var(--eopcrf4-success-bg);
+  color: var(--eopcrf4-success-text);
+}
+
+.eopcrf4-dev-table
+  tbody
+  tr:has(textarea.eopcrf4-cell-edit)
+  .eopcrf4-toggle-lock-btn:hover {
+  background: var(--eopcrf4-success-border);
 }
 
 /* ------------------------------------------------------------------
@@ -912,7 +661,7 @@
    .irc6-confirm-* dialog.
 ------------------------------------------------------------------ */
 
-.irc8c-confirm-overlay {
+.eopcrf4-confirm-overlay {
   display: none;
   position: fixed;
   inset: 0;
@@ -923,11 +672,11 @@
   padding: 16px;
 }
 
-.irc8c-confirm-overlay.visible {
+.eopcrf4-confirm-overlay.visible {
   display: flex;
 }
 
-.irc8c-confirm-box {
+.eopcrf4-confirm-box {
   background: #fff;
   border-radius: 12px;
   width: 100%;
@@ -937,28 +686,28 @@
   text-align: center;
 }
 
-.irc8c-confirm-box h4 {
+.eopcrf4-confirm-box h4 {
   margin: 0 0 10px 0;
   font-size: 16px;
   font-weight: 700;
   color: #1a1a1a;
 }
 
-.irc8c-confirm-box p {
+.eopcrf4-confirm-box p {
   margin: 0 0 20px 0;
   font-size: 13.5px;
   color: #555;
   line-height: 1.5;
 }
 
-.irc8c-confirm-actions {
+.eopcrf4-confirm-actions {
   display: flex;
   justify-content: center;
   gap: 10px;
 }
 
-.irc8c-btn-secondary,
-.irc8c-btn-danger {
+.eopcrf4-btn-secondary,
+.eopcrf4-btn-danger {
   border: none;
   border-radius: 8px;
   padding: 10px 20px;
@@ -967,64 +716,132 @@
   cursor: pointer;
 }
 
-.irc8c-btn-secondary {
+.eopcrf4-btn-secondary {
   background: #f3f4f6;
   color: #374151;
 }
 
-.irc8c-btn-secondary:hover {
+.eopcrf4-btn-secondary:hover {
   background: #e5e7eb;
 }
 
-.irc8c-btn-danger {
+.eopcrf4-btn-danger {
   background: #dc2626;
   color: #fff;
 }
 
-.irc8c-btn-danger:hover {
+.eopcrf4-btn-danger:hover {
   background: #b91c1c;
 }
 
 /* Responsive */
 
-@media (max-width: 900px) {
-  .irc8c-metric-row {
-    flex-direction: column;
-  }
-
-  .irc8c-criteria-strip {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 768px) {
-  .irc8c-header h2 {
+  .eopcrf4-header h2 {
     font-size: 22px;
   }
 
-  .irc8c-header-badge {
+  .eopcrf4-header-badge {
     height: 44px;
     padding: 0 12px;
   }
 
-  .irc8c-header-badge-group {
+  .eopcrf4-header-badge-group {
     font-size: 9px;
   }
 
-  .irc8c-header-badge-page {
+  .eopcrf4-header-badge-page {
     font-size: 15px;
   }
 
-  .irc8c-header-divider {
+  .eopcrf4-header-divider {
     height: 44px;
   }
 
-  .irc8c-header-actions {
+  .eopcrf4-header-actions {
     width: 100%;
   }
 
-  .irc8c-reset-btn {
+  .eopcrf4-reset-btn {
     flex: 1;
     justify-content: center;
   }
+}
+
+/* ------------------------------------------------------------------
+   Part IV layout additions
+------------------------------------------------------------------ */
+
+/* Two-row table header: "Action Plan" spans General Objective +
+   Recommended ... Intervention, matching the printed form. */
+.eopcrf4-dev-table thead tr.eopcrf4-head-sub th {
+  border-bottom: 3px solid #4a6fa5;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+.eopcrf4-dev-table thead tr.eopcrf4-head-top th {
+  border-bottom: none;
+}
+.eopcrf4-dev-table thead th.eopcrf4-th-group {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+/* First content column (Gap Analysis (SWOT) / Strengths) carries the
+   same peach shading as the printed form. */
+.eopcrf4-dev-table tbody td.eopcrf4-col-shaded,
+.eopcrf4-dev-table tbody tr:hover td.eopcrf4-col-shaded {
+  background: #fde8d9;
+}
+
+/* Feedback box under each table */
+.eopcrf4-feedback {
+  padding: 16px 20px 20px 20px;
+  border-top: 1px solid #e8e8e8;
+}
+.eopcrf4-feedback-label {
+  display: block;
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+.eopcrf4-feedback-input {
+  width: 100%;
+  min-height: 84px;
+  max-height: 260px;
+  padding: 9px 11px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.5;
+  color: #1f2937;
+  background: #fff;
+  resize: none;
+  field-sizing: content;
+  overflow-y: auto;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.eopcrf4-feedback-input:focus {
+  outline: none;
+  border-color: var(--eopcrf4-dedp);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+/* Signatories: RATEE / RATER / APPROVING AUTHORITY -- three blocks
+   instead of base.css's default two. */
+.eopcrf4-panel .report-signatory-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 900px) {
+  .eopcrf4-panel .report-signatory-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Locked free-text cells keep the line breaks the user typed. */
+.eopcrf4-cell-text {
+  white-space: pre-wrap;
 }

@@ -1,0 +1,248 @@
+{% extends "base.html" %} {% import "_macros.html" as macros %} {% block title
+%}EOPCRF Part IV - EOPCRF_SH{% endblock %} {% block content %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/eopcrf4.css') }}"
+/>
+
+<section id="eopcrf4-tab" class="tab-panel eopcrf4-panel">
+  <!-- ================= 1. PAGE HEADER ================= -->
+  <div class="eopcrf4-header">
+    <div class="eopcrf4-header-top">
+      <div class="eopcrf4-header-title-main">
+        <span class="eopcrf4-header-badge">
+          <span class="eopcrf4-header-badge-group">EOPCRF</span>
+          <span class="eopcrf4-header-badge-page">IV</span>
+        </span>
+        <div class="eopcrf4-header-divider"></div>
+        <div>
+          <h2>PART IV: IMPROVEMENT AND DEVELOPMENT PLANS</h2>
+          <p class="eopcrf4-subtitle">DepEd OPCRF (ver.Feb2025), page 4 of 4</p>
+        </div>
+      </div>
+      <div class="eopcrf4-header-actions">
+        <button type="button" id="eopcrf4-reset-btn" class="eopcrf4-reset-btn">
+          <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset All Data
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GUIDED FLOW: 1. Part IV-A -> 2. Part IV-B -> 3. Signatories ================= -->
+  <div class="eopcrf4-flow">
+    <div class="eopcrf4-flow-rail" aria-hidden="true">
+      <span class="eopcrf4-flow-badge">1</span>
+      <span class="eopcrf4-flow-badge">2</span>
+      <span class="eopcrf4-flow-badge">3</span>
+    </div>
+
+    <!-- 1. PART IV-A: OFFICE IMPROVEMENT PLAN -->
+    <div class="eopcrf4-flow-section eopcrf4-flow-section-1">
+      <p class="eopcrf4-flow-label" aria-hidden="true"></p>
+      <div class="eopcrf4-card">
+        <div class="eopcrf4-card-header">
+          <h3>Part IV-A: Office Improvement Plan</h3>
+        </div>
+        <div class="eopcrf4-table-wrapper">
+          <table id="eopcrf4-table-a" class="eopcrf4-dev-table">
+            <colgroup>
+              <col class="eopcrf4-col-edit" />
+              <col class="eopcrf4-col-content" />
+              <col class="eopcrf4-col-content" />
+              <col class="eopcrf4-col-content" />
+              <col class="eopcrf4-col-content" />
+              <col class="eopcrf4-col-content" />
+              <col class="eopcrf4-col-content" />
+            </colgroup>
+            <thead>
+              <tr class="eopcrf4-head-top">
+                <th rowspan="2" class="eopcrf4-col-edit"></th>
+                <th rowspan="2">
+                  Gap Analysis<br /><span class="eopcrf4-th-sub">(SWOT)</span>
+                </th>
+                <th rowspan="2">Improvement Area</th>
+                <th colspan="2" class="eopcrf4-th-group">Action Plan</th>
+                <th rowspan="2">Timeline</th>
+                <th rowspan="2">Resources Needed</th>
+              </tr>
+              <tr class="eopcrf4-head-sub">
+                <th>General Objective</th>
+                <th>Recommended Improvement Intervention</th>
+              </tr>
+            </thead>
+            <tbody id="eopcrf4-table-body-a">
+              <!-- rows injected by eopcrf4.js -->
+            </tbody>
+          </table>
+        </div>
+        <div class="eopcrf4-feedback">
+          <label class="eopcrf4-feedback-label" for="eopcrf4-feedback-a"
+            >Feedback:</label
+          >
+          <textarea
+            id="eopcrf4-feedback-a"
+            class="eopcrf4-feedback-input"
+            data-part="A"
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. PART IV-B: INDIVIDUAL DEVELOPMENT PLAN -->
+    <div class="eopcrf4-flow-section eopcrf4-flow-section-2">
+      <p class="eopcrf4-flow-label" aria-hidden="true"></p>
+      <div class="eopcrf4-card">
+        <div class="eopcrf4-card-header">
+          <h3>Part IV-B: Individual Development Plan</h3>
+        </div>
+        <div class="eopcrf4-table-wrapper">
+          <table id="eopcrf4-table-b" class="eopcrf4-dev-table">
+            <colgroup>
+              <col class="eopcrf4-col-edit" />
+              <col class="eopcrf4-col-content" />
+              <col class="eopcrf4-col-content" />
+              <col class="eopcrf4-col-content" />
+              <col class="eopcrf4-col-content" />
+              <col class="eopcrf4-col-content" />
+              <col class="eopcrf4-col-content" />
+            </colgroup>
+            <thead>
+              <tr class="eopcrf4-head-top">
+                <th rowspan="2" class="eopcrf4-col-edit"></th>
+                <th rowspan="2">Strengths</th>
+                <th rowspan="2">Improvement Needs</th>
+                <th colspan="2" class="eopcrf4-th-group">Action Plan</th>
+                <th rowspan="2">Timeline</th>
+                <th rowspan="2">Resources Needed</th>
+              </tr>
+              <tr class="eopcrf4-head-sub">
+                <th>
+                  Learning Objective<br /><span class="eopcrf4-th-sub"
+                    >(based on the developmental intervention)</span
+                  >
+                </th>
+                <th>Recommended Developmental Intervention</th>
+              </tr>
+            </thead>
+            <tbody id="eopcrf4-table-body-b">
+              <!-- rows injected by eopcrf4.js -->
+            </tbody>
+          </table>
+        </div>
+        <div class="eopcrf4-feedback">
+          <label class="eopcrf4-feedback-label" for="eopcrf4-feedback-b"
+            >Feedback:</label
+          >
+          <textarea
+            id="eopcrf4-feedback-b"
+            class="eopcrf4-feedback-input"
+            data-part="B"
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. SIGNATORIES: RATEE / RATER / APPROVING AUTHORITY
+         Reuses the same .report-signatory-* classes as base.html's page-
+         footer signatory block (see static/css/base.css), embedded in this
+         page's own flow instead of the base template's bottom-of-page
+         footer, which must be suppressed for this tab (see base.html).
+         Date controls use the shared signatory_date macro and are wired up
+         generically by index.js, keyed off data-signatory-role plus this
+         page's own active_tab.id ("eopcrf4"). Existing roles are reused:
+         RATEE = prepared_by, RATER = checked_by, APPROVING AUTHORITY =
+         approving_authority. -->
+    <div class="eopcrf4-flow-section eopcrf4-flow-section-3">
+      <p class="eopcrf4-flow-label" aria-hidden="true"></p>
+      <div class="eopcrf4-card">
+        <div class="report-signatory-grid">
+          <div class="report-signatory-block">
+            <div class="report-signatory-person">
+              <span class="report-signatory-avatar" aria-hidden="true">
+                <i class="ti ti-user"></i>
+              </span>
+              <div class="report-signatory-info">
+                <p class="report-signatory-name" id="reportPreparedByName">
+                  &nbsp;
+                </p>
+                <p
+                  class="report-signatory-position"
+                  id="reportPreparedByPosition"
+                ></p>
+                {{ macros.signatory_date('prepared_by', 'RATEE') }}
+              </div>
+            </div>
+            <p class="report-signatory-label">RATEE</p>
+          </div>
+          <div class="report-signatory-block">
+            <div class="report-signatory-person">
+              <span class="report-signatory-avatar" aria-hidden="true">
+                <i class="ti ti-user"></i>
+              </span>
+              <div class="report-signatory-info">
+                <p class="report-signatory-name">&nbsp;</p>
+                <p class="report-signatory-position"></p>
+                {{ macros.signatory_date('checked_by', 'RATER') }}
+              </div>
+            </div>
+            <p class="report-signatory-label">RATER</p>
+          </div>
+          <div class="report-signatory-block">
+            <div class="report-signatory-person">
+              <span class="report-signatory-avatar" aria-hidden="true">
+                <i class="ti ti-user"></i>
+              </span>
+              <div class="report-signatory-info">
+                <p
+                  class="report-signatory-name"
+                  id="eopcrf4ApprovingAuthorityName"
+                >
+                  &nbsp;
+                </p>
+                <p class="report-signatory-position"></p>
+                {{ macros.signatory_date('approving_authority', 'APPROVING
+                AUTHORITY') }}
+              </div>
+            </div>
+            <p class="report-signatory-label">APPROVING AUTHORITY</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /.eopcrf4-flow -->
+  </div>
+</section>
+
+<!-- ================= RESET-PAGE CONFIRMATION MODAL ================= -->
+<div id="eopcrf4-reset-confirm-overlay" class="eopcrf4-confirm-overlay">
+  <div class="eopcrf4-confirm-box">
+    <h4>Reset the contents of this page?</h4>
+    <p>
+      This will clear every row in Part IV-A and Part IV-B, along with both
+      Feedback boxes, back to blank and locked. This cannot be undone.
+    </p>
+    <div class="eopcrf4-confirm-actions">
+      <button
+        type="button"
+        id="eopcrf4-reset-confirm-cancel"
+        class="eopcrf4-btn-secondary"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        id="eopcrf4-reset-confirm-confirm"
+        class="eopcrf4-btn-danger"
+      >
+        Yes, Reset
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/eopcrf4.js') }}"></script>
+
+{% endblock %}

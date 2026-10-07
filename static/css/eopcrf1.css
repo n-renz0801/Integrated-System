@@ -1,5 +1,157 @@
-/* EOPCRF1 - IPCRF (Individual Performance Commitment and Review Form) */
+/* EOPCRF1 - IPCRF (Individual Performance Commitment and Review Form)
+   Minimal layout: one neutral palette plus a single accent (the app's navy).
+   Selected rating = accent. Warnings use amber, nothing else carries color. */
 
+.eopcrf1-panel {
+  --e1-ink: #1c2530;
+  --e1-muted: #667282;
+  --e1-line: #e2e6ec;
+  --e1-line-strong: #cdd4dd;
+  --e1-surface: #ffffff;
+  --e1-subtle: #f6f8fa;
+  --e1-accent: var(--navy-deep, #0b2a5b);
+  --e1-accent-soft: #eaf0fa;
+  --e1-ok: #1b7a4b;
+  --e1-warn: #a45a06;
+  --e1-danger: #b42318;
+  --e1-radius: 8px;
+  color: var(--e1-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.eopcrf1-panel *,
+.eopcrf1-panel *::before,
+.eopcrf1-panel *::after {
+  box-sizing: border-box;
+}
+.eopcrf1-panel h3,
+.eopcrf1-panel h4 {
+  margin: 0;
+  font-weight: 600;
+  color: var(--e1-ink);
+}
+.eopcrf1-muted {
+  color: var(--e1-muted);
+}
+.eopcrf1-inline-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.eopcrf1-btn .eopcrf1-inline-icon,
+.eopcrf1-icon-btn .eopcrf1-inline-icon {
+  margin-right: 0;
+}
+
+/* ---------- Labels, inputs, buttons ---------- */
+.eopcrf1-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--e1-muted);
+  margin-bottom: 2px;
+}
+.eopcrf1-label--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.eopcrf1-input,
+.eopcrf1-field input {
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--e1-ink);
+  background: var(--e1-surface);
+  border: 1px solid var(--e1-line-strong);
+  border-radius: 6px;
+}
+.eopcrf1-input:focus,
+.eopcrf1-field input:focus {
+  outline: 2px solid var(--e1-accent);
+  outline-offset: -1px;
+  border-color: var(--e1-accent);
+}
+textarea.eopcrf1-input {
+  resize: vertical;
+}
+
+.eopcrf1-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--e1-ink);
+  background: var(--e1-surface);
+  border: 1px solid var(--e1-line-strong);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.eopcrf1-btn:hover {
+  background: var(--e1-subtle);
+}
+.eopcrf1-btn--primary {
+  color: #fff;
+  background: var(--e1-accent);
+  border-color: var(--e1-accent);
+}
+.eopcrf1-btn--primary:hover {
+  background: var(--e1-accent);
+  filter: brightness(1.15);
+}
+.eopcrf1-btn--danger {
+  color: #fff;
+  background: var(--e1-danger);
+  border-color: var(--e1-danger);
+}
+.eopcrf1-btn--danger:hover {
+  background: var(--e1-danger);
+  filter: brightness(1.1);
+}
+.eopcrf1-btn--ghost {
+  border-style: dashed;
+  color: var(--e1-muted);
+}
+.eopcrf1-btn--sm {
+  padding: 3px 9px;
+  font-size: 12px;
+}
+.eopcrf1-btn:focus-visible,
+.eopcrf1-icon-btn:focus-visible {
+  outline: 2px solid var(--e1-accent);
+  outline-offset: 2px;
+}
+
+.eopcrf1-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  color: var(--e1-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.eopcrf1-icon-btn svg {
+  width: 14px;
+  height: 14px;
+}
+.eopcrf1-icon-btn:hover {
+  color: var(--e1-ink);
+  background: var(--e1-line);
+}
+.eopcrf1-icon-btn--danger:hover {
+  color: var(--e1-danger);
+  background: #fdecea;
+}
+
+/* ---------- Page header (original style, kept as-is) ---------- */
 .eopcrf1-header {
   margin-bottom: 20px;
   padding-bottom: 20px;
@@ -14,8 +166,6 @@
   flex-wrap: wrap;
 }
 
-/* Title block: badge + divider + title/subtitle, mirroring IRC1a's
-   .irc1a-header-title-main. */
 .eopcrf1-header-title-main {
   display: flex;
   align-items: center;
@@ -58,10 +208,9 @@
   flex-shrink: 0;
 }
 
-.eopcrf1-header h2 {
+.eopcrf1-panel .eopcrf1-header h2 {
   font-size: 32px;
   font-weight: 600;
-  /* Decreased title/subtitle gap -- was 8px. */
   margin: 0 0 2px 0;
   color: var(--navy-deep, #001550);
   text-transform: uppercase;
@@ -80,194 +229,6 @@
   gap: 8px;
   flex-shrink: 0;
 }
-
-/* ---------- IPCRF header info (Name of Rater/Employee, Bureau, Rating
-   Period, Date of Review) — plain on-screen inputs, no modal, saved
-   individually on blur (see eopcrf1.js). Reproduced in the printed report;
-   this panel itself is hidden in @media print (see further down). ---------- */
-
-.eopcrf1-report-header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px 28px;
-  background: #f8f9fc;
-  border: 1px solid #e2e5ea;
-  border-radius: 12px;
-  padding: 18px 22px;
-  margin-bottom: 22px;
-}
-
-.eopcrf1-report-header-col {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  flex: 1 1 200px;
-  min-width: 180px;
-}
-
-.eopcrf1-report-header-col--wide {
-  flex: 2 1 320px;
-}
-
-.eopcrf1-report-header-field label {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: #5a6a8a;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-
-.eopcrf1-report-header-field input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 11px;
-  border: 1px solid #e2e5ea;
-  border-radius: 7px;
-  font-size: 13.5px;
-  font-family: inherit;
-  background: #fff;
-  color: #1a1a1a;
-}
-
-.eopcrf1-report-header-field input::placeholder {
-  color: #aab1bb;
-}
-
-.eopcrf1-report-header-field input:focus {
-  outline: none;
-  border-color: #4a6fa5;
-  box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.15);
-}
-
-/* ---------- Part I-A / I-B / I-C tabs ---------- */
-
-.eopcrf1-part-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.eopcrf1-part-tab {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px 18px;
-  border: 1px solid #e2e5ea;
-  border-radius: 12px;
-  background: #fff;
-  cursor: pointer;
-  font: inherit;
-  text-align: left;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.eopcrf1-part-tab:hover {
-  border-color: #b7c6dd;
-}
-
-.eopcrf1-part-tab-label {
-  font-weight: 700;
-  font-size: 14px;
-  color: #384252;
-}
-
-.eopcrf1-part-tab-score {
-  font-weight: 700;
-  font-size: 13px;
-  color: #8a93a3;
-  font-variant-numeric: tabular-nums;
-}
-
-.eopcrf1-part-tab.is-active {
-  background: linear-gradient(135deg, #1f2937, #131c28);
-  border-color: #131c28;
-  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.18);
-}
-
-.eopcrf1-part-tab.is-active .eopcrf1-part-tab-label {
-  color: #fff;
-}
-
-.eopcrf1-part-tab.is-active .eopcrf1-part-tab-score {
-  color: #7fa8e0;
-}
-
-/* ---------- MFO banner (reads as the page's main title; also hosts Add KRA) ---------- */
-
-.eopcrf1-mfo-banner {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: linear-gradient(135deg, #1f2937, #131c28);
-  color: #f3f4f6;
-  padding: 26px 30px;
-  border-radius: 16px;
-  margin-bottom: 22px;
-  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.22);
-}
-
-.eopcrf1-mfo-label {
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 12.5px;
-  color: #7fa8e0;
-  flex-shrink: 0;
-}
-
-.eopcrf1-mfo-value {
-  font-weight: 700;
-  font-size: 24px;
-  letter-spacing: -0.01em;
-  color: #fff;
-}
-
-.eopcrf1-mfo-banner .eopcrf1-add-btn--banner {
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-/* Save to PDF button — same treatment as irc1a-pdf-btn (see irc1a.css),
-   just namespaced to eopcrf1. Triggers window.print() (see eopcrf1.js); the
-   @media print block further down builds the actual printed layout. */
-
-.eopcrf1-pdf-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  appearance: none;
-  background: #fff;
-  color: #185fa5;
-  border: 1.5px solid #cfe0f2;
-  padding: 7px 14px;
-  border-radius: 7px;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.eopcrf1-pdf-btn i {
-  font-size: 13px;
-}
-
-.eopcrf1-pdf-btn:hover {
-  background: #eaf2fb;
-  border-color: #185fa5;
-}
-
-/* Reset button — sits in .eopcrf1-header, on the page's plain white
-   background, so it uses the same appearance as IRC7's .irc7-reset-btn. */
 
 .eopcrf1-reset-btn {
   display: flex;
@@ -298,24 +259,6 @@
   border-color: #dc2626;
 }
 
-/* ---------- Weight warning banners ---------- */
-
-.eopcrf1-weight-banner-inline {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 10px;
-  border-radius: 6px;
-  margin-top: 10px;
-  background: #fff8e6;
-  color: #8a5a00;
-  border: 1px solid #f2d896;
-}
-
-/* ---------- Buttons ---------- */
-
 .eopcrf1-add-btn {
   background: #4a6fa5;
   color: white;
@@ -334,1559 +277,790 @@
   background: #3d5a8a;
 }
 
-.eopcrf1-add-btn--ghost {
-  background: white;
-  color: #4a6fa5;
-  border: 1px dashed #a8b8d8;
-}
-
-.eopcrf1-add-btn--ghost:hover {
-  background: #f0f5ff;
-}
-
-.eopcrf1-add-btn--sm {
-  padding: 6px 12px;
-  font-size: 12px;
-}
-
-.eopcrf1-inline-icon {
-  width: 14px;
-  height: 14px;
+.eopcrf1-add-btn .eopcrf1-inline-icon {
   vertical-align: -2px;
   margin-right: 5px;
-  flex-shrink: 0;
 }
 
-/* ---------- Icon buttons (edit / delete / chevron) ---------- */
-
-.eopcrf1-icon-btn {
-  background: none;
-  border: 1px solid transparent;
-  color: #6b7280;
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-  flex-shrink: 0;
+/* ---------- Form details ---------- */
+.eopcrf1-details {
+  margin-bottom: 16px;
+  background: var(--e1-surface);
+  border: 1px solid var(--e1-line);
+  border-radius: var(--e1-radius);
 }
-
-.eopcrf1-icon-btn svg {
-  width: 15px;
-  height: 15px;
-}
-
-.eopcrf1-icon-btn:hover {
-  background: #eef1f5;
-  color: #333;
-}
-
-.eopcrf1-icon-btn--danger:hover {
-  background: #fdecea;
-  color: #c0392b;
-}
-
-/* ---------- Empty state ---------- */
-
-.eopcrf1-empty-state {
-  text-align: center;
-  padding: 48px 20px;
-  color: #9aa3af;
-  border: 1.5px dashed #dde2e8;
-  border-radius: 12px;
-  background: #fafbfc;
-}
-
-.eopcrf1-empty-state svg {
-  width: 36px;
-  height: 36px;
-  margin-bottom: 10px;
-  color: #c2cad4;
-}
-
-.eopcrf1-empty-state p {
-  margin: 0;
-  font-size: 14px;
-}
-
-/* ================================================================
-   KRA color palette
-   Cycles by list position (kraIndex % 4), assigned via a
-   eopcrf1-kra-palette-N class added in JS. Coral has been removed —
-   only 4 hues remain: Violet, Teal, Pink, Amber.
-
-   Each KRA hue has FOUR lightness tiers (t1 darkest → t4 lightest),
-   all sharing the same hue/saturation family. Every colored header
-   in the card reads from a fixed pair of adjacent tiers, so the
-   color visibly fades the deeper you go:
-
-     eopcrf1-kra-header / eopcrf1-score-strip   -> t1 -> t2 (darkest)
-     eopcrf1-objective-header                  -> t2 -> t3
-     eopcrf1-obj-banner--planning              -> t3 -> t4 (lightest)
-     eopcrf1-obj-banner--evaluation             -> t4 -> t3 (reversed,
-                                                so siblings at the
-                                                same depth still
-                                                read as distinct)
-
-   --kra-light / --kra-border are unrelated pale/mid tones used for
-   the card's white-ish body fill and border, unchanged from before.
-
-   ---> To retune any KRA's color, edit its six variables below.
-   Nothing else in this file, eopcrf1.js, or eopcrf1.html needs to
-   change — everything downstream cascades from these variables.
-   ================================================================ */
-
-:root {
-  --kra-1-light: #f5f3fe; /* Violet */
-  --kra-1-border: #a78bfa;
-  --kra-1-t1: #1e123a;
-  --kra-1-t2: #311f5c;
-  --kra-1-t3: #452d7b;
-  --kra-1-t4: #593e98;
-
-  --kra-2-light: #e6fbf8; /* Teal */
-  --kra-2-border: #5eead4;
-  --kra-2-t1: #074541;
-  --kra-2-t2: #0e6c65;
-  --kra-2-t3: #189087;
-  --kra-2-t4: #25b1a6;
-
-  --kra-3-light: #fdf1f8; /* Pink */
-  --kra-3-border: #f472b6;
-  --kra-3-t1: #450721;
-  --kra-3-t2: #6d0e35;
-  --kra-3-t3: #90184a;
-  --kra-3-t4: #b1255f;
-
-  --kra-4-light: #fffaeb; /* Amber */
-  --kra-4-border: #fbbf24;
-  --kra-4-t1: #472206;
-  --kra-4-t2: #6f370c;
-  --kra-4-t3: #93481f;
-  --kra-4-t4: #b46122;
-
-  /* Light gold accent used on KRA/objective index badges & eyebrows */
-  --gold-light: #f0cf7d;
-  --gold-light-soft: rgba(240, 207, 125, 0.7);
-}
-
-.eopcrf1-kra-card.eopcrf1-kra-palette-1 {
-  --kra-light: var(--kra-1-light);
-  --kra-border: var(--kra-1-border);
-  --kra-t1: var(--kra-1-t1);
-  --kra-t2: var(--kra-1-t2);
-  --kra-t3: var(--kra-1-t3);
-  --kra-t4: var(--kra-1-t4);
-}
-.eopcrf1-kra-card.eopcrf1-kra-palette-2 {
-  --kra-light: var(--kra-2-light);
-  --kra-border: var(--kra-2-border);
-  --kra-t1: var(--kra-2-t1);
-  --kra-t2: var(--kra-2-t2);
-  --kra-t3: var(--kra-2-t3);
-  --kra-t4: var(--kra-2-t4);
-}
-.eopcrf1-kra-card.eopcrf1-kra-palette-3 {
-  --kra-light: var(--kra-3-light);
-  --kra-border: var(--kra-3-border);
-  --kra-t1: var(--kra-3-t1);
-  --kra-t2: var(--kra-3-t2);
-  --kra-t3: var(--kra-3-t3);
-  --kra-t4: var(--kra-3-t4);
-}
-.eopcrf1-kra-card.eopcrf1-kra-palette-4 {
-  --kra-light: var(--kra-4-light);
-  --kra-border: var(--kra-4-border);
-  --kra-t1: var(--kra-4-t1);
-  --kra-t2: var(--kra-4-t2);
-  --kra-t3: var(--kra-4-t3);
-  --kra-t4: var(--kra-4-t4);
-}
-
-/* Card border reads the assigned mid-tone, tying the dark header
-   and pastel body together as one unit. */
-.eopcrf1-kra-card[class*="eopcrf1-kra-palette-"] {
-  border: 1px solid var(--kra-border);
-}
-
-/* Body gets the pale tint fill */
-.eopcrf1-kra-card[class*="eopcrf1-kra-palette-"] .eopcrf1-kra-body {
-  background: var(--kra-light);
-}
-
-/* ---------- KRA cards ---------- */
-
-.eopcrf1-kra-list {
+.eopcrf1-details summary {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.eopcrf1-kra-card {
-  background: white;
-  border: 1px solid #e2e5ea;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
-/* Header: darkest tier of the gradient (t1 -> t2). Two-row stack —
-   a small uppercase eyebrow ("Key Result Area 1") on top, then the
-   index/text/weight/actions row below — plus a bottom shadow so the
-   header visibly "lifts" off the body beneath it. */
-.eopcrf1-kra-header {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 18px;
-  cursor: pointer;
-  background: linear-gradient(
-    135deg,
-    var(--kra-t1, #1f2937),
-    var(--kra-t2, #29323f)
-  );
-  border-bottom: 1px solid transparent;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
-  transition: filter 0.15s ease;
-}
-
-.eopcrf1-kra-header:hover {
-  filter: brightness(1.12);
-}
-
-.eopcrf1-kra-card.is-open .eopcrf1-kra-header {
-  border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-.eopcrf1-kra-header-top {
-  display: flex;
-}
-
-.eopcrf1-kra-eyebrow {
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--gold-light-soft);
-}
-
-.eopcrf1-kra-header-main {
-  display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 12px;
-}
-
-.eopcrf1-kra-index {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.14);
-  color: var(--gold-light);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 6px;
-}
-
-.eopcrf1-kra-text {
-  flex: 1;
-  font-size: 14.5px;
-  font-weight: 600;
-  color: #fff;
-  line-height: 1.45;
-  white-space: pre-wrap;
-}
-
-.eopcrf1-weight-badge {
-  flex-shrink: 0;
-  background: #eaf1fb;
-  color: #1f4f8a;
-  font-size: 13.5px;
-  font-weight: 800;
-  padding: 6px 14px;
-  border-radius: 8px;
-  border: 1.5px solid #bcd4f0;
-  white-space: nowrap;
-}
-
-.eopcrf1-weight-badge--kra {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--kra-t1, #1f4f8a);
-  font-size: 15px;
-  font-weight: 800;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  box-shadow: none;
-}
-
-.eopcrf1-kra-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-/* "Fixed" badge shown instead of Add/Edit/Delete on Part I-A/I-C KRAs */
-.eopcrf1-locked-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  flex-shrink: 0;
-}
-
-.eopcrf1-locked-badge svg {
-  width: 13px;
-  height: 13px;
-}
-
-/* A slightly muted card treatment marks a KRA as part of the fixed
-   structure at a glance, even before its "Fixed" badge is noticed. */
-.eopcrf1-kra-card--locked {
-  opacity: 0.97;
-}
-
-.eopcrf1-kra-card--locked .eopcrf1-kra-header {
-  background: linear-gradient(135deg, #384252, #1f2733);
-}
-
-/* Icon buttons in the KRA header sit on the gradient background */
-.eopcrf1-kra-header .eopcrf1-icon-btn {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.eopcrf1-kra-header .eopcrf1-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
-}
-
-.eopcrf1-kra-header .eopcrf1-icon-btn--danger:hover {
-  background: rgba(220, 53, 69, 0.35);
-  color: #ffb3ab;
-}
-
-.eopcrf1-kra-body {
-  display: none;
-  padding: 16px 18px 18px;
-  background: #fff; /* fallback if no palette class present */
-}
-
-.eopcrf1-kra-card.is-open .eopcrf1-kra-body {
-  display: block;
-}
-
-.eopcrf1-objectives-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* ---------- Objective cards ---------- */
-
-.eopcrf1-objective-card {
-  border: 1px solid #e8eaee;
-  border-radius: 10px;
-  background: #fcfcfd;
-  overflow: hidden;
-}
-
-/* Second tier: t2 -> t3, one step lighter than the KRA header. Same
-   two-row eyebrow + content stack as the KRA header above. */
-.eopcrf1-objective-header {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
+  padding: 10px 14px;
   cursor: pointer;
-  background: linear-gradient(
-    120deg,
-    var(--kra-t2, #4a6fa5),
-    var(--kra-t3, #5c85c4)
-  );
-  transition: filter 0.15s ease;
+  list-style: none;
 }
-
-.eopcrf1-objective-header:hover {
-  filter: brightness(1.12);
-}
-
-.eopcrf1-objective-header-top {
-  display: flex;
-  color: var(--gold-light);
-}
-
-.eopcrf1-objective-eyebrow {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--gold-light-soft);
-}
-
-.eopcrf1-objective-header-main {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-/* Styled after .eopcrf1-kra-index, with a light gold accent so it
-   pops against every KRA palette rather than matching any of them. */
-.eopcrf1-objective-index {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 26px;
-  background: rgba(255, 255, 255, 0.16);
-  color: var(--gold-light);
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  padding: 0 10px;
-  border-radius: 6px;
-}
-
-.eopcrf1-objective-text {
-  flex: 1;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #fff;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  padding-top: 3px;
-}
-
-.eopcrf1-objective-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-/* Weight badge reads white-on-translucent when it's sitting on the
-   objective header's colored gradient. */
-.eopcrf1-objective-header .eopcrf1-weight-badge {
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--kra-t2, #1f4f8a);
-  border: none;
-}
-
-.eopcrf1-objective-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-/* Icon buttons in the objective header sit on a colored gradient too */
-.eopcrf1-objective-header .eopcrf1-icon-btn {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.eopcrf1-objective-header .eopcrf1-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
-}
-
-.eopcrf1-objective-header .eopcrf1-icon-btn--danger:hover {
-  background: rgba(220, 53, 69, 0.35);
-  color: #ffb3ab;
-}
-
-.eopcrf1-objective-body {
+.eopcrf1-details summary::-webkit-details-marker {
   display: none;
+}
+.eopcrf1-details summary::before {
+  content: "+";
+  width: 14px;
+  color: var(--e1-muted);
+  font-weight: 600;
+}
+.eopcrf1-details[open] summary::before {
+  content: "−";
+}
+.eopcrf1-details-title {
+  font-weight: 600;
+}
+.eopcrf1-details-sum {
+  font-size: 13px;
+  color: var(--e1-muted);
+}
+.eopcrf1-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 16px;
   padding: 4px 14px 16px;
 }
-
-.eopcrf1-objective-card.is-open .eopcrf1-objective-body {
+.eopcrf1-field {
   display: block;
 }
-
-/* ---------- In-page sections (Planning / Evaluation) ---------- */
-
-.eopcrf1-obj-section {
-  margin: 0 0 20px;
+.eopcrf1-field--wide {
+  grid-column: 1 / -1;
 }
 
-.eopcrf1-obj-section:last-child {
-  margin-bottom: 0;
-}
-
-/* Third tier: t3 -> t4, the lightest step. Planning and Evaluation
-   sit at the same depth, so they share the same two tiers — the
-   gradient direction is reversed between them so they still read
-   as two distinct, related bands rather than identical blocks. Both
-   get a bottom shadow so they lift slightly off the content below. */
-.eopcrf1-obj-banner {
+/* ---------- Part tabs ---------- */
+.eopcrf1-part-tabs {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  margin: 0 -14px 14px;
-  color: #fff;
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
-}
-
-.eopcrf1-obj-banner svg {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-.eopcrf1-obj-banner--planning {
-  background: linear-gradient(
-    120deg,
-    var(--kra-t3, #4a6fa5),
-    var(--kra-t4, #6a8fc9)
-  );
-}
-
-.eopcrf1-obj-banner--evaluation {
-  background: linear-gradient(
-    120deg,
-    var(--kra-t4, #6a8fc9),
-    var(--kra-t3, #4a6fa5)
-  );
-}
-
-/* ---------- Performance indicator groups (Quality / Efficiency / Timeliness) ---------- */
-
-.eopcrf1-indicator-groups {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 0;
   margin-bottom: 16px;
+  border-bottom: 1px solid var(--e1-line);
+  overflow-x: auto;
 }
-
-.eopcrf1-indicator-group {
-  border: 1px solid #e8eaee;
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: white;
-}
-
-.eopcrf1-indicator-group-header {
+.eopcrf1-part-tab {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 16px;
+  font: inherit;
+  color: var(--e1-muted);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  white-space: nowrap;
 }
-
-.eopcrf1-indicator-group-title {
+.eopcrf1-part-tab:hover {
+  color: var(--e1-ink);
+}
+.eopcrf1-part-tab.is-active {
+  color: var(--e1-ink);
+  border-bottom-color: var(--e1-accent);
+}
+.eopcrf1-part-tab-label {
+  font-weight: 600;
+}
+.eopcrf1-part-tab-name {
+  font-size: 13px;
+}
+.eopcrf1-part-tab-score {
   font-size: 12px;
-  font-weight: 700;
-  color: #374151;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: var(--e1-subtle);
+  font-variant-numeric: tabular-nums;
+}
+.eopcrf1-part-tab.is-active .eopcrf1-part-tab-score {
+  background: var(--e1-accent-soft);
+  color: var(--e1-accent);
 }
 
-.eopcrf1-indicator-list {
+/* ---------- Workspace: sidebar + detail ---------- */
+.eopcrf1-workspace {
+  display: grid;
+  grid-template-columns: clamp(260px, 26%, 340px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.eopcrf1-nav {
+  position: sticky;
+  top: 12px;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  background: var(--e1-surface);
+  border: 1px solid var(--e1-line);
+  border-radius: var(--e1-radius);
+}
+.eopcrf1-nav {
+  display: flex;
+  flex-direction: column;
+}
+.eopcrf1-nav-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.eopcrf1-nav-group + .eopcrf1-nav-group {
+  border-top: 1px solid var(--e1-line);
+}
+.eopcrf1-nav-group-head {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 8px;
+  padding: 12px 10px 8px 14px;
+  background: var(--e1-subtle);
+}
+.eopcrf1-nav-group-head.is-selected {
+  background: var(--e1-accent-soft);
+}
+.eopcrf1-nav-group-title {
+  display: block;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--e1-ink);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.eopcrf1-nav-group-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.eopcrf1-nav-group-weight {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--e1-muted);
+  font-variant-numeric: tabular-nums;
+}
+.eopcrf1-nav-group-actions {
+  display: flex;
+  align-items: center;
+  margin-left: -6px;
+}
+.eopcrf1-fixed {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--e1-muted);
+}
+.eopcrf1-fixed svg {
+  width: 11px;
+  height: 11px;
+}
+.eopcrf1-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  padding: 8px 14px 8px 28px;
+  text-align: left;
+  font: inherit;
+  color: var(--e1-ink);
+  background: none;
+  border: 0;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+.eopcrf1-nav-item + .eopcrf1-nav-item {
+  border-top: 1px solid var(--e1-line);
+}
+.eopcrf1-nav-item {
+  position: relative;
+}
+.eopcrf1-nav-item::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--e1-line-strong);
+}
+.eopcrf1-nav-item:hover {
+  background: var(--e1-subtle);
+}
+.eopcrf1-nav-item.is-selected {
+  background: var(--e1-accent-soft);
+  border-left-color: var(--e1-accent);
+}
+.eopcrf1-nav-item:focus-visible {
+  outline: 2px solid var(--e1-accent);
+  outline-offset: -2px;
+}
+.eopcrf1-nav-code {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--e1-muted);
+  font-variant-numeric: tabular-nums;
+}
+.eopcrf1-nav-item.is-selected .eopcrf1-nav-code {
+  color: var(--e1-accent);
+}
+.eopcrf1-nav-score {
+  font-size: 12px;
+  color: var(--e1-muted);
+  font-variant-numeric: tabular-nums;
 }
 
-/* Indicator items are clickable — selecting one sets the matching
-   rating dropdown to its rate. Only one item per category can be
-   selected at a time. */
-.eopcrf1-indicator-item {
+.eopcrf1-detail {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- KRA block ---------- */
+.eopcrf1-kra-block {
+  padding: 14px 16px;
+  background: var(--e1-subtle);
+  border: 1px solid var(--e1-line);
+  border-radius: var(--e1-radius);
+}
+.eopcrf1-kra-block-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.eopcrf1-kra-block h3 {
+  font-size: 15px;
+}
+.eopcrf1-kra-block-side {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.eopcrf1-weight-chip {
+  padding: 2px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--e1-surface);
+  border: 1px solid var(--e1-line-strong);
+  border-radius: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.eopcrf1-align {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px 20px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--e1-line);
+}
+.eopcrf1-warn {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--e1-warn);
+}
+
+/* ---------- Objective ---------- */
+.eopcrf1-obj {
+  background: var(--e1-surface);
+  border: 1px solid var(--e1-line);
+  border-radius: var(--e1-radius);
+}
+.eopcrf1-obj-head {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
-  font-size: 12px;
-  line-height: 1.4;
-  padding: 6px 8px;
-  background: #f7f9fc;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--e1-line);
+}
+.eopcrf1-obj-code {
+  padding: 2px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--e1-accent);
+  background: var(--e1-accent-soft);
   border-radius: 6px;
-  border: 1px solid #eef0f3;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.eopcrf1-indicator-item:hover {
-  background: #eef2f9;
-  border-color: #d5deea;
-}
-
-.eopcrf1-indicator-item--selected {
-  background: #eaf1fb;
-  border-color: #4a6fa5;
-  box-shadow: 0 0 0 1px #4a6fa5 inset;
-}
-
-.eopcrf1-indicator-rate {
+  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  background: #1f2937;
-  color: white;
-  font-weight: 700;
-  font-size: 10.5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 1px;
 }
-
-.eopcrf1-indicator-item--selected .eopcrf1-indicator-rate {
-  background: #4a6fa5;
-}
-
-.eopcrf1-indicator-text {
+.eopcrf1-obj-head h3 {
   flex: 1;
-  color: #333;
-  white-space: pre-wrap;
+  font-size: 16px;
+  line-height: 1.4;
 }
-
-.eopcrf1-indicator-item-actions {
+.eopcrf1-obj-actions {
   display: flex;
-  gap: 2px;
   flex-shrink: 0;
 }
 
-.eopcrf1-indicator-item-actions .eopcrf1-icon-btn {
-  width: 22px;
-  height: 22px;
+.eopcrf1-group {
+  padding: 16px;
+}
+.eopcrf1-group + .eopcrf1-group {
+  border-top: 1px solid var(--e1-line);
+}
+.eopcrf1-group-title {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.eopcrf1-group-hint {
+  margin: -6px 0 12px;
+  font-size: 12.5px;
+  color: var(--e1-muted);
 }
 
-.eopcrf1-indicator-item-actions .eopcrf1-icon-btn svg {
-  width: 12px;
-  height: 12px;
+.eopcrf1-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
 }
-
-.eopcrf1-indicator-empty {
-  font-size: 11.5px;
-  color: #aab1bb;
-  font-style: italic;
-  padding: 4px 2px 8px;
+.eopcrf1-fact-value {
+  font-size: 14px;
 }
-
-/* ---------- Field row (MOV + Actual Results side by side) ---------- */
-
-.eopcrf1-field-row {
-  display: flex;
-  gap: 14px;
-}
-
-.eopcrf1-field-row .eopcrf1-field-block {
-  flex: 1;
-  min-width: 0;
-}
-
-/* ---------- MOV ---------- */
-
-.eopcrf1-field-block {
-  margin-bottom: 16px;
-}
-
-.eopcrf1-field-block-header {
+.eopcrf1-fact--inline .eopcrf1-fact-value {
   display: flex;
   align-items: center;
+  gap: 4px;
+}
+
+/* ---------- Rating scale ---------- */
+.eopcrf1-cat + .eopcrf1-cat {
+  margin-top: 18px;
+}
+.eopcrf1-cat-head {
+  display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.eopcrf1-cat-head h4 {
+  font-size: 14px;
+}
+.eopcrf1-cat-rating {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--e1-accent);
+}
+.eopcrf1-cat-rating.is-empty {
+  font-weight: 400;
+  color: var(--e1-muted);
+}
+.eopcrf1-levels {
+  border: 1px solid var(--e1-line);
+  border-radius: var(--e1-radius);
+  overflow: hidden;
+}
+.eopcrf1-level {
+  display: grid;
+  grid-template-columns: 28px 118px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 9px 12px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+.eopcrf1-level + .eopcrf1-level {
+  border-top: 1px solid var(--e1-line);
+}
+.eopcrf1-level:hover {
+  background: var(--e1-subtle);
+}
+.eopcrf1-level:focus-visible {
+  outline: 2px solid var(--e1-accent);
+  outline-offset: -2px;
+}
+.eopcrf1-level.is-selected {
+  background: var(--e1-accent-soft);
+  border-left-color: var(--e1-accent);
+}
+.eopcrf1-level-num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--e1-ink);
+  border: 1px solid var(--e1-line-strong);
+  border-radius: 50%;
+  align-self: start;
+}
+.eopcrf1-level.is-selected .eopcrf1-level-num {
+  color: #fff;
+  background: var(--e1-accent);
+  border-color: var(--e1-accent);
+}
+.eopcrf1-level-name {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--e1-muted);
+}
+.eopcrf1-level.is-selected .eopcrf1-level-name {
+  color: var(--e1-accent);
+}
+.eopcrf1-level-text {
+  font-size: 13.5px;
+}
+.eopcrf1-level-actions {
+  display: flex;
+  align-items: center;
 }
 
-.eopcrf1-field-block-title {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: #6b7280;
+/* ---------- Evaluation ---------- */
+.eopcrf1-eval {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
-
+.eopcrf1-box {
+  padding: 9px 11px;
+  min-height: 64px;
+  font-size: 13.5px;
+  white-space: pre-wrap;
+  background: var(--e1-subtle);
+  border: 1px solid var(--e1-line);
+  border-radius: 6px;
+}
+.eopcrf1-box.is-empty {
+  color: var(--e1-muted);
+}
+.eopcrf1-mov-wrap {
+  margin-top: 8px;
+}
 .eopcrf1-mov-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: #f7f9fc;
-  border: 1px solid #eef0f3;
-  border-radius: 8px;
+  gap: 4px;
 }
-
 .eopcrf1-mov-link {
-  flex: 1;
-  color: #1f4f8a;
-  font-size: 12.5px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--e1-accent);
   text-decoration: none;
+}
+.eopcrf1-mov-link svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.eopcrf1-mov-link span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
-
-.eopcrf1-mov-link:hover {
+.eopcrf1-mov-link:hover span {
   text-decoration: underline;
 }
 
-.eopcrf1-mov-link svg {
-  width: 13px;
-  height: 13px;
-  flex-shrink: 0;
-}
-
-.eopcrf1-mov-empty {
-  font-size: 12px;
-  color: #9aa3af;
-  font-style: italic;
-}
-
-/* ---------- Actual results / Timeline ---------- */
-
-.eopcrf1-actual-box {
-  padding: 10px 12px;
-  background: #f7f9fc;
-  border: 1px solid #eef0f3;
-  border-radius: 8px;
-  font-size: 12.5px;
-  color: #333;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  min-height: 20px;
-}
-
-.eopcrf1-actual-box.is-empty {
-  color: #9aa3af;
-  font-style: italic;
-}
-
-/* ---------- Ratings ---------- */
-
-.eopcrf1-ratings-grid {
+.eopcrf1-results {
   display: grid;
-  grid-template-columns: repeat(3, 1fr) 1fr;
-  gap: 10px;
-  margin-bottom: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 16px;
+  border: 1px solid var(--e1-line);
+  border-radius: var(--e1-radius);
+  overflow: hidden;
 }
-
-.eopcrf1-rating-field label {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  margin-bottom: 5px;
-}
-
-.eopcrf1-rating-select {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 7px 8px;
-  border: 1px solid #d8dde4;
-  border-radius: 6px;
-  font-size: 13px;
-  background: white;
-}
-
-.eopcrf1-rating-select:focus {
-  outline: none;
-  border-color: #4a6fa5;
-  box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.15);
-}
-
-.eopcrf1-rating-readonly {
-  padding: 7px 8px;
-  border: 1px solid #e2e5ea;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  background: #f1f2f4;
-  color: #374151;
-  text-align: center;
-}
-
-/* Score strip matches the KRA header — same darkest tier gradient
-   (t1 -> t2) — so the score reads as tied directly back to the KRA
-   it belongs to. */
-.eopcrf1-score-strip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.eopcrf1-result {
   padding: 10px 14px;
-  background: linear-gradient(
-    135deg,
-    var(--kra-t1, #16202e),
-    var(--kra-t2, #29323f)
-  );
-  border-radius: 8px;
-  color: #f3f4f6;
 }
-
-.eopcrf1-score-strip-label {
-  font-size: 12px;
+.eopcrf1-result + .eopcrf1-result {
+  border-left: 1px solid var(--e1-line);
+}
+.eopcrf1-result--total {
+  background: var(--e1-subtle);
+}
+.eopcrf1-result-value {
+  font-size: 18px;
   font-weight: 600;
-  color: #b7c3d4;
+  font-variant-numeric: tabular-nums;
 }
 
-.eopcrf1-score-strip-value {
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
+.eopcrf1-empty-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 20px;
+  color: var(--e1-muted);
+  border: 1px dashed var(--e1-line-strong);
+  border-radius: var(--e1-radius);
+}
+.eopcrf1-empty-inline p {
+  margin: 0;
+}
+.eopcrf1-empty-state {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--e1-muted);
+}
+.eopcrf1-empty-state svg {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 8px;
 }
 
-.eopcrf1-score-strip-formula {
-  font-size: 11px;
-  color: #8695a8;
-}
-
-/* ---------- Overall summary footer ---------- */
-
+/* ---------- Summary bar ---------- */
 .eopcrf1-summary {
   display: flex;
-  gap: 24px;
+  gap: 0;
   margin-top: 20px;
-  padding: 16px 20px;
-  background: #1f2937;
-  border-radius: 12px;
+  background: var(--e1-surface);
+  border: 1px solid var(--e1-line);
+  border-radius: var(--e1-radius);
+  overflow: hidden;
 }
-
 .eopcrf1-summary-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex: 1;
+  padding: 12px 18px;
 }
-
-.eopcrf1-summary-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: #9fb3d1;
+.eopcrf1-summary-item + .eopcrf1-summary-item {
+  border-left: 1px solid var(--e1-line);
 }
-
 .eopcrf1-summary-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
+  display: block;
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
-
-.eopcrf1-summary-value--warn {
-  color: #ffb020;
+.eopcrf1-summary-value.is-ok {
+  color: var(--e1-ok);
 }
-
-.eopcrf1-summary-value--ok {
-  color: #6fd68a;
+.eopcrf1-summary-value.is-warn {
+  color: var(--e1-warn);
 }
-
 .eopcrf1-summary-hint {
-  font-size: 11px;
-  color: #8695a8;
+  font-size: 12px;
+  color: var(--e1-warn);
 }
 
-/* ---------- Modal ---------- */
-
+/* ---------- Entry modal ---------- */
 .eopcrf1-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.eopcrf1-modal-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: -1;
-}
-
-.eopcrf1-modal-content {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  max-width: 520px;
-  width: 92%;
-  max-height: 88vh;
-  display: flex;
-  flex-direction: column;
-  z-index: 1001;
-}
-
-.eopcrf1-modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.eopcrf1-modal-header h2 {
-  font-size: 17px;
-  font-weight: 600;
-  margin: 0;
-  color: #1a1a1a;
-}
-
-.eopcrf1-modal-close {
-  background: none;
-  border: none;
-  font-size: 26px;
-  color: #999;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
-.eopcrf1-modal-close:hover {
-  color: #333;
-}
-
-.eopcrf1-modal-body {
-  padding: 22px 24px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.eopcrf1-modal-hint {
-  font-size: 12.5px;
-  color: #666;
-  margin: 0 0 16px 0;
-  line-height: 1.5;
-}
-
-.eopcrf1-modal-hint:empty {
-  display: none;
-}
-
-.eopcrf1-field-group {
-  margin-bottom: 16px;
-}
-
-.eopcrf1-field-group:last-child {
-  margin-bottom: 0;
-}
-
-.eopcrf1-field-label {
-  display: block;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 6px;
-}
-
-.eopcrf1-field-textarea,
-.eopcrf1-field-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 9px 12px;
-  border: 1px solid #e2e5ea;
-  border-radius: 7px;
-  font-size: 13.5px;
-  font-family: inherit;
-  background: #fbfbfc;
-}
-
-.eopcrf1-field-textarea {
-  resize: vertical;
-  min-height: 80px;
-  line-height: 1.5;
-}
-
-.eopcrf1-field-textarea:focus,
-.eopcrf1-field-input:focus {
-  outline: none;
-  border-color: #4a6fa5;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.15);
-}
-
-.eopcrf1-modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.eopcrf1-modal-btn {
-  padding: 10px 20px;
-  border: 1px solid #d0d0d0;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.eopcrf1-modal-btn-cancel {
-  background: white;
-  color: #333;
-}
-
-.eopcrf1-modal-btn-cancel:hover {
-  background: #f5f5f5;
-  border-color: #999;
-}
-
-.eopcrf1-modal-btn-submit {
-  background: #4a6fa5;
-  color: white;
-  border-color: #4a6fa5;
-}
-
-.eopcrf1-modal-btn-submit:hover {
-  background: #3d5a8a;
-  border-color: #3d5a8a;
-}
-
-/* ---------- Reset confirmation modal ---------- */
-/* Same visual pattern as IRC7's .irc7-confirm-* dialog. */
-
-.eopcrf1-confirm-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(17, 24, 39, 0.6);
-  z-index: 1100;
   align-items: center;
   justify-content: center;
   padding: 16px;
 }
+.eopcrf1-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 24, 40, 0.45);
+}
+.eopcrf1-modal-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--e1-surface);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(16, 24, 40, 0.25);
+}
+.eopcrf1-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--e1-line);
+}
+.eopcrf1-modal-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--e1-ink);
+}
+.eopcrf1-modal-close {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--e1-muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.eopcrf1-modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+.eopcrf1-modal-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--e1-muted);
+}
+.eopcrf1-modal-hint:empty {
+  display: none;
+}
+.eopcrf1-field-group {
+  margin-bottom: 14px;
+}
+.eopcrf1-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--e1-line);
+}
 
+/* ---------- Reset confirmation ---------- */
+.eopcrf1-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(16, 24, 40, 0.45);
+}
 .eopcrf1-confirm-overlay.visible {
   display: flex;
 }
-
 .eopcrf1-confirm-box {
-  background: #fff;
-  border-radius: 12px;
   width: 100%;
-  max-width: 360px;
-  padding: 22px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-  text-align: center;
+  max-width: 480px;
+  padding: 20px;
+  background: var(--e1-surface);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(16, 24, 40, 0.25);
 }
-
-/* The reset modal has more content (option list) than a plain Yes/No
-   confirmation, so it gets a little extra width and left-aligned body
-   text -- the heading/buttons stay centered like every other confirm box. */
-.eopcrf1-confirm-box--reset {
-  max-width: 420px;
-}
-
 .eopcrf1-confirm-box h4 {
-  margin: 0 0 10px 0;
+  margin-bottom: 12px;
   font-size: 16px;
-  font-weight: 700;
-  color: #1a1a1a;
 }
-
-.eopcrf1-confirm-box p {
-  margin: 0 0 20px 0;
-  font-size: 13.5px;
-  color: #555;
-  line-height: 1.5;
-}
-
-/* Reset-scope radio options */
-
 .eopcrf1-reset-options {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin: 0 0 16px 0;
-  text-align: left;
+  gap: 8px;
 }
-
 .eopcrf1-reset-option {
   display: flex;
-  align-items: flex-start;
   gap: 10px;
-  padding: 12px 14px;
-  border: 1.5px solid #e2e5ea;
-  border-radius: 10px;
+  padding: 10px 12px;
   cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
+  border: 1px solid var(--e1-line);
+  border-radius: var(--e1-radius);
 }
-
-.eopcrf1-reset-option:hover {
-  background: #fafbfc;
-}
-
 .eopcrf1-reset-option:has(input:checked) {
-  border-color: #4a6fa5;
-  background: #eef2f8;
+  border-color: var(--e1-accent);
+  background: var(--e1-accent-soft);
 }
-
-.eopcrf1-reset-option input[type="radio"] {
+.eopcrf1-reset-option input {
   margin-top: 3px;
-  accent-color: #4a6fa5;
-  flex-shrink: 0;
-  cursor: pointer;
+  accent-color: var(--e1-accent);
 }
-
 .eopcrf1-reset-option-text {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
-
-.eopcrf1-reset-option-text strong {
-  font-size: 13.5px;
-  color: #1a1a1a;
-}
-
 .eopcrf1-reset-option-text small {
-  font-size: 12px;
-  color: #666;
-  line-height: 1.4;
+  color: var(--e1-muted);
 }
-
-/* When "Reset entire form" is picked, the warning copy below turns red to
-   signal the heavier, structural action -- see eopcrf1.js's radio change
-   listener. */
+#eopcrf1-reset-confirm-warning {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--e1-muted);
+}
 #eopcrf1-reset-confirm-warning.eopcrf1-reset-warning--danger {
-  color: #b91c1c;
-  font-weight: 600;
+  color: var(--e1-danger);
 }
-
 .eopcrf1-confirm-actions {
   display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-.eopcrf1-btn-secondary,
-.eopcrf1-btn-danger {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.eopcrf1-btn-secondary {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-.eopcrf1-btn-secondary:hover {
-  background: #e5e7eb;
-}
-
-.eopcrf1-btn-danger {
-  background: #dc2626;
-  color: #fff;
-}
-
-.eopcrf1-btn-danger:hover {
-  background: #b91c1c;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 /* ---------- Responsive ---------- */
-
 @media (max-width: 900px) {
-  .eopcrf1-indicator-groups {
+  .eopcrf1-workspace {
     grid-template-columns: 1fr;
   }
-
-  .eopcrf1-ratings-grid {
-    grid-template-columns: 1fr 1fr;
+  .eopcrf1-nav {
+    position: static;
+    max-height: 280px;
   }
-
-  .eopcrf1-field-row {
-    flex-direction: column;
-    gap: 0;
+  .eopcrf1-eval {
+    grid-template-columns: 1fr;
+  }
+  .eopcrf1-part-tab-name {
+    display: none;
   }
 }
-
 @media (max-width: 640px) {
-  .eopcrf1-header h2 {
+  .eopcrf1-panel .eopcrf1-header h2 {
     font-size: 21px;
   }
-
   .eopcrf1-header-badge {
     height: 44px;
     padding: 0 12px;
   }
-
   .eopcrf1-header-badge-group {
     font-size: 9px;
   }
-
   .eopcrf1-header-badge-page {
     font-size: 15px;
   }
-
   .eopcrf1-header-divider {
     height: 44px;
   }
-
   .eopcrf1-header-actions {
     width: 100%;
   }
-
   .eopcrf1-reset-btn {
     flex: 1;
     justify-content: center;
   }
-
-  .eopcrf1-mfo-banner {
-    flex-wrap: wrap;
-  }
-
-  .eopcrf1-mfo-banner .eopcrf1-add-btn--banner {
-    margin-left: 0;
-  }
-
   .eopcrf1-add-btn {
     justify-content: center;
   }
-
-  .eopcrf1-ratings-grid {
-    grid-template-columns: 1fr 1fr;
+  .eopcrf1-facts {
+    grid-template-columns: 1fr;
   }
-
+  .eopcrf1-level {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+  .eopcrf1-level-name {
+    grid-column: 2;
+  }
+  .eopcrf1-level-text,
+  .eopcrf1-level-actions {
+    grid-column: 2;
+  }
+  .eopcrf1-results {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .eopcrf1-result:nth-child(odd) {
+    border-left: 0;
+  }
+  .eopcrf1-result {
+    border-top: 1px solid var(--e1-line);
+  }
   .eopcrf1-summary {
     flex-direction: column;
-    gap: 12px;
+  }
+  .eopcrf1-summary-item + .eopcrf1-summary-item {
+    border-left: 0;
+    border-top: 1px solid var(--e1-line);
   }
 }
-
-/* ---------- Print-only container: hidden on screen, shown only inside
-   @media print below (see #eopcrf1-print-report in eopcrf1.html and
-   buildPrintReport() in eopcrf1.js). ---------- */
-
-.eopcrf1-print-only {
-  display: none;
-}
-
-/* ------------------------------------------------------------------
-   Print / Save-to-PDF
-   Triggered by #eopcrf1-pdf-btn -> window.print() (see eopcrf1.js). Unlike
-   IRC1a's print stylesheet, which prints the same on-screen table,
-   EOPCRF1's on-screen layout is an editable accordion of KRA/objective
-   cards that looks nothing like the official DEPED RPMS "Individual
-   Performance Commitment and Review Form" (IPCRF) sheet it's required
-   to match (see eopcrf1_pdf_format.pdf). So instead of reflowing the
-   on-screen DOM, buildPrintReport() in eopcrf1.js rebuilds a dedicated
-   replica of that sheet into #eopcrf1-print-report right before print,
-   and this stylesheet swaps it in for the whole interactive page. Only
-   ever active on this page since eopcrf1.css is only loaded here, so
-   these rules can safely target the shared <header>/<nav> from
-   base.html without leaking into other tabs.
------------------------------------------------------------------- */
-
 @media print {
-  /* The official form is a wide, many-column table -- landscape "long"
-     bond paper, same 13in dimension IRC1a prints on, just rotated. */
-  @page {
-    size: 13in 8.5in;
-    margin: 0.4in;
-  }
-
-  /* base.css pins header+nav and makes .content the sole scrolling
-     element via overflow-y: auto + a flexed height (see irc1a.css's
-     print block for the same fix, needed here for the same reason). */
-  html,
-  body {
-    height: auto !important;
-    overflow: visible !important;
-  }
-
-  header,
-  nav {
+  .eopcrf1-header-actions,
+  .eopcrf1-nav,
+  .eopcrf1-icon-btn,
+  .eopcrf1-btn {
     display: none !important;
   }
-
-  .content {
-    overflow: visible !important;
-    height: auto !important;
-    padding: 0 !important;
-  }
-
-  /* Everything on screen inside the tab (header + its actions, the
-     editable report-header panel, the MFO banner, KRA cards, empty
-     state, bottom summary) is replaced wholesale by
-     #eopcrf1-print-report -- hide every other direct child of the tab
-     section and show only the printed replica. */
-  #eopcrf1-tab > *:not(#eopcrf1-print-report) {
-    display: none !important;
-  }
-
-  /* Belt-and-suspenders: only ever shown via a style toggle and default
-     to display:none already, but force them off in case a print is
-     triggered while one is open. */
-  #eopcrf1-entry-modal,
-  #eopcrf1-reset-confirm-overlay {
-    display: none !important;
-  }
-
-  * {
-    scrollbar-width: none !important;
-  }
-
-  *::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-  }
-
-  /* Chrome/Edge/Safari drop background colors on print by default --
-     this keeps the header-band shading below intentional. "Background
-     graphics" still needs to be left ON in the print dialog. */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color-adjust: exact !important;
-  }
-
-  .eopcrf1-print-only {
-    display: block !important;
-  }
-
-  .eopcrf1-print-page {
-    font-size: 8px;
-    color: #000;
-  }
-
-  .eopcrf1-print-title {
-    text-align: center;
-    font-weight: 800;
-    font-size: 13px;
-    letter-spacing: 0.02em;
-    margin: 0 0 6px;
-    padding: 5px 0;
-    text-transform: uppercase;
-    background: #3c7d22 !important;
-    color: #fff;
-    break-after: avoid;
-    page-break-after: avoid;
-  }
-
-  /* Name of Rater / Employee, Positions, Bureau, Rating Period, Date of
-     Review -- values come straight from #eopcrf1-report-header's inputs
-     (see eopcrf1.js's buildPrintReport()). */
-  .eopcrf1-print-header-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 6px;
-    font-size: 8.5px;
-    border: 1px solid #000;
-    background: #daf2d0 !important;
-    /* Keep every row (incl. Rating Period, the last one) glued to the
-       rows above it -- without this a row can land right on the page
-       boundary and get pushed to the next page on its own, stranding
-       "Rating Period" away from the rest of the header block instead of
-       staying connected to it. */
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  .eopcrf1-print-header-table tr {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  .eopcrf1-print-header-table td {
-    padding: 3px 6px;
-    vertical-align: top;
-    border: 1px solid #000;
-  }
-
-  .eopcrf1-print-header-label {
-    font-weight: 700;
-    white-space: nowrap;
-    width: 1%;
-  }
-
-  .eopcrf1-print-header-value {
-    font-weight: 700;
-    min-width: 120px;
-  }
-
-  .eopcrf1-print-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-
-  /* ==================================================================
-     COLUMN WIDTHS — edit here.
-     table-layout: fixed above means the table takes widths only from
-     these <col> rules (set via the <colgroup> in buildPrintReport(),
-     eopcrf1.js) and ignores cell content. Values are % of the table's
-     total width and should add up to 100.
-     Order matches the column order in buildPrintReport():
-     MFOs, KRAs, Objectives, Timeline, Weight, Quality, Efficiency,
-     Timeliness, MOVs, Actual Results, Q, E, T, Ave, Score.
-     ================================================================== */
-  .eopcrf1-col-mfo {
-    width: 5%;
-  }
-  .eopcrf1-col-kra {
-    width: 6%;
-  }
-  .eopcrf1-col-objectives {
-    width: 11%;
-  }
-  .eopcrf1-col-timeline {
-    width: 5%;
-  }
-  .eopcrf1-col-weight {
-    width: 4%;
-  }
-  .eopcrf1-col-quality {
-    width: 13%;
-  }
-  .eopcrf1-col-efficiency {
-    width: 13%;
-  }
-  .eopcrf1-col-timeliness {
-    width: 13%;
-  }
-  .eopcrf1-col-movs {
-    width: 8%;
-  }
-  .eopcrf1-col-actual {
-    width: 8%;
-  }
-  .eopcrf1-col-q {
-    width: 2.5%;
-  }
-  .eopcrf1-col-e {
-    width: 2.5%;
-  }
-  .eopcrf1-col-t {
-    width: 2.5%;
-  }
-  .eopcrf1-col-ave {
-    width: 3%;
-  }
-  .eopcrf1-col-score {
-    width: 3.5%;
-  }
-
-  .eopcrf1-print-table th,
-  .eopcrf1-print-table td {
-    border: 1px solid #000;
-    padding: 3px 4px;
-    vertical-align: top;
-    font-size: 7.5px;
-    line-height: 1.3;
-    overflow-wrap: break-word;
-    word-break: break-word;
-  }
-
-  .eopcrf1-print-table thead th {
-    text-align: center;
-    font-weight: 700;
-    background: #83cceb !important;
-  }
-
-  .eopcrf1-print-band-row th {
-    font-size: 8px;
-    font-style: italic;
-    text-transform: uppercase;
-    background: #f2ceef !important;
-  }
-
-  .eopcrf1-print-mfo,
-  .eopcrf1-print-kra,
-  .eopcrf1-print-weight {
-    text-align: center;
-    font-weight: 700;
-    vertical-align: middle;
-  }
-
-  .eopcrf1-print-objective-label {
-    font-weight: 700;
-    margin-right: 3px;
-  }
-
-  .eopcrf1-print-rate {
-    font-weight: 700;
-  }
-
-  /* Cells with no indicator defined at that rate level (or no MOV/actual
-     result/rating filled in) -- grayed out and empty, no "Not specified"
-     text, matching eopcrf1_pdf_format.pdf. */
-  .eopcrf1-print-blank {
-    background: #bfbfbf !important;
-  }
-
-  .eopcrf1-print-rating-cell {
-    text-align: center;
-    font-weight: 700;
-  }
-
-  .eopcrf1-print-empty {
-    color: #666;
-    font-style: italic;
-  }
-
-  /* Overall Rating for Accomplishments -- rendered as the table's own
-     last row (not a separate box below it) so it's visually part of the
-     main table: total weight sits in the Weight column, the label spans
-     Actual Results through Ave, and the total score lines up under the
-     Score column, matching eopcrf1_pdf_format.pdf. */
-  .eopcrf1-print-total-row td {
-    background: #daf2d0 !important;
-    font-weight: 700;
-  }
-
-  .eopcrf1-print-overall-label {
-    text-align: right;
-    text-transform: uppercase;
-    padding-right: 8px !important;
-  }
-
-  .eopcrf1-print-overall-score {
-    text-align: center;
-    font-size: 9px;
-  }
-
-  /* Avoid splitting an objective's rate-level rows awkwardly across a
-     page break. */
-  .eopcrf1-print-table tr {
-    break-inside: avoid;
-  }
-
-  /* Keep the main table attached to the header block above it instead of
-     starting on its own page. */
-  .eopcrf1-print-header-table,
-  .eopcrf1-print-table {
-    break-before: avoid;
-    break-after: auto;
-  }
-
-  /* The report-signatory footer (Prepared by / Checked by / Approving
-     Authority) lives in base.html, outside #eopcrf1-tab, so the
-     "#eopcrf1-tab > *" hide rule above never reaches it. It's not part of
-     the official IPCRF sheet this page reproduces, so hide it here. */
-  .report-signatory {
-    display: none !important;
+  .eopcrf1-workspace {
+    display: block;
   }
 }
