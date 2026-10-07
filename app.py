@@ -14,8 +14,10 @@ from models import (
     EOPCRF1_CATEGORIES,
     EOPCRF1_PART_B,
     seed_eopcrf1_defaults,
-    IRC8CRow,
-    IRC8C_SLOTS,
+    EOPCRF4Row,
+    EOPCRF4Feedback,
+    EOPCRF4_PARTS,
+    EOPCRF4_POSITIONS,
     ReportPreparer,
     EOPCRF1ApprovingAuthority,
     EOPCRF1ReportHeader,
@@ -100,6 +102,19 @@ def _ensure_eopcrf1_schema():
             )
             conn.commit()
 
+        # Columns added for the Organizational Outcomes Alignment fields
+        # (per KRA) and the Performance Target / listed-MOV fields (per
+        # objective). Same idea as `part` above: no-ops once present.
+        kra_cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(eopcrf1_kras)").fetchall()]
+        for col in ("gaa_program", "bedp_pillars", "admin_agenda"):
+            if kra_cols and col not in kra_cols:
+                conn.exec_driver_sql(f"ALTER TABLE eopcrf1_kras ADD COLUMN {col} TEXT")
+        obj_cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(eopcrf1_objectives)").fetchall()]
+        for col, ddl in (("target_value", "VARCHAR(100)"), ("target_description", "TEXT"), ("mov_required", "TEXT")):
+            if obj_cols and col not in obj_cols:
+                conn.exec_driver_sql(f"ALTER TABLE eopcrf1_objectives ADD COLUMN {col} {ddl}")
+        conn.commit()
+
 
 def _ensure_seeded_kras(year):
     """Makes sure the fixed Part I-A / Part I-C structure exists for this
@@ -163,13 +178,13 @@ def init_db_command():
 
 # ---------------------------------------------------------------------------
 # Fixed list of tabs. This system has exactly 4 Individual Report Cards
-# (EOPCRF1, EOPCRF2, IRC8c-8d, the IPCRF series) and this list will not grow.
+# (EOPCRF1, EOPCRF2, EOPCRF3, EOPCRF4) and this list will not grow.
 # ---------------------------------------------------------------------------
 TABS = [
     {"id": "eopcrf1", "short": "EOPCRF I", "part": "Part I", "name": "EOPCRF Part I", "desc": "Individual Performance Commitment and Review Form (IPCRF)"},
     {"id": "eopcrf2", "short": "EOPCRF II", "part": "Part II", "name": "EOPCRF Part II", "desc": "Leadership and Core Behavioral Competencies"},
-    {"id": "irc8c", "short": "EOPCRF III", "part": "Part III", "name": "EOPCRF Part III", "desc": "Summary of Ratings for Discussion"},
     {"id": "eopcrf3", "short": "EOPCRF III", "part": "Part III", "name": "EOPCRF Part III", "desc": "Summary of Ratings"},
+    {"id": "eopcrf4", "short": "EOPCRF IV", "part": "Part IV", "name": "EOPCRF Part IV", "desc": "Improvement and Development Plans"},
 ]
 
 # Quick lookup by id, e.g. TAB_LOOKUP["eopcrf1"]
@@ -384,8 +399,8 @@ def view_tab(tab_id):
     """Renders the dedicated template for whichever tab was requested.
     Templates are static markup with no server-side value binding -- each
     tab's own JS is responsible for fetching /irc/<tab_id>/data on load and
-    populating the page client-side (see eopcrf1.js, eopcrf2.js, irc8c.js,
-    eopcrf3.js)."""
+    populating the page client-side (see eopcrf1.js, eopcrf2.js, eopcrf3.js,
+    eopcrf4.js)."""
     active_tab = TAB_LOOKUP.get(tab_id)
     if active_tab is None:
         abort(404)
@@ -396,8 +411,7 @@ def view_tab(tab_id):
 # EOPCRF2 -- Part II: Leadership Competencies and Core Behavioural Competencies
 # ---------------------------------------------------------------------------
 @app.route("/irc/eopcrf2/data", methods=["GET"])
-# Back-compat alias: irc8c.js (not part of this rename pass) may
-# still fetch the old "/irc/irc8b/data" path. The "ratings" shape is
+# Back-compat alias: any page still fetching the old "/irc/irc8b/data" path. The "ratings" shape is
 # unchanged ({subsectionKey: {index: rating}}), so they keep working.
 @app.route("/irc/irc8b/data", methods=["GET"])
 def get_eopcrf2_data():
@@ -542,6 +556,10 @@ def save_eopcrf1_kra():
 
     kra.text = text
     kra.weight = weight
+    # Optional alignment fields -- only the keys present in the body change.
+    for json_key, column in (("gaaProgram", "gaa_program"), ("bedpPillars", "bedp_pillars"), ("adminAgenda", "admin_agenda")):
+        if json_key in data:
+            setattr(kra, column, (data.get(json_key) or "").strip() or None)
     db.session.commit()
     return jsonify(kra.to_dict()), 200
 
@@ -598,6 +616,10 @@ def save_eopcrf1_objective():
 
     objective.text = text
     objective.weight = weight
+    # Optional Performance Target / listed-MOV fields -- only keys present change.
+    for json_key, column in (("targetValue", "target_value"), ("targetDescription", "target_description"), ("movRequired", "mov_required")):
+        if json_key in data:
+            setattr(objective, column, (data.get(json_key) or "").strip() or None)
     db.session.commit()
     return jsonify(objective.to_dict()), 200
 
@@ -804,86 +826,101 @@ def reset_eopcrf1_data():
 
 
 # ---------------------------------------------------------------------------
-# IRC8c -- Summary of Ratings for Discussion
+# EOPCRF4 -- Part IV: Improvement and Development Plans
 #
-# Just two routes: one to read the (always-exactly-four) Development Plan
-# rows plus the live Final Rating, one to patch a single row. There's no
-# create/delete here -- see models.py's IRC8CRow docstring for why the four
-# rows are permanent slots rather than a user-managed list, and why
-# "top 5" ranking/label resolution is left to irc8c.js instead of computed
-# here (short version: EOPCRF2's subsection titles and per-subsection
-# criteria only exist in eopcrf2.js, so IRC8c's route can't resolve an
-# irc8b_* slot ref (slot name kept for irc8c.js) into a label without duplicating that list here too).
+# Four routes: read everything on the page (six fixed plan rows -- three in
+# Part IV-A, three in Part IV-B -- plus the two Feedback boxes), patch a
+# single row, save a Feedback box, and reset. There's no create/delete for
+# rows -- see models.py's EOPCRF4Row docstring for why they're permanent
+# slots, and why "top 5" ranking/label resolution for Part IV-B's Strengths
+# / Improvement Needs picks is left to eopcrf4.js instead of computed here.
 # ---------------------------------------------------------------------------
-@app.route("/irc/irc8c/data", methods=["GET"])
-def get_irc8c_data():
+_EOPCRF4_TEXT_FIELDS = {
+    # JSON key -> model attribute
+    "gapAnalysis": "gap_analysis",
+    "improvementArea": "improvement_area",
+    "objective": "objective",
+    "intervention": "intervention",
+    "timeline": "timeline",
+    "resources": "resources",
+}
+_EOPCRF4_REF_FIELDS = {
+    "strengthRef": "strength_ref",
+    "devNeedsRef": "dev_needs_ref",
+}
+
+
+@app.route("/irc/eopcrf4/data", methods=["GET"])
+def get_eopcrf4_data():
     year = request.args.get("year", type=int) or _current_year()
 
-    existing = {r.slot: r for r in IRC8CRow.query.filter_by(year=year).all()}
+    existing = {(r.part, r.position): r for r in EOPCRF4Row.query.filter_by(year=year).all()}
     added = False
-    for slot in IRC8C_SLOTS:
-        if slot not in existing:
-            row = IRC8CRow(year=year, slot=slot, is_locked=True)
-            db.session.add(row)
-            existing[slot] = row
-            added = True
+    for part in EOPCRF4_PARTS:
+        for position in EOPCRF4_POSITIONS:
+            if (part, position) not in existing:
+                row = EOPCRF4Row(year=year, part=part, position=position, is_locked=True)
+                db.session.add(row)
+                existing[(part, position)] = row
+                added = True
     if added:
         db.session.commit()
 
-    rows = [existing[slot].to_dict() for slot in IRC8C_SLOTS]
+    rows = [existing[(part, position)].to_dict() for part in EOPCRF4_PARTS for position in EOPCRF4_POSITIONS]
 
-    # Final Performance Results Rating = sum of every objective's Score
-    # (Average x Weight) for the year -- the same arithmetic eopcrf1.js's
-    # summary footer uses, just computed here via EOPCRF1Objective.score()
-    # so IRC8c never has to re-derive it (or store a stale copy).
-    objectives = (
-        EOPCRF1Objective.query.join(EOPCRF1Kra, EOPCRF1Objective.kra_id == EOPCRF1Kra.id)
-        .filter(EOPCRF1Kra.year == year)
-        .all()
-    )
-    scores = [s for s in (o.score() for o in objectives) if s is not None]
-    final_rating = sum(scores) if scores else None
+    feedback = {part: "" for part in EOPCRF4_PARTS}
+    for fb in EOPCRF4Feedback.query.filter_by(year=year).all():
+        if fb.part in feedback:
+            feedback[fb.part] = fb.text or ""
 
-    return jsonify({"year": year, "finalRating": final_rating, "rows": rows}), 200
+    return jsonify({"year": year, "rows": rows, "feedback": feedback}), 200
 
 
-@app.route("/irc/irc8c/row", methods=["POST"])
-def save_irc8c_row():
-    """Partial update of one fixed Development Plan row. Every field is
-    optional -- only keys present in the body are changed, so the dropdown
-    picks, the text cells, and the lock toggle can each be saved
-    independently without clobbering the others.
+@app.route("/irc/eopcrf4/row", methods=["POST"])
+def save_eopcrf4_row():
+    """Partial update of one fixed plan row. Every field is optional -- only
+    keys present in the body are changed, so the dropdown picks, the text
+    cells, and the lock toggle can each be saved independently without
+    clobbering the others.
 
-    Expected JSON body (all fields but 'slot' optional):
+    Expected JSON body (all fields but 'part' and 'position' optional):
         {
-          "year": 2026, "slot": "eopcrf1_1",
-          "strengthRef": "17", "devNeedsRef": "42",
-          "actionPlan": "...", "timeline": "...", "resourcesNeeded": "...",
+          "year": 2026, "part": "B", "position": 1,
+          "strengthRef": "o:17", "devNeedsRef": "c:self_management",
+          "gapAnalysis": "...", "improvementArea": "...",
+          "objective": "...", "intervention": "...",
+          "timeline": "...", "resources": "...",
           "isLocked": true
         }
+    gapAnalysis / improvementArea are Part IV-A columns; strengthRef /
+    devNeedsRef are Part IV-B columns. Sending one for the wrong part is
+    rejected rather than silently stored.
     """
     data = request.get_json(silent=True) or {}
     year = data.get("year") or _current_year()
-    slot = data.get("slot")
+    part = data.get("part")
+    position = data.get("position")
 
-    if slot not in IRC8C_SLOTS:
-        return jsonify({"error": f"Invalid slot: {slot!r}"}), 400
+    if part not in EOPCRF4_PARTS:
+        return jsonify({"error": f"Invalid part: {part!r}"}), 400
+    if position not in EOPCRF4_POSITIONS:
+        return jsonify({"error": f"Invalid position: {position!r}"}), 400
+    if part == "A" and any(k in data for k in _EOPCRF4_REF_FIELDS):
+        return jsonify({"error": "Part IV-A has no Strengths / Improvement Needs picks"}), 400
+    if part == "B" and ("gapAnalysis" in data or "improvementArea" in data):
+        return jsonify({"error": "Part IV-B has no Gap Analysis / Improvement Area columns"}), 400
 
-    row = IRC8CRow.query.filter_by(year=year, slot=slot).first()
+    row = EOPCRF4Row.query.filter_by(year=year, part=part, position=position).first()
     if row is None:
-        row = IRC8CRow(year=year, slot=slot, is_locked=True)
+        row = EOPCRF4Row(year=year, part=part, position=position, is_locked=True)
         db.session.add(row)
 
-    if "strengthRef" in data:
-        row.strength_ref = str(data["strengthRef"]) if data["strengthRef"] not in (None, "") else None
-    if "devNeedsRef" in data:
-        row.dev_needs_ref = str(data["devNeedsRef"]) if data["devNeedsRef"] not in (None, "") else None
-    if "actionPlan" in data:
-        row.action_plan = (data.get("actionPlan") or "").strip() or None
-    if "timeline" in data:
-        row.timeline = (data.get("timeline") or "").strip() or None
-    if "resourcesNeeded" in data:
-        row.resources_needed = (data.get("resourcesNeeded") or "").strip() or None
+    for key, attr in _EOPCRF4_REF_FIELDS.items():
+        if key in data:
+            setattr(row, attr, str(data[key]) if data[key] not in (None, "") else None)
+    for key, attr in _EOPCRF4_TEXT_FIELDS.items():
+        if key in data:
+            setattr(row, attr, (data.get(key) or "").strip() or None)
     if "isLocked" in data:
         row.is_locked = bool(data["isLocked"])
 
@@ -891,23 +928,51 @@ def save_irc8c_row():
     return jsonify(row.to_dict()), 200
 
 
-@app.route("/irc/irc8c/reset", methods=["DELETE"])
-def reset_irc8c_data():
-    """Clears every Development Plan row for the given year back to blank
-    and locked. The four rows themselves are fixed slots (see IRC8C_SLOTS
-    / IRC8CRow) so they're never deleted here, only their editable fields.
-    irc8c.js just re-fetches everything via loadAll() afterward, so no
+@app.route("/irc/eopcrf4/feedback", methods=["POST"])
+def save_eopcrf4_feedback():
+    """Saves one 'Feedback:' box. Expected JSON body:
+        { "year": 2026, "part": "A", "text": "..." }
+    Empty text clears the box."""
+    data = request.get_json(silent=True) or {}
+    year = data.get("year") or _current_year()
+    part = data.get("part")
+
+    if part not in EOPCRF4_PARTS:
+        return jsonify({"error": f"Invalid part: {part!r}"}), 400
+    if data.get("text") is not None and not isinstance(data["text"], str):
+        return jsonify({"error": "'text' must be a string"}), 400
+
+    fb = EOPCRF4Feedback.query.filter_by(year=year, part=part).first()
+    if fb is None:
+        fb = EOPCRF4Feedback(year=year, part=part)
+        db.session.add(fb)
+    fb.text = (data.get("text") or "").strip() or None
+
+    db.session.commit()
+    return jsonify({"year": year, "part": part, "text": fb.text or ""}), 200
+
+
+@app.route("/irc/eopcrf4/reset", methods=["DELETE"])
+def reset_eopcrf4_data():
+    """Clears every plan row for the given year back to blank and locked,
+    and empties both Feedback boxes. The six rows themselves are fixed
+    slots so they're never deleted here, only their editable fields.
+    eopcrf4.js just re-fetches everything via loadAll() afterward, so no
     scope/body is needed in the response beyond a success flag."""
     year = request.args.get("year", type=int) or _current_year()
 
-    rows = IRC8CRow.query.filter_by(year=year).all()
-    for row in rows:
+    for row in EOPCRF4Row.query.filter_by(year=year).all():
+        row.gap_analysis = None
+        row.improvement_area = None
         row.strength_ref = None
         row.dev_needs_ref = None
-        row.action_plan = None
+        row.objective = None
+        row.intervention = None
         row.timeline = None
-        row.resources_needed = None
+        row.resources = None
         row.is_locked = True
+
+    EOPCRF4Feedback.query.filter_by(year=year).delete()
 
     db.session.commit()
     return jsonify({"reset": True, "year": year}), 200
