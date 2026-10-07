@@ -20,8 +20,13 @@
   const resetConfirmConfirmBtn = document.getElementById(
     "eopcrf1-reset-confirm-confirm",
   );
-  const resetScopeRadios = document.querySelectorAll(
-    'input[name="eopcrf1-reset-scope"]',
+  const resetPartChecks = document.querySelectorAll(
+    'input[name="eopcrf1-reset-part"]',
+  );
+  const resetPartB = document.getElementById("eopcrf1-reset-part-b");
+  const resetBOptions = document.getElementById("eopcrf1-reset-b-options");
+  const resetBScopeRadios = document.querySelectorAll(
+    'input[name="eopcrf1-reset-b-scope"]',
   );
   const resetConfirmWarning = document.getElementById(
     "eopcrf1-reset-confirm-warning",
@@ -950,53 +955,70 @@
   );
 
   // ================= Reset =================
-  const RESET_WARNINGS = {
-    ratings_mov:
-      "This clears every rating and MOV link but keeps your KRAs, objectives and weights. This cannot be undone.",
-    all: "This removes every Part I-B KRA, objective and indicator, along with everything typed into them, and clears all ratings and MOV links. This cannot be undone.",
-  };
-  const getSelectedResetScope = () => {
+  const PART_NAMES = { a: "Part I-A", b: "Part I-B", c: "Part I-C" };
+  const getSelectedResetParts = () =>
+    Array.from(resetPartChecks)
+      .filter((c) => c.checked)
+      .map((c) => c.value);
+  const getBResetScope = () => {
     const checked = document.querySelector(
-      'input[name="eopcrf1-reset-scope"]:checked',
+      'input[name="eopcrf1-reset-b-scope"]:checked',
     );
-    return checked ? checked.value : "ratings_mov";
+    return checked ? checked.value : "data";
   };
-  function updateResetWarning() {
-    const scope = getSelectedResetScope();
-    resetConfirmWarning.textContent =
-      RESET_WARNINGS[scope] || RESET_WARNINGS.ratings_mov;
+
+  function updateResetUi() {
+    const parts = getSelectedResetParts();
+    const bSelected = parts.includes("b");
+    resetBOptions.style.display = bSelected ? "flex" : "none";
+    resetConfirmConfirmBtn.disabled = parts.length === 0;
+
+    if (!parts.length) {
+      resetConfirmWarning.textContent = "Select at least one part to reset.";
+      resetConfirmWarning.classList.remove("eopcrf1-reset-warning--danger");
+      return;
+    }
+    const names = parts.map((p) => PART_NAMES[p]).join(", ");
+    const removeKras = bSelected && getBResetScope() === "all";
+    resetConfirmWarning.textContent = removeKras
+      ? `This clears the ratings, timeline, MOV links and actual accomplishments of ${names}, and removes every KRA, objective and indicator you added in Part I-B. This cannot be undone.`
+      : `This clears the ratings, timeline, MOV links and actual accomplishments of ${names}. KRAs, objectives and weights are kept. This cannot be undone.`;
     resetConfirmWarning.classList.toggle(
       "eopcrf1-reset-warning--danger",
-      scope === "all",
+      removeKras,
     );
   }
-  resetScopeRadios.forEach((r) =>
-    r.addEventListener("change", updateResetWarning),
-  );
+  resetPartChecks.forEach((c) => c.addEventListener("change", updateResetUi));
+  resetBScopeRadios.forEach((r) => r.addEventListener("change", updateResetUi));
 
   function openResetConfirm() {
-    document.getElementById("eopcrf1-reset-scope-ratings").checked = true;
-    updateResetWarning();
+    resetPartChecks.forEach((c) => (c.checked = false));
+    document.querySelector(
+      'input[name="eopcrf1-reset-b-scope"][value="data"]',
+    ).checked = true;
+    updateResetUi();
     resetConfirmOverlay.classList.add("visible");
   }
   function closeResetConfirm() {
     resetConfirmOverlay.classList.remove("visible");
   }
 
-  function clearAllRatingsAndMovInPlace() {
-    state.kras.forEach((kra) =>
+  function applyResetInPlace(parts, removePartBKras) {
+    if (removePartBKras) {
+      state.kras = state.kras.filter((k) => k.part !== "b");
+    }
+    state.kras.forEach((kra) => {
+      if (!parts.includes(kra.part)) return;
       kra.objectives.forEach((obj) => {
         obj.ratings = { quality: null, efficiency: null, timeliness: null };
         obj.mov = null;
-      }),
-    );
+        obj.actualResults = null;
+        obj.timeline = null;
+        obj.average = null;
+        obj.score = null;
+      });
+    });
     render();
-  }
-  function removePartBKrasInPlace() {
-    // Part I-A / I-C are fixed and survive "reset entire form" server-side,
-    // so only Part I-B KRAs leave the list here (their ratings/MOV clear too).
-    state.kras = state.kras.filter((k) => k.locked);
-    clearAllRatingsAndMovInPlace();
   }
 
   resetBtn.addEventListener("click", openResetConfirm);
@@ -1005,20 +1027,20 @@
     if (e.target === resetConfirmOverlay) closeResetConfirm();
   });
   resetConfirmConfirmBtn.addEventListener("click", async () => {
-    const scope = getSelectedResetScope();
+    const parts = getSelectedResetParts();
+    if (!parts.length) return;
+    const removeKras = parts.includes("b") && getBResetScope() === "all";
     resetConfirmConfirmBtn.disabled = true;
     try {
-      const data = await apiCall(
-        "DELETE",
-        `/irc/eopcrf1/reset?scope=${scope}&year=${state.year}`,
-      );
-      if (data && data.scope === "all") removePartBKrasInPlace();
-      else clearAllRatingsAndMovInPlace();
+      let url = `/irc/eopcrf1/reset?parts=${parts.join(",")}&year=${state.year}`;
+      if (parts.includes("b")) url += `&partB=${removeKras ? "all" : "data"}`;
+      await apiCall("DELETE", url);
+      applyResetInPlace(parts, removeKras);
+      closeResetConfirm();
     } catch (err) {
       alert(err.message || "Could not reset the data. Please try again.");
     } finally {
-      resetConfirmConfirmBtn.disabled = false;
-      closeResetConfirm();
+      updateResetUi();
     }
   });
 

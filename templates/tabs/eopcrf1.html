@@ -257,46 +257,76 @@
   <div class="eopcrf1-confirm-box">
     <h4>Reset this form?</h4>
 
+    <p class="eopcrf1-reset-intro">
+      Choose what to reset. Resetting clears the ratings, timeline, MOV link and
+      actual accomplishments of the selected parts.
+    </p>
+
     <div class="eopcrf1-reset-options">
       <label class="eopcrf1-reset-option">
-        <input
-          type="radio"
-          name="eopcrf1-reset-scope"
-          value="ratings_mov"
-          id="eopcrf1-reset-scope-ratings"
-          checked
-        />
+        <input type="checkbox" name="eopcrf1-reset-part" value="a" />
         <span class="eopcrf1-reset-option-text">
-          <strong>Clear ratings &amp; MOV links only</strong>
-          <small
-            >Clears every Quality, Efficiency and Timeliness rating and every
-            MOV link. KRAs, objectives, weights, indicators, timeline and actual
-            results stay as they are.</small
-          >
+          <strong>Part I-A</strong>
+          <small>Commitment to Organizational Outcomes</small>
         </span>
       </label>
       <label class="eopcrf1-reset-option">
         <input
-          type="radio"
-          name="eopcrf1-reset-scope"
-          value="all"
-          id="eopcrf1-reset-scope-all"
+          type="checkbox"
+          name="eopcrf1-reset-part"
+          value="b"
+          id="eopcrf1-reset-part-b"
         />
         <span class="eopcrf1-reset-option-text">
-          <strong>Reset entire form</strong>
-          <small
-            >Also removes every KRA, objective and indicator you added in Part
-            I-B. Part I-A and Part I-C have a fixed structure, so only their
-            ratings and MOV links are cleared.</small
-          >
+          <strong>Part I-B</strong>
+          <small>Innovating and Intervening Accomplishments</small>
+        </span>
+      </label>
+
+      <div
+        id="eopcrf1-reset-b-options"
+        class="eopcrf1-reset-suboptions"
+        style="display: none"
+      >
+        <label class="eopcrf1-reset-option">
+          <input
+            type="radio"
+            name="eopcrf1-reset-b-scope"
+            value="data"
+            checked
+          />
+          <span class="eopcrf1-reset-option-text">
+            <strong
+              >Reset ratings, timeline, MOV links &amp; actual accomplishments
+              only</strong
+            >
+            <small>Your KRAs and objectives in Part I-B are kept.</small>
+          </span>
+        </label>
+        <label class="eopcrf1-reset-option">
+          <input type="radio" name="eopcrf1-reset-b-scope" value="all" />
+          <span class="eopcrf1-reset-option-text">
+            <strong
+              >Reset everything, including added KRAs and objectives</strong
+            >
+            <small
+              >Removes every KRA, objective and indicator you added in Part
+              I-B.</small
+            >
+          </span>
+        </label>
+      </div>
+
+      <label class="eopcrf1-reset-option">
+        <input type="checkbox" name="eopcrf1-reset-part" value="c" />
+        <span class="eopcrf1-reset-option-text">
+          <strong>Part I-C</strong>
+          <small>Organizational Effectiveness</small>
         </span>
       </label>
     </div>
 
-    <p id="eopcrf1-reset-confirm-warning">
-      This clears every rating and MOV link but keeps your KRAs, objectives and
-      weights. This cannot be undone.
-    </p>
+    <p id="eopcrf1-reset-confirm-warning">Select at least one part to reset.</p>
 
     <div class="eopcrf1-confirm-actions">
       <button
@@ -310,6 +340,7 @@
         type="button"
         id="eopcrf1-reset-confirm-confirm"
         class="eopcrf1-btn eopcrf1-btn--danger"
+        disabled
       >
         Yes, reset
       </button>
