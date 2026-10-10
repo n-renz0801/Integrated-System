@@ -76,6 +76,7 @@ def main():
         width=1366,
         height=850,
         min_size=(1000, 650),
+        maximized=True,  # open filling the screen (title bar and taskbar stay)
     )
     try:
         webview.start()  # blocks until the window is closed
