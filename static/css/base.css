@@ -386,6 +386,35 @@ nav ul li a.active::after {
   border-bottom-color: var(--navy);
 }
 
+/* Editable "position" line (EOPCRF4's Rater / Approving Authority) -- an
+   input that reads like .report-signatory-position at rest, with the same
+   hover/focus underline as .report-signatory-name-input. */
+.report-signatory-position-input {
+  display: block;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  padding: 0 0 2px;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--text-light);
+}
+
+.report-signatory-position-input::placeholder {
+  color: var(--text-light);
+  opacity: 0.7;
+}
+
+.report-signatory-position-input:hover {
+  border-bottom-color: var(--border);
+}
+
+.report-signatory-position-input:focus {
+  outline: none;
+  border-bottom-color: var(--navy);
+}
+
 /* "Date" control shown under each signatory's position -- a visible button
    (styled to match .report-signatory-position at rest) that triggers a
    real <input type="date">'s native pop-up calendar. The input itself is
@@ -648,7 +677,8 @@ textarea[readonly] {
     font-size: 9.5px !important;
   }
 
-  .report-signatory-position {
+  .report-signatory-position,
+  .report-signatory-position-input {
     font-size: 8px !important;
   }
 

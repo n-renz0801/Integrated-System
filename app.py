@@ -18,6 +18,7 @@ from models import (
     EOPCRF4Feedback,
     EOPCRF4_PARTS,
     EOPCRF4_POSITIONS,
+    EOPCRF4_POSITIONS_BY_PART,
     ReportPreparer,
     EOPCRF1ApprovingAuthority,
     EOPCRF1ReportHeader,
@@ -294,7 +295,7 @@ def get_eopcrf1_approving_authority():
     """Read-only fetch used by base.html's report-signatory footer, on the
     EOPCRF1 page only, to fill in the current 'Approving Authority' name."""
     authority = _get_eopcrf1_approving_authority()
-    return jsonify({"name": authority.name}), 200
+    return jsonify({"name": authority.name, "position": authority.position or ""}), 200
 
 
 @app.route("/api/eopcrf1/approving-authority", methods=["POST"])
@@ -303,13 +304,17 @@ def save_eopcrf1_approving_authority():
     report-signatory footer. Single global row -- not year-scoped and
     intentionally untouched by EOPCRF1's Reset."""
     data = request.get_json(silent=True) or {}
-    name = (data.get("name") or "").strip()
 
     authority = _get_eopcrf1_approving_authority()
-    authority.name = name
+    # Partial body: only the fields sent are changed, so saving the name
+    # never blanks the position (and vice versa).
+    if "name" in data:
+        authority.name = (data.get("name") or "").strip()
+    if "position" in data:
+        authority.position = (data.get("position") or "").strip()
     db.session.commit()
 
-    return jsonify({"name": authority.name}), 200
+    return jsonify({"name": authority.name, "position": authority.position or ""}), 200
 
 
 @app.route("/api/eopcrf1/report-header", methods=["GET"])
@@ -871,7 +876,7 @@ def get_eopcrf4_data():
     existing = {(r.part, r.position): r for r in EOPCRF4Row.query.filter_by(year=year).all()}
     added = False
     for part in EOPCRF4_PARTS:
-        for position in EOPCRF4_POSITIONS:
+        for position in EOPCRF4_POSITIONS_BY_PART[part]:
             if (part, position) not in existing:
                 row = EOPCRF4Row(year=year, part=part, position=position, is_locked=True)
                 db.session.add(row)
@@ -880,7 +885,7 @@ def get_eopcrf4_data():
     if added:
         db.session.commit()
 
-    rows = [existing[(part, position)].to_dict() for part in EOPCRF4_PARTS for position in EOPCRF4_POSITIONS]
+    rows = [existing[(part, position)].to_dict() for part in EOPCRF4_PARTS for position in EOPCRF4_POSITIONS_BY_PART[part]]
 
     feedback = {part: "" for part in EOPCRF4_PARTS}
     for fb in EOPCRF4Feedback.query.filter_by(year=year).all():
@@ -917,7 +922,7 @@ def save_eopcrf4_row():
 
     if part not in EOPCRF4_PARTS:
         return jsonify({"error": f"Invalid part: {part!r}"}), 400
-    if position not in EOPCRF4_POSITIONS:
+    if position not in EOPCRF4_POSITIONS_BY_PART[part]:
         return jsonify({"error": f"Invalid position: {position!r}"}), 400
     if part == "A" and any(k in data for k in _EOPCRF4_REF_FIELDS):
         return jsonify({"error": "Part IV-A has no Strengths / Improvement Needs picks"}), 400
@@ -969,7 +974,7 @@ def save_eopcrf4_feedback():
 @app.route("/irc/eopcrf4/reset", methods=["DELETE"])
 def reset_eopcrf4_data():
     """Clears every plan row for the given year back to blank and locked,
-    and empties both Feedback boxes. The six rows themselves are fixed
+    and empties both Feedback boxes. The seven rows themselves are fixed
     slots so they're never deleted here, only their editable fields.
     eopcrf4.js just re-fetches everything via loadAll() afterward, so no
     scope/body is needed in the response beyond a success flag."""

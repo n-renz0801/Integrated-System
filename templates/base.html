@@ -71,7 +71,9 @@
            Shown at the bottom of every IRC8a/8b/8d page (active_tab is set
            by view_tab()) except IRC8c and EOPCRF3, which each render their own
            agreement block inline (see tabs/irc8c.html and
-           tabs/eopcrf3.html) instead of down here. Hidden on Home, which has
+           tabs/eopcrf3.html) instead of down here. On EOPCRF4 the same
+           footer is shown but its contents are Ratee / Rater / Approving
+           Authority instead of Prepared by / Checked by. Hidden on Home, which has
            no report to sign. "Prepared by" is populated client-side from
            /api/preparer (see index.js) so it always reflects whatever was
            last saved on the Home page. "Checked by" never changes, so it's
@@ -83,8 +85,89 @@
           <span>Report signatories</span>
         </div>
         <div
-          class="report-signatory-grid{% if active_tab and active_tab.id == 'irc8a' %} report-signatory-grid--three{% endif %}"
+          class="report-signatory-grid{% if active_tab and active_tab.id in ['irc8a', 'eopcrf4'] %} report-signatory-grid--three{% endif %}"
         >
+          {% if active_tab and active_tab.id == 'eopcrf4' %}
+          <!-- EOPCRF4: Ratee / Rater / Approving Authority.
+               Ratee name + position come from the Home page (index.js fills
+               #reportPreparedByName / #reportPreparedByPosition). Rater and
+               Approving Authority name + position are typeable and saved by
+               eopcrf4.js (Rater = same record as "Name/Position of Rater" on
+               EOPCRF I; Approving Authority = the shared record). -->
+          <div class="report-signatory-block">
+            <p class="report-signatory-label">Ratee</p>
+            <div class="report-signatory-person">
+              <span class="report-signatory-avatar" aria-hidden="true">
+                <i class="ti ti-user"></i>
+              </span>
+              <div class="report-signatory-info">
+                <p class="report-signatory-name" id="reportPreparedByName">
+                  &nbsp;
+                </p>
+                <p
+                  class="report-signatory-position"
+                  id="reportPreparedByPosition"
+                ></p>
+                {{ macros.signatory_date('prepared_by', 'Ratee') }}
+              </div>
+            </div>
+          </div>
+          <div class="report-signatory-block">
+            <p class="report-signatory-label">Rater</p>
+            <div class="report-signatory-person">
+              <span class="report-signatory-avatar" aria-hidden="true">
+                <i class="ti ti-user"></i>
+              </span>
+              <div class="report-signatory-info">
+                <input
+                  type="text"
+                  id="eopcrf4-rater-name"
+                  class="report-signatory-name-input"
+                  placeholder="Full name"
+                  maxlength="255"
+                  autocomplete="off"
+                />
+                <input
+                  type="text"
+                  id="eopcrf4-rater-position"
+                  class="report-signatory-position-input"
+                  placeholder="Position"
+                  maxlength="255"
+                  autocomplete="off"
+                />
+                {{ macros.signatory_date('checked_by', 'Rater') }}
+              </div>
+            </div>
+          </div>
+          <div class="report-signatory-block">
+            <p class="report-signatory-label">Approving Authority</p>
+            <div class="report-signatory-person">
+              <span class="report-signatory-avatar" aria-hidden="true">
+                <i class="ti ti-user"></i>
+              </span>
+              <div class="report-signatory-info">
+                <input
+                  type="text"
+                  id="eopcrf4-authority-name"
+                  class="report-signatory-name-input"
+                  placeholder="Full name"
+                  maxlength="255"
+                  autocomplete="off"
+                />
+                <input
+                  type="text"
+                  id="eopcrf4-authority-position"
+                  class="report-signatory-position-input"
+                  placeholder="Position"
+                  maxlength="255"
+                  autocomplete="off"
+                />
+                {{ macros.signatory_date('approving_authority', 'Approving
+                Authority') }}
+              </div>
+            </div>
+          </div>
+          {% else %}
           <div class="report-signatory-block">
             <p class="report-signatory-label">Prepared by</p>
             <div class="report-signatory-person">
@@ -142,7 +225,7 @@
               </div>
             </div>
           </div>
-          {% endif %}
+          {% endif %} {% endif %}
         </div>
       </div>
       {% endif %}

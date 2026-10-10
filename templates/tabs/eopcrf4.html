@@ -17,7 +17,7 @@
         </span>
         <div class="eopcrf4-header-divider"></div>
         <div>
-          <h2>PART IV: IMPROVEMENT AND DEVELOPMENT PLANS</h2>
+          <h2>IMPROVEMENT AND DEVELOPMENT PLANS</h2>
           <p class="eopcrf4-subtitle">DepEd OPCRF (ver.Feb2025), page 4 of 4</p>
         </div>
       </div>
@@ -29,17 +29,16 @@
     </div>
   </div>
 
-  <!-- ================= GUIDED FLOW: 1. Part IV-A -> 2. Part IV-B -> 3. Signatories ================= -->
+  <!-- ================= GUIDED FLOW: 1. Part IV-A -> 2. Part IV-B (Ratee / Rater / Approving Authority sign off in base.html's report-signatory footer) ================= -->
   <div class="eopcrf4-flow">
     <div class="eopcrf4-flow-rail" aria-hidden="true">
       <span class="eopcrf4-flow-badge">1</span>
       <span class="eopcrf4-flow-badge">2</span>
-      <span class="eopcrf4-flow-badge">3</span>
     </div>
 
     <!-- 1. PART IV-A: OFFICE IMPROVEMENT PLAN -->
     <div class="eopcrf4-flow-section eopcrf4-flow-section-1">
-      <p class="eopcrf4-flow-label" aria-hidden="true"></p>
+      <p class="eopcrf4-flow-label">Office gaps &amp; interventions</p>
       <div class="eopcrf4-card">
         <div class="eopcrf4-card-header">
           <h3>Part IV-A: Office Improvement Plan</h3>
@@ -92,7 +91,7 @@
 
     <!-- 2. PART IV-B: INDIVIDUAL DEVELOPMENT PLAN -->
     <div class="eopcrf4-flow-section eopcrf4-flow-section-2">
-      <p class="eopcrf4-flow-label" aria-hidden="true"></p>
+      <p class="eopcrf4-flow-label">Ratee strengths &amp; needs</p>
       <div class="eopcrf4-card">
         <div class="eopcrf4-card-header">
           <h3>Part IV-B: Individual Development Plan</h3>
@@ -145,76 +144,46 @@
       </div>
     </div>
 
-    <!-- 3. SIGNATORIES: RATEE / RATER / APPROVING AUTHORITY
-         Reuses the same .report-signatory-* classes as base.html's page-
-         footer signatory block (see static/css/base.css), embedded in this
-         page's own flow instead of the base template's bottom-of-page
-         footer, which must be suppressed for this tab (see base.html).
-         Date controls use the shared signatory_date macro and are wired up
-         generically by index.js, keyed off data-signatory-role plus this
-         page's own active_tab.id ("eopcrf4"). Existing roles are reused:
-         RATEE = prepared_by, RATER = checked_by, APPROVING AUTHORITY =
-         approving_authority. -->
-    <div class="eopcrf4-flow-section eopcrf4-flow-section-3">
-      <p class="eopcrf4-flow-label" aria-hidden="true"></p>
-      <div class="eopcrf4-card">
-        <div class="report-signatory-grid">
-          <div class="report-signatory-block">
-            <div class="report-signatory-person">
-              <span class="report-signatory-avatar" aria-hidden="true">
-                <i class="ti ti-user"></i>
-              </span>
-              <div class="report-signatory-info">
-                <p class="report-signatory-name" id="reportPreparedByName">
-                  &nbsp;
-                </p>
-                <p
-                  class="report-signatory-position"
-                  id="reportPreparedByPosition"
-                ></p>
-                {{ macros.signatory_date('prepared_by', 'RATEE') }}
-              </div>
-            </div>
-            <p class="report-signatory-label">RATEE</p>
-          </div>
-          <div class="report-signatory-block">
-            <div class="report-signatory-person">
-              <span class="report-signatory-avatar" aria-hidden="true">
-                <i class="ti ti-user"></i>
-              </span>
-              <div class="report-signatory-info">
-                <p class="report-signatory-name">&nbsp;</p>
-                <p class="report-signatory-position"></p>
-                {{ macros.signatory_date('checked_by', 'RATER') }}
-              </div>
-            </div>
-            <p class="report-signatory-label">RATER</p>
-          </div>
-          <div class="report-signatory-block">
-            <div class="report-signatory-person">
-              <span class="report-signatory-avatar" aria-hidden="true">
-                <i class="ti ti-user"></i>
-              </span>
-              <div class="report-signatory-info">
-                <p
-                  class="report-signatory-name"
-                  id="eopcrf4ApprovingAuthorityName"
-                >
-                  &nbsp;
-                </p>
-                <p class="report-signatory-position"></p>
-                {{ macros.signatory_date('approving_authority', 'APPROVING
-                AUTHORITY') }}
-              </div>
-            </div>
-            <p class="report-signatory-label">APPROVING AUTHORITY</p>
-          </div>
-        </div>
-      </div>
-    </div>
     <!-- /.eopcrf4-flow -->
   </div>
 </section>
+
+<!-- ================= ROW EDIT MODAL (opened by each row's edit button) ================= -->
+<div id="eopcrf4-edit-overlay" class="eopcrf4-edit-overlay">
+  <form
+    id="eopcrf4-edit-form"
+    class="eopcrf4-edit-box"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="eopcrf4-edit-title"
+    novalidate
+  >
+    <div class="eopcrf4-edit-header">
+      <h4 id="eopcrf4-edit-title">Edit row</h4>
+      <p id="eopcrf4-edit-sub" class="eopcrf4-edit-sub"></p>
+    </div>
+    <div id="eopcrf4-edit-fields" class="eopcrf4-edit-fields">
+      <!-- fields injected by eopcrf4.js -->
+    </div>
+    <p id="eopcrf4-edit-error" class="eopcrf4-edit-error" hidden></p>
+    <div class="eopcrf4-edit-actions">
+      <button
+        type="button"
+        id="eopcrf4-edit-cancel"
+        class="eopcrf4-btn-secondary"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        id="eopcrf4-edit-submit"
+        class="eopcrf4-btn-primary"
+      >
+        Submit
+      </button>
+    </div>
+  </form>
+</div>
 
 <!-- ================= RESET-PAGE CONFIRMATION MODAL ================= -->
 <div id="eopcrf4-reset-confirm-overlay" class="eopcrf4-confirm-overlay">
