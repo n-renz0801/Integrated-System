@@ -1,64 +1,55 @@
-# EOPCRF_SH
+# Project MEASURE
 
-Employee's Output-based Performance Commitment and Review Form -- a trimmed,
-standalone sibling of the larger SGOD PMES project. This app only covers the
-4 EOPCRF parts (formerly IRC8a-8d):
+**Project MEASURE helps you fill out the DepEd Office Performance Commitment and
+Review Form (OPCRF) on your computer instead of on paper or in Excel.**
 
-| Navbar label | Internally | Covers |
-|---|---|---|
-| EOPCRF I   | `irc8a` | Individual Performance Commitment and Review Form (IPCRF) -- KRAs, Objectives, rubric ratings |
-| EOPCRF II  | `irc8b` | Core Behavioral Competencies and Core Skills |
-| EOPCRF III | `irc8c` | Summary of Ratings for Discussion -- final rating, sign-off, development plans |
-| EOPCRF IV  | `irc8d` | Read-only summary, mirrors EOPCRF I live |
+You type in your goals and ratings, and the program keeps everything saved,
+does the computing for you, and prints each page of the form in the official
+layout.
 
-There is **no file-upload / PDF-import feature** in this app -- every field
-is entered by hand through each tab's own UI.
+---
 
-## Setup
+## What can I do with it?
 
-```bash
-pip install -r requirements.txt
-flask --app app init-db   # creates instance/eopcrf_sh.db
-python app.py             # runs the dev server on http://127.0.0.1:5000
-```
+The form has four pages. Project MEASURE has one tab for each:
 
-## Logos
+| Tab            | What it is for                                                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **EOPCRF I**   | Write down the office's goals (called KRAs and objectives) and rate how well each one was met. You also fill in the names and details that appear at the top of the form. |
+| **EOPCRF II**  | Rate leadership and work behaviors on a scale of 1 to 5.                                                                                                                  |
+| **EOPCRF III** | See a summary of all the ratings.                                                                                                                                         |
+| **EOPCRF IV**  | Plan improvements for the office and for yourself, and write feedback.                                                                                                    |
 
-`templates/base.html` and `templates/home.html` reference 4 logo files that
-were **not** included in this build (they weren't part of the source
-material this app was generated from):
+Helpful things to know:
 
-```
-static/images/deped.png
-static/images/antipolo_division.png
-static/images/i_love_sgod.png
-static/images/project_irc.png
-```
+- **Fill in your details once.** Names and positions are typed on the first tab.
+  The other pages reuse them automatically, including the signature lines.
+- **It suggests your strengths and weak spots.** On the last page, you can pick
+  from your highest-rated and lowest-rated items from the earlier pages.
+- **Your work saves by itself.** You do not need to press a "save" button.
+  Close the program and open it later, and your information is still there.
 
-Drop your own copies of these in `static/images/` with those exact
-filenames, or edit the `<img>` tags in `templates/base.html` /
-`templates/home.html` to point elsewhere.
+---
 
-## Project structure
+## How do I get a printed or PDF copy?
 
-```
-app.py                      Flask app: config, DB setup, all routes
-models.py                   SQLAlchemy models (IRC8a-d + shared signatory tables)
-requirements.txt
-static/
-  css/
-    base.css                Layout, nav, header, report-signatory footer
-    home.css                Home page masthead + report cards
-    irc8a.css .. irc8d.css  Per-tab styling
-  js/
-    index.js                Preparer name/position, IRC8a approving authority, signatory dates
-    irc8a.js .. irc8d.js    Per-tab client logic (fetches /irc/<tab>/data, renders, saves)
-  images/                   <- put your logo files here (see above)
-templates/
-  base.html                 Shared shell: header, nav, report-signatory footer
-  home.html                 Landing page: EOPCRF group card + 2 "coming soon" placeholders
-  _macros.html              Shared signatory_date() Jinja macro
-  404.html
-  tabs/
-    irc8a.html .. irc8d.html
-```
+1. Open the page you want to print.
+2. Click **Save to PDF** at the top right.
+3. A print window appears. Choose **Save as PDF** (to make a file) or pick your
+   printer (to print on paper).
+
+Each page prints on one long-bond sheet (13 x 8.5 inches), turned sideways,
+just like the official form.
+
+---
+
+## How do I start the program?
+
+Open **project_measure.exe**. A window will appear. That's all. You do not need
+to install anything else, and you do not need internet.
+
+If Windows or your antivirus shows a warning the first time, that is normal for
+small programs that are not from a big company. Choose "More info" and then
+"Run anyway", or ask your IT person to allow it.
+
+---
