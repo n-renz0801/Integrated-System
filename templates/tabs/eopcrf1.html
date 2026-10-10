@@ -5,6 +5,10 @@
   rel="stylesheet"
   href="{{ url_for('static', filename='css/eopcrf1.css') }}"
 />
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/eopcrf1_print.css') }}"
+/>
 
 <section id="eopcrf1-tab" class="tab-panel eopcrf1-panel">
   <div class="eopcrf1-header">
@@ -25,8 +29,11 @@
         </div>
       </div>
       <div class="eopcrf1-header-actions">
+        <button type="button" id="eopcrf1-print-btn" class="eopcrf1-pdf-btn">
+          <i class="ti ti-file-type-pdf" aria-hidden="true"></i> Save to PDF
+        </button>
         <button type="button" class="eopcrf1-reset-btn" id="eopcrf1-reset-btn">
-          <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset All Data
+          <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset Data
         </button>
       </div>
     </div>
@@ -48,6 +55,7 @@
           type="text"
           id="eopcrf1-h-nameOfEmployee"
           data-header="nameOfEmployee"
+          data-upper="1"
       /></label>
       <label class="eopcrf1-field"
         ><span class="eopcrf1-label">Position / designation</span
@@ -62,6 +70,7 @@
           type="text"
           id="eopcrf1-h-nameOfRater"
           data-header="nameOfRater"
+          data-upper="1"
       /></label>
       <label class="eopcrf1-field"
         ><span class="eopcrf1-label">Rater's position</span
@@ -69,6 +78,14 @@
           type="text"
           id="eopcrf1-h-positionOfRater"
           data-header="positionOfRater"
+      /></label>
+      <label class="eopcrf1-field"
+        ><span class="eopcrf1-label">Approving authority</span
+        ><input
+          type="text"
+          id="eopcrf1-h-approvingAuthority"
+          data-authority="name"
+          data-upper="1"
       /></label>
       <label class="eopcrf1-field eopcrf1-field--wide"
         ><span class="eopcrf1-label"
@@ -89,6 +106,14 @@
           id="eopcrf1-h-dateOfReview"
           data-header="dateOfReview"
       /></label>
+      <label class="eopcrf1-field eopcrf1-field--wide"
+        ><span class="eopcrf1-label">Statement of purpose</span
+        ><textarea
+          id="eopcrf1-h-statementOfPurpose"
+          data-header="statementOfPurpose"
+          rows="3"
+        ></textarea>
+      </label>
     </div>
   </details>
 
@@ -347,6 +372,12 @@
     </div>
   </div>
 </div>
+
+<!-- Print-only copy of the form; built and moved to <body> by eopcrf1.js -->
+<div
+  id="eopcrf1-print-root"
+  data-header-img="{{ url_for('static', filename='images/part1_header.png') }}"
+></div>
 
 <script src="{{ url_for('static', filename='js/eopcrf1.js') }}"></script>
 

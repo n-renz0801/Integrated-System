@@ -71,7 +71,8 @@
   justify-content: space-between;
 }
 .eopcrf1-input,
-.eopcrf1-field input {
+.eopcrf1-field input,
+.eopcrf1-field textarea {
   width: 100%;
   padding: 8px 10px;
   font: inherit;
@@ -81,10 +82,18 @@
   border-radius: 6px;
 }
 .eopcrf1-input:focus,
-.eopcrf1-field input:focus {
+.eopcrf1-field input[data-upper] {
+  text-transform: uppercase;
+}
+
+.eopcrf1-field input:focus,
+.eopcrf1-field textarea:focus {
   outline: 2px solid var(--e1-accent);
   outline-offset: -1px;
   border-color: var(--e1-accent);
+}
+.eopcrf1-field textarea {
+  resize: vertical;
 }
 textarea.eopcrf1-input {
   resize: vertical;
@@ -242,6 +251,41 @@ textarea.eopcrf1-input {
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+}
+
+/* Save to PDF button (same look as the IRC1a page's) */
+.eopcrf1-pdf-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  appearance: none;
+  background: #fff;
+  color: #185fa5;
+  border: 1.5px solid #cfe0f2;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.eopcrf1-pdf-btn i {
+  font-size: 13px;
+}
+
+.eopcrf1-pdf-btn:hover {
+  background: #eaf2fb;
+  border-color: #185fa5;
+}
+
+.eopcrf1-pdf-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .eopcrf1-reset-btn {
@@ -1420,6 +1464,7 @@ textarea.eopcrf1-input {
   .eopcrf1-header-actions {
     width: 100%;
   }
+  .eopcrf1-pdf-btn,
   .eopcrf1-reset-btn {
     flex: 1;
     justify-content: center;

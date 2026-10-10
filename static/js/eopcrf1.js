@@ -1234,7 +1234,10 @@
   const headerInputs = document.querySelectorAll("[data-header]");
 
   function updateDetailsSummary(h) {
-    const bits = [h.nameOfEmployee, h.ratingPeriod].filter(Boolean);
+    const bits = [
+      (h.nameOfEmployee || "").toUpperCase(),
+      h.ratingPeriod,
+    ].filter(Boolean);
     detailsSumEl.textContent = bits.length
       ? bits.join(" · ")
       : "Not filled in yet";
@@ -1244,7 +1247,8 @@
     try {
       const h = await apiCall("GET", "/api/eopcrf1/report-header");
       headerInputs.forEach((inp) => {
-        inp.value = h[inp.dataset.header] || "";
+        const v = h[inp.dataset.header] || "";
+        inp.value = inp.dataset.upper ? v.toUpperCase() : v;
       });
       updateDetailsSummary(h);
     } catch (err) {
@@ -1252,11 +1256,54 @@
     }
   }
 
+  // Name fields are forced to capitals as the person types (cursor kept).
+  document.querySelectorAll("[data-upper]").forEach((inp) => {
+    inp.addEventListener("input", () => {
+      const start = inp.selectionStart;
+      const end = inp.selectionEnd;
+      inp.value = inp.value.toUpperCase();
+      try {
+        inp.setSelectionRange(start, end);
+      } catch (e) {
+        /* not supported for this input type */
+      }
+    });
+  });
+
+  // Approving authority lives in its own table (shared with the signatory
+  // footer), so it has its own load/save instead of the report-header API.
+  const authorityInput = document.getElementById(
+    "eopcrf1-h-approvingAuthority",
+  );
+  async function loadAuthority() {
+    if (!authorityInput) return;
+    try {
+      const a = await apiCall("GET", "/api/eopcrf1/approving-authority");
+      authorityInput.value = (a.name || "").toUpperCase();
+    } catch (err) {
+      /* leave blank */
+    }
+  }
+  if (authorityInput) {
+    authorityInput.addEventListener("change", async () => {
+      try {
+        const a = await apiCall("POST", "/api/eopcrf1/approving-authority", {
+          name: authorityInput.value.trim().toUpperCase(),
+        });
+        authorityInput.value = (a.name || "").toUpperCase();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
   headerInputs.forEach((inp) => {
     inp.addEventListener("change", async () => {
       try {
         const h = await apiCall("POST", "/api/eopcrf1/report-header", {
-          [inp.dataset.header]: inp.value,
+          [inp.dataset.header]: inp.dataset.upper
+            ? inp.value.trim().toUpperCase()
+            : inp.value,
         });
         updateDetailsSummary(h);
       } catch (err) {
@@ -1265,9 +1312,326 @@
     });
   });
 
+  // ================= Print / Save as PDF =================
+  // Builds a print-only copy of the whole form (header block, Part I-A, I-B,
+  // I-C, signatories) laid out like the official OPCRF sheet, then calls
+  // window.print(). Styling lives in eopcrf1_print.css (long bond, landscape).
+  // The root is moved to <body> so the print stylesheet can hide everything
+  // else on the page without knowing base.html's structure.
+  const printRoot = document.getElementById("eopcrf1-print-root");
+  const printBtn = document.getElementById("eopcrf1-print-btn");
+  const printCache = {
+    header: {},
+    authority: { name: "", position: "" },
+  };
+  if (printRoot) document.body.appendChild(printRoot);
+
+  const PRINT_INTRO = {
+    a: "Part I-A. Commitment to Organizational Outcomes shall capture office commitments, performance, and accomplishments based on office mandates and KRAs as reflected in the official issuance on the Compendium of Office Functions. This part shall capture the contributions of the office directly targeting the Organizational Outcomes indicated in the General Appropriation Act (GAA) Programs/Subprograms, Basic Education Development Plan (BEDP) Pillars, MATATAG Agenda priority deliverables, and other national level commitments that are aligned with and relevant to the office KRAs. Clear attribution shall be made to ensure such alignment.",
+    b: "Part I-B. Innovating and Intervening Accomplishments shall capture the outcomes/outputs of the office that are enabling, supportive, and/or contributory to the achievement of the organizational commitments and KRAs in Part I-A. Accomplishments can be innovations, interventions, and enhancements on the processes, services, and/or outputs.",
+    c: "Part I-C. Organizational Effectiveness shall capture accomplishments/outputs produced or attained on the aspects of Financial Stewardship, Process Improvement, and Client Satisfaction. It shall focus on the results achieved by the office that are aligned with the Performance-based Bonus (PBB) oversight requirements.",
+  };
+
+  // Column widths are % of the table and add up to ~100 per part.
+  const SCALE_LABELS = {
+    5: "5<br>(Outstanding)",
+    4: "4<br>(Very Satisfactory)",
+    3: "3<br>(Satisfactory)",
+    2: "2<br>(Unsatisfactory)",
+    1: "1<br>(Poor)",
+  };
+  function printCols(partKey) {
+    const kraHead =
+      partKey === "a"
+        ? "Key Result Areas (KRA)<br>(Based on Office Mandate and Functions)"
+        : partKey === "b"
+          ? "Key Result Areas (KRA)"
+          : "Organizational Effectiveness Area";
+    const objHead =
+      partKey === "a"
+        ? "Objectives<br>(based on Office Functions)<br>The school is expected to:"
+        : "Objectives";
+    const scale = [5, 4, 3, 2, 1].map((n) => ({
+      k: "r" + n,
+      group: "scale",
+      label: SCALE_LABELS[n],
+      w: partKey === "a" ? 7.4 : 8,
+    }));
+    const cols = [{ k: "kra", label: kraHead, w: partKey === "a" ? 6 : 8 }];
+    if (partKey === "a") {
+      cols.push(
+        {
+          k: "gaa",
+          group: "align",
+          label: "GAA Programs/ Subprograms",
+          w: 4.5,
+        },
+        { k: "bedp", group: "align", label: "BEDP Pillars", w: 4.5 },
+        {
+          k: "agenda",
+          group: "align",
+          label: "Current Administration Agenda",
+          w: 4.5,
+        },
+      );
+    }
+    cols.push(
+      { k: "obj", label: objHead, w: partKey === "a" ? 8 : 11 },
+      { k: "time", label: "Timeline", w: 3 },
+      { k: "wt", label: "Weight Allocation", w: 2.6 },
+    );
+    if (partKey !== "c") {
+      cols.push(
+        {
+          k: "val",
+          group: "target",
+          label: "Value<br>(numerical, statistical, trend)",
+          w: 3,
+        },
+        {
+          k: "desc",
+          group: "target",
+          label: "Description<br>(expected outcome/ output/service)",
+          w: 4.5,
+        },
+      );
+    }
+    cols.push(
+      {
+        k: "meas",
+        label: "Performance Measure<br>(Quality, Efficiency, Timeliness)",
+        w: 3.4,
+      },
+      ...scale,
+      { k: "mov", label: "Means of Verification (MOVs)", w: 6.5 },
+      {
+        k: "act",
+        label:
+          partKey === "b"
+            ? "Actual Results/ Accomplishments"
+            : "Actual Accomplishments",
+        w: 5.5,
+      },
+      { k: "rate", label: "RATING<br>(Q,E,T)", w: 2.4 },
+      { k: "avg", label: "AVERAGE<br>(QET)", w: 2.6 },
+      { k: "wavg", label: "WEIGHTED AVERAGE", w: 2.8 },
+    );
+    return cols;
+  }
+
+  const pText = (v) => escapeHtml(v == null ? "" : String(v));
+  const pWeight = (w) =>
+    hasVal(w) ? Math.round(Number(w) * 100) / 100 + "%" : "";
+  const pFmtDate = (iso) => {
+    if (!iso) return "";
+    const d = new Date(iso + "T00:00:00");
+    return isNaN(d)
+      ? iso
+      : d.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+  };
+
+  function printTableHead(cols) {
+    const evalStart = cols.findIndex((c) => c.k === "act");
+    const colgroup = `<colgroup>${cols.map((c) => `<col style="width:${c.w}%">`).join("")}</colgroup>`;
+    const row1 = `<tr class="ph-band">
+      <th colspan="${evalStart}">TO BE ACCOMPLISHED DURING PLANNING</th>
+      <th colspan="${cols.length - evalStart}">TO BE FILLED DURING EVALUATION</th></tr>`;
+    const groupTitle = {
+      align: "Organizational Outcomes Alignment",
+      target: "Performance Targets",
+      scale: "Rating Scale",
+    };
+    let row2 = "";
+    let row3 = "";
+    for (let i = 0; i < cols.length; ) {
+      const c = cols[i];
+      if (!c.group) {
+        row2 += `<th rowspan="2">${c.label}</th>`;
+        i++;
+        continue;
+      }
+      let j = i;
+      while (j < cols.length && cols[j].group === c.group) j++;
+      row2 += `<th colspan="${j - i}">${groupTitle[c.group]}</th>`;
+      for (let x = i; x < j; x++) row3 += `<th>${cols[x].label}</th>`;
+      i = j;
+    }
+    return `${colgroup}<thead>${row1}<tr>${row2}</tr><tr>${row3}</tr></thead>`;
+  }
+
+  // One <tbody> per KRA. Each objective is three rows (Quality / Efficiency /
+  // Timeliness); cells that apply to the whole objective span those rows.
+  function printKraBody(kra, partKey, cols) {
+    const objs = kra.objectives.length ? kra.objectives : [null];
+    const totalRows = objs.length * 3;
+    let html = `<tbody class="pb-kra">`;
+    objs.forEach((obj, oi) => {
+      INDICATOR_CATEGORIES.forEach((cat, ci) => {
+        let tr = "<tr>";
+        cols.forEach((c) => {
+          const first = oi === 0 && ci === 0;
+          switch (c.k) {
+            case "kra":
+              if (first)
+                tr += `<td rowspan="${totalRows}" class="pc-kra">${pText(kra.text)}${
+                  partKey === "a" && hasVal(kra.weight)
+                    ? `<br>(${pWeight(kra.weight)})`
+                    : ""
+                }</td>`;
+              break;
+            case "gaa":
+            case "bedp":
+            case "agenda": {
+              const f = {
+                gaa: "gaaProgram",
+                bedp: "bedpPillars",
+                agenda: "adminAgenda",
+              }[c.k];
+              if (first)
+                tr += `<td rowspan="${totalRows}">${pText(kra[f])}</td>`;
+              break;
+            }
+            case "meas":
+              tr += `<td class="pc-meas">${cat.label}</td>`;
+              break;
+            case "rate":
+              tr += `<td class="pc-c">${obj && hasVal(obj.ratings[cat.key]) ? Number(obj.ratings[cat.key]) : ""}</td>`;
+              break;
+            case "r5":
+            case "r4":
+            case "r3":
+            case "r2":
+            case "r1": {
+              const n = Number(c.k.slice(1));
+              const item = obj ? obj[cat.key].find((i) => i.rate === n) : null;
+              tr += `<td>${item ? pText(item.label) : ""}</td>`;
+              break;
+            }
+            default:
+              if (ci !== 0) break; // objective-level cell, only on first row
+              {
+                let v = "";
+                let cls = "";
+                if (obj) {
+                  if (c.k === "obj") v = pText(obj.text);
+                  else if (c.k === "time") v = pText(obj.timeline);
+                  else if (c.k === "wt")
+                    ((v = pWeight(obj.weight)), (cls = "pc-c"));
+                  else if (c.k === "val")
+                    ((v = pText(obj.targetValue)), (cls = "pc-c"));
+                  else if (c.k === "desc") v = pText(obj.targetDescription);
+                  else if (c.k === "mov")
+                    v =
+                      pText(obj.movRequired) +
+                      (obj.mov
+                        ? `${obj.movRequired ? "<br>" : ""}<span class="pc-link">${pText(obj.mov)}</span>`
+                        : "");
+                  else if (c.k === "act") v = pText(obj.actualResults);
+                  else if (c.k === "avg") {
+                    const a = computeAverage(obj);
+                    ((v = a === null ? "" : fmt3(a)), (cls = "pc-c"));
+                  } else if (c.k === "wavg") {
+                    const s = computeScore(obj);
+                    ((v = s === null ? "" : fmt3(s)), (cls = "pc-c"));
+                  }
+                }
+                tr += `<td rowspan="3" class="${cls}">${v}</td>`;
+              }
+          }
+        });
+        html += tr + "</tr>";
+      });
+    });
+    return html + "</tbody>";
+  }
+
+  function printPart(partKey) {
+    const part = PARTS.find((p) => p.key === partKey);
+    const cols = printCols(partKey);
+    let kras = state.kras.filter((k) => k.part === partKey);
+    if (!kras.length) {
+      // Nothing entered yet: print blank rows, as on the paper form.
+      kras = [{ text: "", weight: null, objectives: [null, null] }];
+    }
+    const t = partTotals(partKey);
+    const bodies = kras.map((k) => printKraBody(k, partKey, cols)).join("");
+    const total = `<tbody class="pb-total"><tr><td colspan="${cols.length - 1}" class="pc-total-label">${part.label} Total Score</td><td class="pc-c">${t.score === null ? "" : fmt3(t.score)}</td></tr></tbody>`;
+    return `<div class="p-part p-part--${partKey}">
+      <h3>${part.label.toUpperCase()}: ${part.full.toUpperCase()} (${PART_EXPECTED_TOTAL[partKey]}%)</h3>
+      <p class="p-intro">${pText(PRINT_INTRO[partKey])}</p>
+      <table class="p-table">${printTableHead(cols)}${bodies}${total}</table>
+    </div>`;
+  }
+
+  function buildPrintHtml() {
+    const h = printCache.header || {};
+    const a = printCache.authority || {};
+    const headerImg = printRoot.dataset.headerImg;
+    const up = (v) => (v == null ? "" : String(v).toUpperCase());
+    const info = (l1, v1, l2, v2) =>
+      `<tr><th>${l1}</th><td>${pText(v1)}</td><th>${l2}</th><td>${pText(v2)}</td></tr>`;
+    const sign = (name, role) =>
+      `<div class="p-sign"><div class="p-sign-name">${pText(name)}</div><div class="p-sign-role">${role}</div></div>`;
+    return `
+      <div class="p-annex">Annex B</div>
+      <div class="p-head">
+        <img class="p-header-img" src="${headerImg}" alt="Department of Education - Office of the Undersecretary, Human Resource and Organizational Development">
+        <div class="p-title">OFFICE PERFORMANCE COMMITMENT AND REVIEW FORM (OPCRF)</div>
+        <div class="p-ver">ver.Feb2025</div>
+      </div>
+      <table class="p-info">
+        ${info("Name of Employee:", up(h.nameOfEmployee), "Name of Rater:", up(h.nameOfRater))}
+        ${info("Position/Designation:", h.positionOfEmployee, "Position:", h.positionOfRater)}
+        ${info("Review Period:", h.ratingPeriod, "Approving Authority:", up(a.name))}
+        ${info("Strand/Bureau/Center/Service/Region/Division:", h.bureau, "Date of Review:", pFmtDate(h.dateOfReview))}
+        <tr><th>Strand/Bureau/Center/Service/Region/Division Statement of Purpose:</th><td colspan="3">${pText(h.statementOfPurpose)}</td></tr>
+      </table>
+      ${printPart("a")}
+      ${printPart("b")}
+      ${printPart("c")}
+      <div class="p-signs">
+        ${sign(up(h.nameOfEmployee), "RATEE")}
+        ${sign(up(h.nameOfRater), "RATER")}
+        ${sign(up(a.name), "APPROVING AUTHORITY")}
+      </div>`;
+  }
+
+  function refreshPrintRoot() {
+    if (printRoot) printRoot.innerHTML = buildPrintHtml();
+  }
+
+  async function loadPrintExtras() {
+    const [h, a] = await Promise.allSettled([
+      apiCall("GET", "/api/eopcrf1/report-header"),
+      apiCall("GET", "/api/eopcrf1/approving-authority"),
+    ]);
+    if (h.status === "fulfilled") printCache.header = h.value;
+    if (a.status === "fulfilled") printCache.authority = a.value;
+  }
+
+  if (printBtn && printRoot) {
+    printBtn.addEventListener("click", async () => {
+      printBtn.disabled = true;
+      try {
+        await loadPrintExtras();
+        refreshPrintRoot();
+        window.print();
+      } finally {
+        printBtn.disabled = false;
+      }
+    });
+    // Ctrl+P / browser menu print gets the same layout from cached data.
+    window.addEventListener("beforeprint", refreshPrintRoot);
+  }
+
   // ================= Initial load =================
   async function init() {
     loadHeader();
+    loadAuthority();
     try {
       const data = await apiCall("GET", "/irc/eopcrf1/data");
       state.year = data.year;
