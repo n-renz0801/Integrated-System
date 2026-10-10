@@ -7,40 +7,71 @@
   // first two columns (Strengths / Improvement Needs) are picks from the
   // top-rated / lowest-rated items in EOPCRF I (objectives) and EOPCRF II
   // (competency subsections); everything else is free text.
-  // Each table has exactly 3 fixed rows (position 1..3), matching the
-  // printed form.
+  // Part IV-A has 3 fixed rows; Part IV-B has 4. In Part IV-B, rows 1-2
+  // pick from EOPCRF I objectives (all KRAs A-C pooled) and rows 3-4 pick
+  // from EOPCRF II subsections (II-A and II-B pooled); each dropdown offers
+  // the top 3 (Strengths) or lowest 3 (Improvement Needs) of its pool.
   // ------------------------------------------------------------------
   const PARTS = {
     A: {
       bodyId: "eopcrf4-table-body-a",
+      positions: [1, 2, 3],
       columns: [
-        { field: "gapAnalysis", type: "text", shaded: true },
-        { field: "improvementArea", type: "text" },
-        { field: "objective", type: "text" },
-        { field: "intervention", type: "text" },
-        { field: "timeline", type: "text" },
-        { field: "resources", type: "text" },
+        {
+          field: "gapAnalysis",
+          type: "text",
+          label: "Gap Analysis (SWOT)",
+        },
+        { field: "improvementArea", type: "text", label: "Improvement Area" },
+        { field: "objective", type: "text", label: "General Objective" },
+        {
+          field: "intervention",
+          type: "text",
+          label: "Recommended Improvement Intervention",
+        },
+        { field: "timeline", type: "text", label: "Timeline" },
+        { field: "resources", type: "text", label: "Resources Needed" },
       ],
     },
     B: {
       bodyId: "eopcrf4-table-body-b",
+      positions: [1, 2, 3, 4],
       columns: [
         {
           field: "strengthRef",
           type: "ref",
           direction: "highest",
-          shaded: true,
+          label: "Strengths",
         },
-        { field: "devNeedsRef", type: "ref", direction: "lowest" },
-        { field: "objective", type: "text" },
-        { field: "intervention", type: "text" },
-        { field: "timeline", type: "text" },
-        { field: "resources", type: "text" },
+        {
+          field: "devNeedsRef",
+          type: "ref",
+          direction: "lowest",
+          label: "Improvement Needs",
+        },
+        {
+          field: "objective",
+          type: "text",
+          label: "Learning Objective (based on the developmental intervention)",
+        },
+        {
+          field: "intervention",
+          type: "text",
+          label: "Recommended Developmental Intervention",
+        },
+        { field: "timeline", type: "text", label: "Timeline" },
+        { field: "resources", type: "text", label: "Resources Needed" },
       ],
     },
   };
-  const POSITIONS = [1, 2, 3];
-  const TOP_N = 5;
+  // Which pooled source a Part IV-B row's picks come from.
+  const REF_SOURCE_BY_POSITION = { 1: "o", 2: "o", 3: "c", 4: "c" };
+  const REF_SOURCE_LABELS = {
+    o: "EOPCRF I objectives (KRAs A–C)",
+    c: "EOPCRF II subsections (II-A & II-B)",
+  };
+  const PART_TITLES = { A: "Part IV-A", B: "Part IV-B" };
+  const TOP_N = 3;
 
   // Friendly names for EOPCRF II's section keys, and known subsection
   // titles. Any subsection key not listed here falls back to a humanized
@@ -61,7 +92,9 @@
   // ------------------------------------------------------------------
   // State
   // ------------------------------------------------------------------
-  // rows: { "A1": { part, position, ...fields, isLocked } }
+  // rows: { "A1": { part, position, ...fields } }
+  // edit: the row currently open in the edit modal -- { part, position, refs }
+  //   (refs = in-progress dropdown picks; text fields are read from the form)
   // items: pooled, flattened candidate list rebuilt fresh on every load
   //   [{ id, main, source, average }] -- "top 5" is a live computation.
   const state = {
@@ -69,6 +102,7 @@
     rows: {},
     feedback: { A: "", B: "" },
     items: [],
+    edit: null,
   };
 
   // ------------------------------------------------------------------
@@ -82,9 +116,15 @@
     A: document.getElementById("eopcrf4-feedback-a"),
     B: document.getElementById("eopcrf4-feedback-b"),
   };
-  const approvingAuthorityName = document.getElementById(
-    "eopcrf4ApprovingAuthorityName",
-  );
+
+  const editOverlay = document.getElementById("eopcrf4-edit-overlay");
+  const editForm = document.getElementById("eopcrf4-edit-form");
+  const editTitle = document.getElementById("eopcrf4-edit-title");
+  const editSub = document.getElementById("eopcrf4-edit-sub");
+  const editFields = document.getElementById("eopcrf4-edit-fields");
+  const editError = document.getElementById("eopcrf4-edit-error");
+  const editCancelBtn = document.getElementById("eopcrf4-edit-cancel");
+  const editSubmitBtn = document.getElementById("eopcrf4-edit-submit");
 
   const resetBtn = document.getElementById("eopcrf4-reset-btn");
   const resetConfirmOverlay = document.getElementById(
@@ -193,6 +233,13 @@
     return items;
   }
 
+  // Candidate pool for a dropdown: items whose id prefix matches the
+  // row's source ("o:" = EOPCRF I objective, "c:" = EOPCRF II subsection).
+  function poolFor(position) {
+    const source = REF_SOURCE_BY_POSITION[position];
+    return state.items.filter((it) => it.id.startsWith(`${source}:`));
+  }
+
   function topN(items, n, direction) {
     return items
       .slice()
@@ -222,7 +269,6 @@
       );
 
       render();
-      loadApprovingAuthority();
     } catch (err) {
       ["A", "B"].forEach((part) => {
         bodies[part].innerHTML =
@@ -231,16 +277,79 @@
     }
   }
 
-  // The Approving Authority's name is entered once on EOPCRF I and shared;
-  // here it is only read, never edited.
-  async function loadApprovingAuthority() {
-    if (!approvingAuthorityName) return;
-    try {
-      const data = await apiCall("GET", "/api/eopcrf1/approving-authority");
-      if (data && data.name) approvingAuthorityName.textContent = data.name;
-    } catch (e) {
-      // leave blank
+  // Report-signatory footer (rendered by base.html below the page content,
+  // so it doesn't exist yet when this script first runs -- hence the
+  // DOMContentLoaded hook). Rater name/position are the same values as
+  // "Name / Position of Rater" on EOPCRF I (report-header record);
+  // Approving Authority name/position are the shared Approving Authority
+  // record. Each input saves on blur with a partial body, so editing one
+  // never clobbers the others.
+  async function initSignatories() {
+    const fields = [
+      {
+        id: "eopcrf4-rater-name",
+        url: "/api/eopcrf1/report-header",
+        key: "nameOfRater",
+      },
+      {
+        id: "eopcrf4-rater-position",
+        url: "/api/eopcrf1/report-header",
+        key: "positionOfRater",
+      },
+      {
+        id: "eopcrf4-authority-name",
+        url: "/api/eopcrf1/approving-authority",
+        key: "name",
+      },
+      {
+        id: "eopcrf4-authority-position",
+        url: "/api/eopcrf1/approving-authority",
+        key: "position",
+      },
+    ];
+    fields.forEach((f) => {
+      f.input = document.getElementById(f.id);
+      f.saved = "";
+    });
+    if (fields.some((f) => !f.input)) return;
+    const el = (id) => fields.find((f) => f.id === id).input;
+
+    const [header, authority] = await Promise.all([
+      apiCall("GET", "/api/eopcrf1/report-header").catch(() => null),
+      apiCall("GET", "/api/eopcrf1/approving-authority").catch(() => null),
+    ]);
+    if (header) {
+      el("eopcrf4-rater-name").value = header.nameOfRater || "";
+      el("eopcrf4-rater-position").value = header.positionOfRater || "";
     }
+    if (authority) {
+      el("eopcrf4-authority-name").value = authority.name || "";
+      el("eopcrf4-authority-position").value = authority.position || "";
+    }
+
+    fields.forEach((f) => {
+      f.saved = f.input.value.trim();
+      f.input.addEventListener("blur", async () => {
+        const value = f.input.value.trim();
+        f.input.value = value;
+        if (value === f.saved) return;
+        try {
+          await apiCall("POST", f.url, { [f.key]: value });
+          f.saved = value;
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+      f.input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") f.input.blur();
+      });
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initSignatories);
+  } else {
+    initSignatories();
   }
 
   // ------------------------------------------------------------------
@@ -268,10 +377,10 @@
     });
   }
 
-  function renderRefDropdown(row, column) {
+  // Used inside the edit modal only. `currentRef` is the in-progress pick.
+  function renderRefDropdown(column, currentRef, position) {
     const { field, direction } = column;
-    const items = state.items;
-    const currentRef = row[field];
+    const items = poolFor(position);
     const candidates = topN(items, TOP_N, direction);
 
     // Always keep the currently-saved pick in the list, even if it has
@@ -280,7 +389,7 @@
     // silently dropping the selection.
     let extra = null;
     if (currentRef && !candidates.some((c) => c.id === currentRef)) {
-      const match = items.find((c) => c.id === currentRef);
+      const match = state.items.find((c) => c.id === currentRef);
       extra = match || {
         id: currentRef,
         main: "(previously selected — no longer available)",
@@ -290,7 +399,7 @@
       };
     }
 
-    const current = extra || items.find((c) => c.id === currentRef);
+    const current = extra || state.items.find((c) => c.id === currentRef);
     const ranked = candidates.map((c, i) => ({ ...c, rank: i + 1 }));
     const allOptions = extra ? [{ ...extra, rank: null }, ...ranked] : ranked;
 
@@ -333,7 +442,7 @@
       .join("");
 
     return `
-      <div class="eopcrf4-ref-dropdown" data-field="${field}" data-part="${row.part}" data-position="${row.position}">
+      <div class="eopcrf4-ref-dropdown" data-field="${field}">
         <button type="button" class="eopcrf4-ref-trigger" aria-haspopup="listbox" aria-expanded="false">
           ${triggerInner}
           <span class="eopcrf4-ref-trigger-caret">&#9662;</span>
@@ -348,8 +457,8 @@
     `;
   }
 
-  // Locked view for a pick: plain read text, no dropdown present at all.
-  function renderLockedRefCell(row, column, cls) {
+  // Table cells are always read-only; edits happen in the modal.
+  function renderRefCell(row, column, cls) {
     const currentRef = row[column.field];
     if (!currentRef) return `<td class="${cls}"></td>`;
     const match = state.items.find((c) => c.id === currentRef);
@@ -366,48 +475,55 @@
 
   function renderTextCell(row, column, cls) {
     const value = row[column.field] || "";
-    if (row.isLocked) {
-      return `<td class="eopcrf4-cell-text ${cls}">${escapeHtml(value)}</td>`;
-    }
-    return `<td class="${cls}"><textarea class="eopcrf4-cell-edit" data-field="${column.field}" rows="2">${escapeHtml(value)}</textarea></td>`;
+    return `<td class="eopcrf4-cell-text ${cls}">${escapeHtml(value)}</td>`;
   }
 
   function renderCell(row, column) {
-    const cls = column.shaded ? "eopcrf4-col-shaded" : "";
-    if (column.type === "ref") {
-      return row.isLocked
-        ? renderLockedRefCell(row, column, cls)
-        : `<td class="${cls}">${renderRefDropdown(row, column)}</td>`;
-    }
-    return renderTextCell(row, column, cls);
+    const cls = "";
+    return column.type === "ref"
+      ? renderRefCell(row, column, cls)
+      : renderTextCell(row, column, cls);
   }
 
   function renderTable(part) {
     const def = PARTS[part];
-    bodies[part].innerHTML = POSITIONS.map((position) => {
-      const row = state.rows[rowKey(part, position)] || {
-        part,
-        position,
-        isLocked: true,
-      };
-      return `
+    bodies[part].innerHTML = def.positions
+      .map((position) => {
+        const row = state.rows[rowKey(part, position)] || { part, position };
+        return `
         <tr data-part="${part}" data-position="${position}">
           <td class="eopcrf4-col-edit">
-            <button type="button" class="eopcrf4-icon-btn eopcrf4-toggle-lock-btn" data-part="${part}" data-position="${position}" title="${row.isLocked ? "Edit this row" : "Save & lock"}">
-              ${row.isLocked ? "&#9998;" : "&#10003;"}
+            <button type="button" class="eopcrf4-icon-btn eopcrf4-edit-btn" data-part="${part}" data-position="${position}" title="Edit this row" aria-label="Edit ${PART_TITLES[part]} row ${position}">
+              &#9998;
             </button>
           </td>
           ${def.columns.map((col) => renderCell(row, col)).join("")}
         </tr>
       `;
-    }).join("");
+      })
+      .join("");
   }
 
   // ------------------------------------------------------------------
   // Events
   // ------------------------------------------------------------------
+  // Edit button on a table row -> open the edit modal for that row.
+  ["A", "B"].forEach((part) => {
+    bodies[part].addEventListener("click", (e) => {
+      const btn = e.target.closest(".eopcrf4-edit-btn");
+      if (!btn) return;
+      openEditModal(part, Number(btn.dataset.position));
+    });
+  });
+
+  // ------------------------------------------------------------------
+  // Edit modal
+  //
+  // Opens pre-filled with the row's current values. Nothing is saved
+  // until Submit; Cancel / Escape discards the changes.
+  // ------------------------------------------------------------------
   function closeAllDropdowns(exceptListbox) {
-    tab.querySelectorAll(".eopcrf4-ref-listbox").forEach((listbox) => {
+    editForm.querySelectorAll(".eopcrf4-ref-listbox").forEach((listbox) => {
       if (listbox === exceptListbox) return;
       listbox.hidden = true;
       const trigger = listbox.previousElementSibling;
@@ -415,78 +531,151 @@
     });
   }
 
-  ["A", "B"].forEach((part) => {
-    const body = bodies[part];
+  // The list floats over the modal (position: fixed) instead of sitting in
+  // the field flow, so opening it never changes the modal's height. Placed
+  // under the trigger, or flipped above it when there isn't room below.
+  function positionListbox(trigger, listbox) {
+    const rect = trigger.getBoundingClientRect();
+    const gap = 4;
+    const margin = 12;
+    const below = window.innerHeight - rect.bottom - gap - margin;
+    const above = rect.top - gap - margin;
+    const openUp = below < 160 && above > below;
+    const room = Math.max(120, openUp ? above : below);
 
-    body.addEventListener("click", async (e) => {
-      // Open/close a dropdown
-      const trigger = e.target.closest(".eopcrf4-ref-trigger");
-      if (trigger) {
-        const listbox = trigger.nextElementSibling;
-        const wasOpen = !listbox.hidden;
-        closeAllDropdowns();
-        listbox.hidden = wasOpen;
-        trigger.setAttribute("aria-expanded", String(!wasOpen));
-        return;
-      }
+    listbox.style.left = `${rect.left}px`;
+    listbox.style.width = `${rect.width}px`;
+    listbox.style.maxHeight = `${Math.min(280, room)}px`;
+    if (openUp) {
+      listbox.style.top = "auto";
+      listbox.style.bottom = `${window.innerHeight - rect.top + gap}px`;
+    } else {
+      listbox.style.bottom = "auto";
+      listbox.style.top = `${rect.bottom + gap}px`;
+    }
+  }
 
-      // Choose an option
-      const option = e.target.closest(".eopcrf4-ref-option");
-      if (option) {
-        const dropdown = option.closest(".eopcrf4-ref-dropdown");
-        const position = Number(dropdown.dataset.position);
-        const field = dropdown.dataset.field;
-        closeAllDropdowns();
-        try {
-          await saveRow(part, position, { [field]: option.dataset.value });
-        } catch (err) {
-          alert(err.message);
-        }
-        renderTable(part); // re-render either way (reverts on failure)
-        return;
-      }
+  function renderEditField(column, row) {
+    const id = `eopcrf4-edit-${column.field}`;
+    const label = escapeHtml(column.label || column.field);
+    if (column.type === "ref") {
+      const dir = column.direction === "highest" ? "Top" : "Lowest";
+      const hint = `${dir} ${TOP_N} · ${REF_SOURCE_LABELS[REF_SOURCE_BY_POSITION[row.position]]}`;
+      return `
+        <div class="eopcrf4-edit-field">
+          <span class="eopcrf4-edit-label">${label}<span class="eopcrf4-edit-hint">${escapeHtml(hint)}</span></span>
+          ${renderRefDropdown(column, state.edit.refs[column.field], row.position)}
+        </div>
+      `;
+    }
+    return `
+      <div class="eopcrf4-edit-field">
+        <label class="eopcrf4-edit-label" for="${id}">${label}</label>
+        <textarea id="${id}" class="eopcrf4-edit-input" data-field="${column.field}" rows="3">${escapeHtml(row[column.field] || "")}</textarea>
+      </div>
+    `;
+  }
 
-      // Edit / save-and-lock toggle
-      const btn = e.target.closest(".eopcrf4-toggle-lock-btn");
-      if (btn) {
-        const position = Number(btn.dataset.position);
-        const row = state.rows[rowKey(part, position)];
-        if (!row) return;
+  function openEditModal(part, position) {
+    const row = state.rows[rowKey(part, position)] || { part, position };
+    const def = PARTS[part];
 
-        btn.disabled = true;
-        try {
-          if (row.isLocked) {
-            await saveRow(part, position, { isLocked: false });
-          } else {
-            // Commit whatever is currently typed, then lock.
-            const tr = btn.closest("tr");
-            const patch = { isLocked: true };
-            tr.querySelectorAll("textarea.eopcrf4-cell-edit").forEach((ta) => {
-              patch[ta.dataset.field] = ta.value;
-            });
-            await saveRow(part, position, patch);
-          }
-          renderTable(part);
-        } catch (err) {
-          alert(err.message);
-        } finally {
-          btn.disabled = false;
-        }
-        return;
-      }
-
-      if (!e.target.closest(".eopcrf4-ref-listbox")) closeAllDropdowns();
+    state.edit = { part, position, refs: {} };
+    def.columns.forEach((col) => {
+      if (col.type === "ref") state.edit.refs[col.field] = row[col.field] || "";
     });
+
+    editTitle.textContent = `Edit ${PART_TITLES[part]}`;
+    editSub.textContent = `Row ${position}`;
+    editFields.innerHTML = def.columns
+      .map((col) => renderEditField(col, row))
+      .join("");
+    editError.hidden = true;
+    editError.textContent = "";
+    editSubmitBtn.disabled = false;
+    editOverlay.classList.add("visible");
+
+    const first = editFields.querySelector("textarea, .eopcrf4-ref-trigger");
+    if (first) first.focus();
+  }
+
+  function closeEditModal() {
+    editOverlay.classList.remove("visible");
+    editFields.innerHTML = "";
+    state.edit = null;
+  }
+
+  // Dropdown interactions inside the modal (picks update the draft only).
+  editForm.addEventListener("click", (e) => {
+    const trigger = e.target.closest(".eopcrf4-ref-trigger");
+    if (trigger) {
+      const listbox = trigger.nextElementSibling;
+      const wasOpen = !listbox.hidden;
+      closeAllDropdowns();
+      listbox.hidden = wasOpen;
+      if (!wasOpen) positionListbox(trigger, listbox);
+      trigger.setAttribute("aria-expanded", String(!wasOpen));
+      return;
+    }
+
+    const option = e.target.closest(".eopcrf4-ref-option");
+    if (option && state.edit) {
+      const dropdown = option.closest(".eopcrf4-ref-dropdown");
+      const field = dropdown.dataset.field;
+      state.edit.refs[field] = option.dataset.value;
+      const column = PARTS[state.edit.part].columns.find(
+        (c) => c.field === field,
+      );
+      dropdown.outerHTML = renderRefDropdown(
+        column,
+        option.dataset.value,
+        state.edit.position,
+      );
+      return;
+    }
+
+    if (!e.target.closest(".eopcrf4-ref-dropdown")) closeAllDropdowns();
   });
 
-  document.addEventListener("click", (e) => {
-    if (!tab.contains(e.target) || !e.target.closest(".eopcrf4-dev-table")) {
-      closeAllDropdowns();
+  editForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!state.edit) return;
+    const { part, position, refs } = state.edit;
+
+    const patch = { isLocked: true, ...refs };
+    editFields.querySelectorAll("textarea.eopcrf4-edit-input").forEach((ta) => {
+      patch[ta.dataset.field] = ta.value;
+    });
+
+    editSubmitBtn.disabled = true;
+    editCancelBtn.disabled = true;
+    editError.hidden = true;
+    try {
+      await saveRow(part, position, patch);
+      renderTable(part);
+      closeEditModal();
+    } catch (err) {
+      editError.textContent = err.message;
+      editError.hidden = false;
+      editSubmitBtn.disabled = false;
+    } finally {
+      editCancelBtn.disabled = false;
     }
   });
 
+  editCancelBtn.addEventListener("click", closeEditModal);
+
+  // A floating list would drift away from its trigger if the field area
+  // scrolls or the window resizes, so just close it.
+  editFields.addEventListener("scroll", () => closeAllDropdowns());
+  window.addEventListener("resize", () => closeAllDropdowns());
+
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeAllDropdowns();
+    if (e.key !== "Escape" || !editOverlay.classList.contains("visible"))
+      return;
+    const open = editForm.querySelector(".eopcrf4-ref-listbox:not([hidden])");
+    if (open) closeAllDropdowns();
+    else closeEditModal();
   });
 
   // ------------------------------------------------------------------

@@ -71,7 +71,10 @@ EOPCRF1_PART_LABELS = {
 EOPCRF4_PART_A = "A"
 EOPCRF4_PART_B = "B"
 EOPCRF4_PARTS = (EOPCRF4_PART_A, EOPCRF4_PART_B)
-EOPCRF4_POSITIONS = (1, 2, 3)
+# Part IV-A keeps 3 fixed rows; Part IV-B has 4 (rows 1-2 draw their picks
+# from EOPCRF I, rows 3-4 from EOPCRF II -- see eopcrf4.js).
+EOPCRF4_POSITIONS_BY_PART = {EOPCRF4_PART_A: (1, 2, 3), EOPCRF4_PART_B: (1, 2, 3, 4)}
+EOPCRF4_POSITIONS = (1, 2, 3, 4)  # union, kept for existing imports
 
 
 # ---------------------------------------------------------------------------
@@ -1213,6 +1216,10 @@ class EOPCRF1ApprovingAuthority(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False, default="")
+    # Editable on EOPCRF I / EOPCRF IV. NOTE: new column -- existing databases
+    # need it added (e.g. ALTER TABLE eopcrf1_approving_authority ADD COLUMN
+    # position VARCHAR(255) NOT NULL DEFAULT '';) or a migration.
+    position = db.Column(db.String(255), nullable=False, default="", server_default="")
 
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

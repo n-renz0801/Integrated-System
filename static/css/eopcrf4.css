@@ -151,22 +151,22 @@
 }
 
 /* ------------------------------------------------------------------
-   Guided Flow — numbered rail (1-3) tying Part IV-A, Part IV-B and the
-   signatory block together as a top-to-bottom sequence, copied from
+   Guided Flow — numbered rail (1-2) tying Part IV-A and Part IV-B
+   together as a top-to-bottom sequence, copied from
    IRC1a/IRC8b's .irc1a-flow / .irc8b-flow.
 ------------------------------------------------------------------ */
 
 .eopcrf4-flow {
   display: grid;
   grid-template-columns: 40px 1fr;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto;
   column-gap: 20px;
   row-gap: 1.25rem;
 }
 
 .eopcrf4-flow-rail {
   grid-column: 1;
-  grid-row: 1 / span 3;
+  grid-row: 1 / span 2;
   display: grid;
   grid-template-rows: subgrid;
   position: relative;
@@ -202,8 +202,7 @@
 }
 
 .eopcrf4-flow-section-1,
-.eopcrf4-flow-section-2,
-.eopcrf4-flow-section-3 {
+.eopcrf4-flow-section-2 {
   grid-column: 2;
   min-width: 0;
 }
@@ -214,10 +213,6 @@
 
 .eopcrf4-flow-section-2 {
   grid-row: 2;
-}
-
-.eopcrf4-flow-section-3 {
-  grid-row: 3;
 }
 
 .eopcrf4-flow-label {
@@ -272,16 +267,6 @@
   padding: 20px 22px;
   box-sizing: border-box;
 }
-
-/* ------------------------------------------------------------------
-   Employee-Superior Agreement -- reuses base.css's .report-signatory-*
-   classes (grid/block/person/avatar/name/position) for "Prepared by" /
-   "Checked by" so they read identically to the old page-footer version,
-   just without its dark .report-signatory-title bar. Sits directly
-   under the dark section header, same as .eopcrf4-table-wrapper below --
-   .report-signatory-block already carries its own internal padding, so
-   no extra card-body wrapper is needed here.
------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------
    Development Plans table
@@ -552,49 +537,6 @@
   color: #9ca3af;
 }
 
-/* Action Plan / Timeline / Resources Needed -- shown as plain text
-   (.eopcrf4-cell-text above) while a row is locked; eopcrf4.js swaps the
-   cell to this textarea when the row's edit-toggle is unlocked.
-   Deliberately NOT a plain fixed-height + scroll box, and NOT
-   drag-resizable either:
-     - resize: none removes the manual drag handle entirely -- height
-       is never something the user can pull with the mouse.
-     - field-sizing: content (Chrome/Edge 123+) makes the box grow
-       taller only as wrapped/typed lines actually need the room, and
-       shrink back down if text is removed, so there's no dead space
-       and no fighting a scrollbar while typing a longer paragraph.
-     - min-height keeps it from starting shorter than one line;
-       max-height caps runaway growth for a very long entry, past which
-       it scrolls instead of continuing to grow.
-     - In browsers without field-sizing support yet, this simply falls
-       back to a normal fixed-height (min-height) box that scrolls once
-       full -- still never resizable, just not auto-growing. */
-.eopcrf4-cell-edit {
-  width: 100%;
-  min-height: 34px;
-  max-height: 160px;
-  padding: 7px 8px;
-  border: 1.5px solid var(--eopcrf4-dedp-light);
-  border-radius: 6px;
-  font-size: 12.5px;
-  font-family: inherit;
-  line-height: 1.5;
-  color: #1f2937;
-  background: #fff;
-  resize: none;
-  field-sizing: content;
-  overflow-y: auto;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.eopcrf4-cell-edit:focus {
-  outline: none;
-  border-color: var(--eopcrf4-dedp);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
-}
-
 .eopcrf4-dev-table td.eopcrf4-col-edit {
   text-align: center;
   vertical-align: top;
@@ -627,33 +569,15 @@
   cursor: not-allowed;
 }
 
-/* Edit/lock toggle -- the row's one button, in the narrow leading
-   column. Blue while it
-   shows the pencil (locked, click to edit); green once it shows the
-   checkmark (unlocked, click to save & lock again) so the two states
-   read at a glance without having to parse the icon. */
-.eopcrf4-toggle-lock-btn {
+/* Edit button -- the row's one button, in the narrow leading column.
+   Opens the row's edit modal. */
+.eopcrf4-edit-btn {
   background: var(--eopcrf4-blue-bg);
   color: var(--eopcrf4-dedp);
 }
 
-.eopcrf4-toggle-lock-btn:hover {
+.eopcrf4-edit-btn:hover {
   background: var(--eopcrf4-blue-border);
-}
-
-.eopcrf4-dev-table
-  tbody
-  tr:has(textarea.eopcrf4-cell-edit)
-  .eopcrf4-toggle-lock-btn {
-  background: var(--eopcrf4-success-bg);
-  color: var(--eopcrf4-success-text);
-}
-
-.eopcrf4-dev-table
-  tbody
-  tr:has(textarea.eopcrf4-cell-edit)
-  .eopcrf4-toggle-lock-btn:hover {
-  background: var(--eopcrf4-success-border);
 }
 
 /* ------------------------------------------------------------------
@@ -734,6 +658,159 @@
   background: #b91c1c;
 }
 
+/* ------------------------------------------------------------------
+   Row edit modal -- opened by each row's edit button. Same overlay /
+   box language as the reset-confirmation modal, but wider and with a
+   scrolling field area.
+------------------------------------------------------------------ */
+
+.eopcrf4-edit-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.6);
+  z-index: 1100;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.eopcrf4-edit-overlay.visible {
+  display: flex;
+}
+
+.eopcrf4-edit-box {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 640px;
+  max-height: calc(100vh - 32px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.eopcrf4-edit-header {
+  padding: 18px 22px 12px;
+  flex-shrink: 0;
+}
+
+.eopcrf4-edit-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.eopcrf4-edit-sub {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: #6b7280;
+}
+
+.eopcrf4-edit-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 22px 16px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.eopcrf4-edit-label {
+  display: block;
+  margin: 0 0 5px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #374151;
+}
+
+.eopcrf4-edit-hint {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.eopcrf4-edit-input {
+  width: 100%;
+  min-height: 72px;
+  max-height: 220px;
+  padding: 8px 10px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.5;
+  color: #1f2937;
+  background: #fff;
+  resize: none;
+  field-sizing: content;
+  overflow-y: auto;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.eopcrf4-edit-input:focus {
+  outline: none;
+  border-color: var(--eopcrf4-dedp);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+/* Inside the modal the dropdown list floats above it (position: fixed,
+   placed by eopcrf4.js under or above the trigger) so opening it never
+   adds to the modal's height and isn't clipped by the scrolling field
+   area. */
+.eopcrf4-edit-box .eopcrf4-ref-listbox {
+  position: fixed;
+  z-index: 1200;
+  right: auto;
+  margin: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.eopcrf4-edit-error {
+  margin: 0;
+  padding: 0 22px 10px;
+  font-size: 12.5px;
+  color: var(--eopcrf4-red-text);
+}
+
+.eopcrf4-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.eopcrf4-btn-primary {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--eopcrf4-dedp);
+  color: #fff;
+}
+
+.eopcrf4-btn-primary:hover {
+  background: var(--eopcrf4-dedp-dark);
+}
+
+.eopcrf4-btn-primary:disabled,
+.eopcrf4-btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Responsive */
 
 @media (max-width: 768px) {
@@ -785,13 +862,6 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
-/* First content column (Gap Analysis (SWOT) / Strengths) carries the
-   same peach shading as the printed form. */
-.eopcrf4-dev-table tbody td.eopcrf4-col-shaded,
-.eopcrf4-dev-table tbody tr:hover td.eopcrf4-col-shaded {
-  background: #fde8d9;
-}
-
 /* Feedback box under each table */
 .eopcrf4-feedback {
   padding: 16px 20px 20px 20px;
@@ -828,17 +898,6 @@
   outline: none;
   border-color: var(--eopcrf4-dedp);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
-}
-
-/* Signatories: RATEE / RATER / APPROVING AUTHORITY -- three blocks
-   instead of base.css's default two. */
-.eopcrf4-panel .report-signatory-grid {
-  grid-template-columns: repeat(3, 1fr);
-}
-@media (max-width: 900px) {
-  .eopcrf4-panel .report-signatory-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Locked free-text cells keep the line breaks the user typed. */

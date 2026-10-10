@@ -176,14 +176,11 @@
 
   // ================= State =================
   // ratings[subsectionKey] = [r1..r5]   (each null or 1-5)
-  // remarks[subsectionKey] = [t1..t5]   (Remarks / Observations text)
   const ratings = {};
-  const remarks = {};
   const SUBSECTION_TO_SECTION = {};
   DATA.forEach((section) => {
     section.subsections.forEach((sub) => {
       ratings[sub.key] = sub.criteria.map(() => null);
-      remarks[sub.key] = sub.criteria.map(() => "");
       SUBSECTION_TO_SECTION[sub.key] = section.key;
     });
   });
@@ -191,7 +188,7 @@
   const YEAR = new Date().getFullYear();
 
   // ================= Server sync =================
-  // Only the numbers and remarks the user enters are persisted; the
+  // Only the numbers the user enters are persisted; the
   // sections/subsections/indicators above stay hardcoded.
   async function loadRatings() {
     try {
@@ -199,7 +196,6 @@
       if (!res.ok) throw new Error("Failed to load ratings");
       const data = await res.json();
       const serverRatings = data.ratings || {};
-      const serverRemarks = data.remarks || {};
 
       Object.keys(serverRatings).forEach((subKey) => {
         if (!ratings[subKey]) return; // unknown subsection key -- ignore
@@ -210,24 +206,14 @@
           }
         });
       });
-
-      Object.keys(serverRemarks).forEach((subKey) => {
-        if (!remarks[subKey]) return;
-        Object.entries(serverRemarks[subKey]).forEach(([idxStr, text]) => {
-          const idx = Number(idxStr);
-          if (idx >= 0 && idx < remarks[subKey].length) {
-            remarks[subKey][idx] = text || "";
-          }
-        });
-      });
     } catch (err) {
       console.error("Failed to load EOPCRF2 data:", err);
     }
     render();
   }
 
-  // `fields` is any of { rating, remarks } -- the server only touches the
-  // fields that are present in the body.
+  // `fields` is { rating } -- the server only touches the fields present
+  // in the body.
   async function saveEntry(subKey, idx, fields) {
     try {
       const res = await fetch("/irc/eopcrf2/rating", {
@@ -249,7 +235,7 @@
 
   // ================= Reset-page confirmation modal =================
   // No bulk-clear endpoint: reset fires one best-effort clear request per
-  // indicator that currently has a rating or remark.
+  // indicator that currently has a rating.
   function openResetConfirm() {
     resetConfirmOverlay.classList.add("visible");
   }
@@ -270,11 +256,10 @@
       const clears = [];
       Object.keys(ratings).forEach((subKey) => {
         ratings[subKey].forEach((value, idx) => {
-          if (value !== null || remarks[subKey][idx] !== "") {
-            clears.push(saveEntry(subKey, idx, { rating: null, remarks: "" }));
+          if (value !== null) {
+            clears.push(saveEntry(subKey, idx, { rating: null }));
           }
           ratings[subKey][idx] = null;
-          remarks[subKey][idx] = "";
         });
       });
       await Promise.all(clears);
@@ -396,14 +381,21 @@
       })
       .join("");
 
+    // Adjectival rating of the selected number (empty state until rated)
+    const adjectival = current
+      ? `<span class="eopcrf2-rate-label eopcrf2-rate-label--set eopcrf2-rate-label--r${current}">${escapeHtml(RATING_LABELS[current])}</span>`
+      : `<span class="eopcrf2-rate-label">Not yet rated</span>`;
+
     return `
       <div class="eopcrf2-criterion-row">
         <span class="eopcrf2-criterion-num">${index + 1}</span>
         <div class="eopcrf2-criterion-body">
           <span class="eopcrf2-criterion-text">${escapeHtml(text)}</span>
-          <input type="text" class="eopcrf2-remarks" data-sub="${subKey}" data-idx="${index}" maxlength="500" placeholder="Remarks / Observations" value="${escapeAttr(remarks[subKey][index])}" />
         </div>
-        <div class="eopcrf2-rate-group">${buttons}</div>
+        <div class="eopcrf2-rate-col">
+          <div class="eopcrf2-rate-group">${buttons}</div>
+          ${adjectival}
+        </div>
       </div>
     `;
   }
@@ -456,26 +448,8 @@
     saveEntry(subKey, idx, { rating: newValue });
   }
 
-  // Remarks: keep state current on every keystroke (so a re-render from a
-  // rating click never loses text), but only hit the server on change/blur.
-  function handleRemarksInput(e) {
-    const input = e.target.closest(".eopcrf2-remarks");
-    if (!input) return;
-    remarks[input.dataset.sub][parseInt(input.dataset.idx, 10)] = input.value;
-  }
-
-  function handleRemarksChange(e) {
-    const input = e.target.closest(".eopcrf2-remarks");
-    if (!input) return;
-    const subKey = input.dataset.sub;
-    const idx = parseInt(input.dataset.idx, 10);
-    saveEntry(subKey, idx, { remarks: input.value.trim() });
-  }
-
   [sectionsLeadEl, sectionsCbcEl].forEach((el) => {
     el.addEventListener("click", handleRateClick);
-    el.addEventListener("input", handleRemarksInput);
-    el.addEventListener("change", handleRemarksChange);
   });
 
   // ================= Initial load =================
