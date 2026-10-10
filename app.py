@@ -51,7 +51,7 @@ def _data_dir():
             root = os.path.expanduser("~/Library/Application Support")
         else:
             root = os.environ.get("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
-        return os.path.join(root, "EOPCRF_SH")
+        return os.path.join(root, "project_measure")
     return os.path.abspath(os.path.dirname(__file__))
 
 
