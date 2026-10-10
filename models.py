@@ -1203,6 +1203,24 @@ class ReportPreparer(db.Model):
 
 
 # ---------------------------------------------------------------------------
+# "Checked by" signatory shown in the report-signatory footer (every page
+# except EOPCRF3 and EOPCRF4, which use their own signatory blocks). Typed in
+# by the user directly in the footer -- nothing is pre-filled. Single global
+# row, same pattern as ReportPreparer: not year-scoped, never touched by any
+# tab's Reset. The per-page date lives in ReportSignatoryDate (role
+# "checked_by").
+# ---------------------------------------------------------------------------
+class ReportCheckedBy(db.Model):
+    __tablename__ = "report_checked_by"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False, default="")
+    position = db.Column(db.String(255), nullable=False, default="")
+
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# ---------------------------------------------------------------------------
 # EOPCRF1's own third signatory -- "Approving Authority" name shown alongside
 # "Prepared by"/"Checked by" in the report-signatory footer, but only on the
 # EOPCRF1 page itself (see base.html's active_tab.id == 'eopcrf1' check).

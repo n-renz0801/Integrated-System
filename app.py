@@ -20,6 +20,7 @@ from models import (
     EOPCRF4_POSITIONS,
     EOPCRF4_POSITIONS_BY_PART,
     ReportPreparer,
+    ReportCheckedBy,
     EOPCRF1ApprovingAuthority,
     EOPCRF1ReportHeader,
     ReportSignatoryDate,
@@ -217,6 +218,18 @@ def _get_preparer():
     return preparer
 
 
+def _get_checked_by():
+    """Single global row holding the 'Checked by' name/position (see
+    ReportCheckedBy in models.py). Created lazily with blank fields, same
+    convention as _get_preparer() above."""
+    row = ReportCheckedBy.query.first()
+    if row is None:
+        row = ReportCheckedBy(name="", position="")
+        db.session.add(row)
+        db.session.commit()
+    return row
+
+
 def _get_eopcrf1_approving_authority():
     """Single global row holding EOPCRF1's 'Approving Authority' name (see
     EOPCRF1ApprovingAuthority in models.py). Created lazily with a blank name
@@ -293,6 +306,30 @@ def save_preparer():
     db.session.commit()
 
     return jsonify({"name": preparer.name, "position": preparer.position}), 200
+
+
+@app.route("/api/checked-by", methods=["GET"])
+def get_checked_by():
+    """Read-only fetch used by base.html's report-signatory footer to fill
+    in the typed 'Checked by' name/position."""
+    row = _get_checked_by()
+    return jsonify({"name": row.name, "position": row.position}), 200
+
+
+@app.route("/api/checked-by", methods=["POST"])
+def save_checked_by():
+    """Saves the 'Checked by' name/position typed in the report-signatory
+    footer. Single global row, never touched by any tab's Reset. Partial
+    body allowed so saving the name never blanks the position (and vice
+    versa)."""
+    data = request.get_json(silent=True) or {}
+    row = _get_checked_by()
+    if "name" in data:
+        row.name = (data.get("name") or "").strip().upper()
+    if "position" in data:
+        row.position = (data.get("position") or "").strip()
+    db.session.commit()
+    return jsonify({"name": row.name, "position": row.position}), 200
 
 
 @app.route("/api/eopcrf1/approving-authority", methods=["GET"])

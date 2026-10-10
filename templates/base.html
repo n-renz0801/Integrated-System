@@ -71,13 +71,11 @@
            Shown at the bottom of every IRC8a/8b/8d page (active_tab is set
            by view_tab()) except IRC8c and EOPCRF3, which each render their own
            agreement block inline (see tabs/irc8c.html and
-           tabs/eopcrf3.html) instead of down here. On EOPCRF4 the same
-           footer is shown but its contents are Ratee / Rater / Approving
-           Authority instead of Prepared by / Checked by. Hidden on Home, which has
-           no report to sign. "Prepared by" is populated client-side from
-           /api/preparer (see index.js) so it always reflects whatever was
-           last saved on the Home page. "Checked by" never changes, so it's
-           hardcoded here. -->
+           tabs/eopcrf3.html) instead of down here. Every page that shows it
+           (EOPCRF1, EOPCRF2, EOPCRF4) uses the same Ratee / Rater / Approving
+           Authority layout. Hidden on Home, which has no report to sign. "Ratee" is populated client-side from
+           /api/preparer (see index.js), i.e. whatever was last saved on the
+           Home page. -->
       {% if active_tab and active_tab.id not in ['irc8c', 'eopcrf3'] %}
       <div class="report-signatory">
         <div class="report-signatory-title">
@@ -85,15 +83,15 @@
           <span>Report signatories</span>
         </div>
         <div
-          class="report-signatory-grid{% if active_tab and active_tab.id in ['irc8a', 'eopcrf4'] %} report-signatory-grid--three{% endif %}"
+          class="report-signatory-grid{% if active_tab and active_tab.id in ['eopcrf1', 'eopcrf2', 'eopcrf4'] %} report-signatory-grid--three{% endif %}"
         >
-          {% if active_tab and active_tab.id == 'eopcrf4' %}
-          <!-- EOPCRF4: Ratee / Rater / Approving Authority.
+          {% if active_tab and active_tab.id in ['eopcrf1', 'eopcrf2',
+          'eopcrf4'] %}
+          <!-- EOPCRF1 / EOPCRF2 / EOPCRF4 (identical): Ratee / Rater / Approving Authority.
                Ratee name + position come from the Home page (index.js fills
-               #reportPreparedByName / #reportPreparedByPosition). Rater and
-               Approving Authority name + position are typeable and saved by
-               eopcrf4.js (Rater = same record as "Name/Position of Rater" on
-               EOPCRF I; Approving Authority = the shared record). -->
+               #reportPreparedByName / #reportPreparedByPosition). Rater (EOPCRF I's "Name of Rater" / "Rater's Position") and
+               Approving Authority name + position are read-only here, filled
+               by index.js; only the dates are editable. -->
           <div class="report-signatory-block">
             <p class="report-signatory-label">Ratee</p>
             <div class="report-signatory-person">
@@ -119,22 +117,11 @@
                 <i class="ti ti-user"></i>
               </span>
               <div class="report-signatory-info">
-                <input
-                  type="text"
-                  id="eopcrf4-rater-name"
-                  class="report-signatory-name-input"
-                  placeholder="Full name"
-                  maxlength="255"
-                  autocomplete="off"
-                />
-                <input
-                  type="text"
-                  id="eopcrf4-rater-position"
-                  class="report-signatory-position-input"
-                  placeholder="Position"
-                  maxlength="255"
-                  autocomplete="off"
-                />
+                <p class="report-signatory-name" id="reportRaterName">&nbsp;</p>
+                <p
+                  class="report-signatory-position"
+                  id="reportRaterPosition"
+                ></p>
                 {{ macros.signatory_date('checked_by', 'Rater') }}
               </div>
             </div>
@@ -146,86 +133,19 @@
                 <i class="ti ti-user"></i>
               </span>
               <div class="report-signatory-info">
-                <input
-                  type="text"
-                  id="eopcrf4-authority-name"
-                  class="report-signatory-name-input"
-                  placeholder="Full name"
-                  maxlength="255"
-                  autocomplete="off"
-                />
-                <input
-                  type="text"
-                  id="eopcrf4-authority-position"
-                  class="report-signatory-position-input"
-                  placeholder="Position"
-                  maxlength="255"
-                  autocomplete="off"
-                />
-                {{ macros.signatory_date('approving_authority', 'Approving
-                Authority') }}
-              </div>
-            </div>
-          </div>
-          {% else %}
-          <div class="report-signatory-block">
-            <p class="report-signatory-label">Prepared by</p>
-            <div class="report-signatory-person">
-              <span class="report-signatory-avatar" aria-hidden="true">
-                <i class="ti ti-user"></i>
-              </span>
-              <div class="report-signatory-info">
-                <p class="report-signatory-name" id="reportPreparedByName">
+                <p class="report-signatory-name" id="reportAuthorityName">
                   &nbsp;
                 </p>
                 <p
                   class="report-signatory-position"
-                  id="reportPreparedByPosition"
+                  id="reportAuthorityPosition"
                 ></p>
-                {{ macros.signatory_date('prepared_by', 'Prepared by') }}
-              </div>
-            </div>
-          </div>
-          <div class="report-signatory-block">
-            <p class="report-signatory-label">Checked by</p>
-            <div class="report-signatory-person">
-              <span class="report-signatory-avatar" aria-hidden="true">
-                <i class="ti ti-user"></i>
-              </span>
-              <div class="report-signatory-info">
-                <p class="report-signatory-name">DR. JONATHAN P. DOMINGO</p>
-                <p class="report-signatory-position">SGOD Chief</p>
-                {{ macros.signatory_date('checked_by', 'Checked by') }}
-              </div>
-            </div>
-          </div>
-          <!-- IRC8A only: third signatory, name typed in directly here and
-               saved to /api/irc8a/approving-authority (see index.js).
-               Position is constant, same treatment as "Checked by" above. -->
-          {% if active_tab and active_tab.id == 'irc8a' %}
-          <div class="report-signatory-block">
-            <p class="report-signatory-label">Approving Authority</p>
-            <div class="report-signatory-person">
-              <span class="report-signatory-avatar" aria-hidden="true">
-                <i class="ti ti-user"></i>
-              </span>
-              <div class="report-signatory-info">
-                <input
-                  type="text"
-                  id="irc8aApprovingAuthorityName"
-                  class="report-signatory-name-input"
-                  placeholder="Full name"
-                  autocomplete="off"
-                />
-                <p class="report-signatory-position">
-                  Assistant Schools Division Superintendent
-                </p>
                 {{ macros.signatory_date('approving_authority', 'Approving
                 Authority') }}
               </div>
             </div>
           </div>
-          {% endif %} {% endif %}
+          {% endif %}
         </div>
       </div>
       {% endif %}

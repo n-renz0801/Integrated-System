@@ -1,3 +1,53 @@
+// ---------- Signatory live-update hook ----------
+// Wraps window.fetch (installed immediately, before any page script runs)
+// so that ANY save to the preparer / rater / approving-authority records
+// -- from this file or from eopcrf1.js, eopcrf4.js, etc. -- also updates
+// the read-only report-signatory footer right away. Reads (GET) are
+// ignored, so the footer's own refresh can't loop.
+(function () {
+  var originalFetch = window.fetch;
+  var WATCHED = [
+    "/api/preparer",
+    "/api/eopcrf1/report-header",
+    "/api/eopcrf1/approving-authority",
+  ];
+
+  window.fetch = function (input, init) {
+    var path = "";
+    var method = "GET";
+    try {
+      var url = typeof input === "string" ? input : input && input.url;
+      path = new URL(url, window.location.href).pathname;
+      method = (
+        (init && init.method) ||
+        (input && input.method) ||
+        "GET"
+      ).toUpperCase();
+    } catch (e) {
+      /* unparseable URL: just pass through */
+    }
+
+    var watched = method !== "GET" && WATCHED.indexOf(path) !== -1;
+    if (watched && window.__signatoryApply) {
+      try {
+        window.__signatoryApply(path, JSON.parse(init.body));
+      } catch (e) {
+        /* non-JSON body: skip the instant update, the refresh below covers it */
+      }
+    }
+
+    var promise = originalFetch.apply(this, arguments);
+    if (watched) {
+      promise
+        .then(function () {
+          if (window.__signatoryRefresh) window.__signatoryRefresh();
+        })
+        .catch(function () {});
+    }
+    return promise;
+  };
+})();
+
 document.addEventListener("DOMContentLoaded", function () {
   // ---------- Home page card carousel ----------
   var track = document.getElementById("carouselTrack");
@@ -125,25 +175,111 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  var preparedByNameEl = document.getElementById("reportPreparedByName");
-  var preparedByPositionEl = document.getElementById(
-    "reportPreparedByPosition",
-  );
+  // ---------- Report signatories (footer, read-only, live) ----------
+  // Ratee = Home page preparer; Rater = EOPCRF I's "Name of Rater" /
+  // "Rater's Position" (report-header record); Approving Authority = the
+  // shared record. Display only -- only the signatory dates are editable
+  // in the footer. No-op where the footer isn't rendered.
+  //
+  // Live updates: the fetch wrapper at the top of this file notices any
+  // save to one of those three records (from any script on the page) and
+  // calls window.__signatoryApply(path, body) right away with the values
+  // being saved, then window.__signatoryRefresh() once the save lands to
+  // re-sync with what the server actually stored (e.g. capitalized names).
+  // The footer is also re-synced when the tab regains focus / is restored
+  // from back-forward cache.
+  var sig = {
+    preparedName: document.getElementById("reportPreparedByName"),
+    preparedPosition: document.getElementById("reportPreparedByPosition"),
+    raterName: document.getElementById("reportRaterName"),
+    raterPosition: document.getElementById("reportRaterPosition"),
+    authorityName: document.getElementById("reportAuthorityName"),
+    authorityPosition: document.getElementById("reportAuthorityPosition"),
+  };
 
-  if (preparedByNameEl) {
-    fetch("/api/preparer")
-      .then(function (res) {
-        return res.json();
-      })
-      .then(function (data) {
-        preparedByNameEl.textContent = data.name || "\u00A0";
-        preparedByPositionEl.textContent = data.position || "";
-      })
-      .catch(function () {
-        preparedByNameEl.textContent = "\u00A0";
-        preparedByPositionEl.textContent = "";
-      });
+  function setSig(nameEl, positionEl, name, position) {
+    if (nameEl && name !== undefined) nameEl.textContent = name || "\u00A0";
+    if (positionEl && position !== undefined)
+      positionEl.textContent = position || "";
   }
+
+  function fetchJson(url) {
+    return fetch(url).then(function (res) {
+      return res.json();
+    });
+  }
+
+  function refreshSignatories() {
+    if (sig.preparedName) {
+      fetchJson("/api/preparer")
+        .then(function (d) {
+          setSig(sig.preparedName, sig.preparedPosition, d.name, d.position);
+        })
+        .catch(function () {});
+    }
+    if (sig.raterName) {
+      fetchJson("/api/eopcrf1/report-header")
+        .then(function (d) {
+          setSig(
+            sig.raterName,
+            sig.raterPosition,
+            d.nameOfRater,
+            d.positionOfRater,
+          );
+        })
+        .catch(function () {});
+    }
+    if (sig.authorityName) {
+      fetchJson("/api/eopcrf1/approving-authority")
+        .then(function (d) {
+          setSig(sig.authorityName, sig.authorityPosition, d.name, d.position);
+        })
+        .catch(function () {});
+    }
+  }
+
+  // Instant (optimistic) update from a save request's body; partial bodies
+  // only touch the fields they contain.
+  function applySignatoryPatch(path, body) {
+    if (!body) return;
+    var up = function (v) {
+      return typeof v === "string" ? v.trim().toUpperCase() : v;
+    };
+    var tr = function (v) {
+      return typeof v === "string" ? v.trim() : v;
+    };
+    if (path === "/api/preparer") {
+      setSig(
+        sig.preparedName,
+        sig.preparedPosition,
+        tr(body.name),
+        tr(body.position),
+      );
+    } else if (path === "/api/eopcrf1/report-header") {
+      setSig(
+        sig.raterName,
+        sig.raterPosition,
+        up(body.nameOfRater),
+        tr(body.positionOfRater),
+      );
+    } else if (path === "/api/eopcrf1/approving-authority") {
+      setSig(
+        sig.authorityName,
+        sig.authorityPosition,
+        up(body.name),
+        tr(body.position),
+      );
+    }
+  }
+
+  window.__signatoryApply = applySignatoryPatch;
+  window.__signatoryRefresh = refreshSignatories;
+
+  refreshSignatories();
+  window.addEventListener("focus", refreshSignatories);
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted) refreshSignatories();
+  });
 
   // ---------- IRC8A: "Approving Authority" name (footer, IRC8A page only) ----------
   // Only present on the IRC8A page (see base.html's active_tab.id == 'irc8a'
