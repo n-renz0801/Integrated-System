@@ -114,6 +114,11 @@ def _ensure_eopcrf1_schema():
         for col, ddl in (("target_value", "VARCHAR(100)"), ("target_description", "TEXT"), ("mov_required", "TEXT")):
             if obj_cols and col not in obj_cols:
                 conn.exec_driver_sql(f"ALTER TABLE eopcrf1_objectives ADD COLUMN {col} {ddl}")
+
+        # Statement of Purpose, added to the printed-report header block.
+        hdr_cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(eopcrf1_report_header)").fetchall()]
+        if hdr_cols and "statement_of_purpose" not in hdr_cols:
+            conn.exec_driver_sql("ALTER TABLE eopcrf1_report_header ADD COLUMN statement_of_purpose TEXT NOT NULL DEFAULT ''")
         conn.commit()
 
 
@@ -309,7 +314,7 @@ def save_eopcrf1_approving_authority():
     # Partial body: only the fields sent are changed, so saving the name
     # never blanks the position (and vice versa).
     if "name" in data:
-        authority.name = (data.get("name") or "").strip()
+        authority.name = (data.get("name") or "").strip().upper()
     if "position" in data:
         authority.position = (data.get("position") or "").strip()
     db.session.commit()
@@ -344,10 +349,16 @@ def save_eopcrf1_report_header():
         "positionOfEmployee": "position_of_employee",
         "bureau": "bureau",
         "ratingPeriod": "rating_period",
+        "statementOfPurpose": "statement_of_purpose",
     }
+    # Names are always stored in capitals (matches the printed form).
+    uppercase_keys = {"nameOfEmployee", "nameOfRater"}
     for json_key, column in text_fields.items():
         if json_key in data:
-            setattr(header, column, (data.get(json_key) or "").strip())
+            value = (data.get(json_key) or "").strip()
+            if json_key in uppercase_keys:
+                value = value.upper()
+            setattr(header, column, value)
 
     if "dateOfReview" in data:
         date_str = (data.get("dateOfReview") or "").strip()

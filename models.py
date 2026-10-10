@@ -1249,6 +1249,9 @@ class EOPCRF1ReportHeader(db.Model):
     bureau = db.Column(db.String(255), nullable=False, default="")  # "Bureau/Center/Service/Division"
     rating_period = db.Column(db.String(255), nullable=False, default="")
     date_of_review = db.Column(db.Date, nullable=True)
+    # Printed in the "Statement of Purpose" row of the OPCRF header block.
+    # NOTE: new column -- added to existing DBs by _ensure_eopcrf1_schema().
+    statement_of_purpose = db.Column(db.Text, nullable=False, default="", server_default="")
 
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -1261,6 +1264,7 @@ class EOPCRF1ReportHeader(db.Model):
             "bureau": self.bureau,
             "ratingPeriod": self.rating_period,
             "dateOfReview": self.date_of_review.isoformat() if self.date_of_review else None,
+            "statementOfPurpose": self.statement_of_purpose or "",
         }
 
 
