@@ -5,6 +5,10 @@
   rel="stylesheet"
   href="{{ url_for('static', filename='css/eopcrf3.css') }}"
 />
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/eopcrf3_print.css') }}"
+/>
 
 <section id="eopcrf3-tab" class="tab-panel eopcrf3-panel">
   <div class="eopcrf3-header">
@@ -22,6 +26,11 @@
             &mdash; edit ratings on those tabs.
           </p>
         </div>
+      </div>
+      <div class="eopcrf3-header-actions">
+        <button type="button" id="eopcrf3-print-btn" class="eopcrf3-pdf-btn">
+          <i class="ti ti-file-type-pdf" aria-hidden="true"></i> Save to PDF
+        </button>
       </div>
     </div>
   </div>
@@ -236,6 +245,9 @@
     <!-- /.eopcrf3-flow -->
   </div>
 </section>
+
+<!-- Print-only copy of the form; built and moved to <body> by eopcrf3.js -->
+<div id="eopcrf3-print-root"></div>
 
 <script src="{{ url_for('static', filename='js/eopcrf3.js') }}"></script>
 
