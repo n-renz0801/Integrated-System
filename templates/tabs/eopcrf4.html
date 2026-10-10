@@ -5,6 +5,10 @@
   rel="stylesheet"
   href="{{ url_for('static', filename='css/eopcrf4.css') }}"
 />
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/eopcrf4_print.css') }}"
+/>
 
 <section id="eopcrf4-tab" class="tab-panel eopcrf4-panel">
   <!-- ================= 1. PAGE HEADER ================= -->
@@ -22,6 +26,9 @@
         </div>
       </div>
       <div class="eopcrf4-header-actions">
+        <button type="button" id="eopcrf4-print-btn" class="eopcrf4-pdf-btn">
+          <i class="ti ti-file-type-pdf" aria-hidden="true"></i> Save to PDF
+        </button>
         <button type="button" id="eopcrf4-reset-btn" class="eopcrf4-reset-btn">
           <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset All Data
         </button>
@@ -211,6 +218,9 @@
     </div>
   </div>
 </div>
+
+<!-- Print-only copy of the form; built and moved to <body> by eopcrf4.js -->
+<div id="eopcrf4-print-root"></div>
 
 <script src="{{ url_for('static', filename='js/eopcrf4.js') }}"></script>
 

@@ -744,6 +744,135 @@
   });
 
   // ------------------------------------------------------------------
+  // Print / Save as PDF
+  //
+  // Builds a print-only copy of Part IV (Part IV-A, Part IV-B, Feedback
+  // boxes, signatories) laid out like the OPCRF sheet's page 4, then calls
+  // window.print(). Styling is in eopcrf4_print.css (long bond, landscape).
+  // The root is moved to <body> so the print stylesheet can hide the rest
+  // of the page.
+  // ------------------------------------------------------------------
+  const printRoot = document.getElementById("eopcrf4-print-root");
+  const printBtn = document.getElementById("eopcrf4-print-btn");
+  const printCache = { header: {}, authority: { name: "" } };
+  if (printRoot) document.body.appendChild(printRoot);
+
+  const pText = (v) => escapeHtml(v == null ? "" : String(v));
+
+  // Same column widths for both tables so they line up, as on the sheet.
+  const PRINT_COLGROUP =
+    '<colgroup><col style="width:17%"><col style="width:16%"><col style="width:18%"><col style="width:17%"><col style="width:16%"><col style="width:16%"></colgroup>';
+
+  const PRINT_HEADS = {
+    A: [
+      'Gap Analysis<br><span class="r-sub">(SWOT)</span>',
+      "Improvement Area",
+      "General Objective",
+      "Recommended Improvement Intervention",
+      "Timeline",
+      "Resources Needed",
+    ],
+    B: [
+      "Strengths",
+      "Improvement Needs",
+      'Learning Objective<br><span class="r-sub">(based on the developmental intervention)</span>',
+      "Recommended Developmental Intervention",
+      "Timeline",
+      "Resources Needed",
+    ],
+  };
+
+  function printRefCell(row, column) {
+    const ref = row[column.field];
+    if (!ref) return "<td></td>";
+    const match = state.items.find((c) => c.id === ref);
+    if (!match) return "<td></td>";
+    const meta = `${match.source ? match.source + " · " : ""}${match.average.toFixed(2)}`;
+    return `<td><div class="r-ref-main">${pText(match.main)}</div><div class="r-ref-meta">${pText(meta)}</div></td>`;
+  }
+
+  function printPart(part) {
+    const def = PARTS[part];
+    const heads = PRINT_HEADS[part].map((t) => `<th>${t}</th>`).join("");
+    const rows = def.positions
+      .map((position) => {
+        const row = state.rows[rowKey(part, position)] || {};
+        const cells = def.columns
+          .map((col) =>
+            col.type === "ref"
+              ? printRefCell(row, col)
+              : `<td>${pText(row[col.field])}</td>`,
+          )
+          .join("");
+        return `<tr>${cells}</tr>`;
+      })
+      .join("");
+    // Feedback reads the live textarea so unsaved typing still prints.
+    const feedback = feedbackInputs[part]
+      ? feedbackInputs[part].value
+      : state.feedback[part] || "";
+    return `<div class="r-part">
+      <h3>${PART_TITLES[part]}: ${part === "A" ? "Office Improvement Plan" : "Individual Development Plan"}</h3>
+      <table class="r-table r-table-${part.toLowerCase()}">
+        ${PRINT_COLGROUP}
+        <thead>
+          <tr class="r-band"><th></th><th></th><th colspan="2">Action Plan</th><th></th><th></th></tr>
+          <tr class="r-cols">${heads}</tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="r-feedback"><span class="r-feedback-label">Feedback:</span>${pText(feedback)}</div>
+    </div>`;
+  }
+
+  function buildPrintHtml() {
+    const h = printCache.header || {};
+    const a = printCache.authority || {};
+    const up = (v) => (v == null ? "" : String(v).toUpperCase());
+    const sign = (name, role) =>
+      `<div class="r-sign"><div class="r-sign-name">${pText(up(name))}</div><div class="r-sign-role">${role}</div></div>`;
+    return `
+      <div class="r-page-label">DepEd OPCRF (ver.Feb2025), page 4 of 4</div>
+      <div class="r-title">Part IV: Improvement and Development Plans</div>
+      ${printPart("A")}
+      ${printPart("B")}
+      <div class="r-signs">
+        ${sign(h.nameOfEmployee, "RATEE")}
+        ${sign(h.nameOfRater, "RATER")}
+        ${sign(a.name, "APPROVING AUTHORITY")}
+      </div>`;
+  }
+
+  function refreshPrintRoot() {
+    if (printRoot) printRoot.innerHTML = buildPrintHtml();
+  }
+
+  // Ratee / Rater / Approving Authority names are the ones kept on EOPCRF I.
+  async function loadPrintExtras() {
+    const [h, a] = await Promise.allSettled([
+      apiCall("GET", "/api/eopcrf1/report-header"),
+      apiCall("GET", "/api/eopcrf1/approving-authority"),
+    ]);
+    if (h.status === "fulfilled") printCache.header = h.value;
+    if (a.status === "fulfilled") printCache.authority = a.value;
+  }
+
+  if (printBtn && printRoot) {
+    printBtn.addEventListener("click", async () => {
+      printBtn.disabled = true;
+      try {
+        await loadPrintExtras();
+        refreshPrintRoot();
+        window.print();
+      } finally {
+        printBtn.disabled = false;
+      }
+    });
+    // Ctrl+P / browser menu print gets the same layout from cached data.
+    window.addEventListener("beforeprint", refreshPrintRoot);
+  }
+
+  // ------------------------------------------------------------------
   // Initial load
   // ------------------------------------------------------------------
   loadAll();
