@@ -1,51 +1,31 @@
 # Python
-
-**pycache**/
+__pycache__/
 *.py[cod]
-*.pyo
+*.egg-info/
 
-# Virtual environment
-
+# Virtual environments
 env/
 venv/
 .venv/
 
-# PyInstaller build files
-
+# PyInstaller build output
 build/
 dist/
+# Keep project_measure.spec tracked (it holds your build settings)
 
-# Local database / application data
-
+# Local database (contains real employee/rating data)
 instance/
 *.db
-*.sqlite
 *.sqlite3
 
-# Local Adobe Illustrator files
-
-adobe_illustrator/
-
-# Excel and CSV files
-
-data/*.xlsx
-data/*.csv
-
-# Microsoft Office temporary/lock files
-
+# Excel temp/lock files (created while the workbook is open)
 ~$*
 
-# Environment variables / secrets
-
+# Environment / secrets
 .env
-.env.*
 
-# IDE / editor files
-
+# Editors and OS
 .vscode/
 .idea/
-
-# OS-generated files
-
 .DS_Store
 Thumbs.db
