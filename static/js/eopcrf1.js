@@ -350,10 +350,21 @@
   //      builds, i.e. not locked) all five level descriptors are written
   //   3. Actual accomplishments
   // Returns { state: "none" | "partial" | "done", done, total, missing[] }.
+  // True when at least one level of this measure (quality / efficiency /
+  // timeliness) has a written descriptor.
+  function hasDescriptors(obj, key) {
+    return (obj[key] || []).some(
+      (i) => typeof i.label === "string" && i.label.trim() !== "",
+    );
+  }
+
   function objectiveProgress(kra, obj) {
     const filled = (v) => typeof v === "string" && v.trim() !== "";
     const checks = [{ label: "Timeline", ok: filled(obj.timeline) }];
     INDICATOR_CATEGORIES.forEach((c) => {
+      // A measure with no descriptors at all is not applicable to this
+      // objective, so neither its rating nor its descriptors are required.
+      if (!hasDescriptors(obj, c.key)) return;
       checks.push({
         label: `${c.label} rating`,
         ok: hasVal(obj.ratings && obj.ratings[c.key]),
@@ -472,6 +483,14 @@
   }
 
   // ================= Render: detail panel =================
+  // Red asterisk (Google Forms style) shown beside a label while its field is
+  // still empty. render() rebuilds the panel after every save, so it
+  // disappears on its own once the field has a value.
+  const reqMark = (isEmpty) =>
+    isEmpty
+      ? '<span class="eopcrf1-req" title="Required" aria-label="Required">*</span>'
+      : "";
+
   function field(label, valueHtml, extraCls) {
     return `<div class="eopcrf1-fact${extraCls ? " " + extraCls : ""}"><span class="eopcrf1-label">${label}</span><div class="eopcrf1-fact-value">${valueHtml}</div></div>`;
   }
@@ -510,6 +529,14 @@
   function renderLevelRow(obj, cat, level, selectedRate, locked) {
     const item = obj[cat.key].find((i) => i.rate === level.n);
     const isSel = selectedRate === level.n;
+    // A level with no descriptor can't be rated. (If a stale rating is already
+    // sitting on such a level it stays clickable so it can be cleared.)
+    const hasText = !!(
+      item &&
+      typeof item.label === "string" &&
+      item.label.trim()
+    );
+    const pickable = hasText || isSel;
     let actions = "";
     if (!locked) {
       actions = item
@@ -520,7 +547,7 @@
         : `<span class="eopcrf1-level-actions"><button type="button" class="eopcrf1-btn eopcrf1-btn--ghost eopcrf1-btn--sm" data-action="add-rubric" data-category="${cat.key}" data-level="${level.n}">${ICON_PLUS}Add descriptor</button></span>`;
     }
     return `
-      <div class="eopcrf1-level${isSel ? " is-selected" : ""}" role="radio" aria-checked="${isSel}" tabindex="0" data-action="pick-level" data-category="${cat.key}" data-level="${level.n}" title="${isSel ? "Click to clear this rating" : `Rate ${cat.label.toLowerCase()} ${level.n}`}">
+      <div class="eopcrf1-level${isSel ? " is-selected" : ""}${pickable ? "" : " is-disabled"}" role="radio" aria-checked="${isSel}" ${pickable ? 'tabindex="0" data-action="pick-level"' : 'tabindex="-1" aria-disabled="true"'} data-category="${cat.key}" data-level="${level.n}" title="${isSel ? "Click to clear this rating" : pickable ? `Rate ${cat.label.toLowerCase()} ${level.n}` : "No descriptor for this level, so it can't be rated"}">
         <span class="eopcrf1-level-num">${level.n}</span>
         <span class="eopcrf1-level-name">${level.name}</span>
         <span class="eopcrf1-level-text">${item ? escapeHtml(item.label) : '<span class="eopcrf1-muted">No descriptor for this level</span>'}</span>
@@ -534,7 +561,7 @@
     return `
       <section class="eopcrf1-cat">
         <div class="eopcrf1-cat-head">
-          <h4>${cat.label}</h4>
+          <h4>${cat.label}${reqMark(selectedRate === null && hasDescriptors(obj, cat.key))}</h4>
           <span class="eopcrf1-cat-rating${selectedRate === null ? " is-empty" : ""}">${selectedRate === null ? "Not rated" : `${selectedRate} · ${levelName(selectedRate)}`}</span>
         </div>
         <div class="eopcrf1-levels${selectedRate === null ? "" : " has-selection"}" role="radiogroup" aria-label="${cat.label} rating">
@@ -587,7 +614,7 @@
           <h4 class="eopcrf1-group-title"><i class="ti ti-calendar-event" aria-hidden="true"></i>Planning</h4>
           <div class="eopcrf1-group-body">
           <div class="eopcrf1-facts">
-            ${field("Timeline", `<span>${textOrDash(obj.timeline)}</span><button type="button" class="eopcrf1-icon-btn" data-action="edit-timeline" title="Edit timeline">${ICON_EDIT}</button>`, "eopcrf1-fact--inline")}
+            ${field("Timeline" + reqMark(!obj.timeline || !String(obj.timeline).trim()), `<span>${textOrDash(obj.timeline)}</span><button type="button" class="eopcrf1-icon-btn" data-action="edit-timeline" title="Edit timeline">${ICON_EDIT}</button>`, "eopcrf1-fact--inline")}
             ${field("Weight allocation", escapeHtml(fmtWeight(obj.weight)))}
             ${field("Target value", textOrDash(obj.targetValue))}
             ${field("Target description", textOrDash(obj.targetDescription))}
@@ -612,7 +639,7 @@
               <div class="eopcrf1-mov-wrap">${renderMovLink(obj)}</div>
             </div>
             <div class="eopcrf1-fact">
-              <span class="eopcrf1-label eopcrf1-label--row">Actual accomplishments<button type="button" class="eopcrf1-icon-btn" data-action="edit-actual" title="Edit actual accomplishments">${ICON_EDIT}</button></span>
+              <span class="eopcrf1-label eopcrf1-label--row"><span>Actual accomplishments${reqMark(!obj.actualResults || !String(obj.actualResults).trim())}</span><button type="button" class="eopcrf1-icon-btn" data-action="edit-actual" title="Edit actual accomplishments">${ICON_EDIT}</button></span>
               <div class="eopcrf1-box${obj.actualResults ? "" : " is-empty"}">${obj.actualResults ? escapeHtml(obj.actualResults) : "No accomplishments recorded yet."}</div>
             </div>
           </div>
@@ -1209,6 +1236,15 @@
         const current = hasVal(obj.ratings[category])
           ? Number(obj.ratings[category])
           : null;
+        // Only levels that have a descriptor can be newly rated.
+        if (
+          current !== level &&
+          !(obj[category] || []).some(
+            (i) =>
+              i.rate === level && typeof i.label === "string" && i.label.trim(),
+          )
+        )
+          return;
         await setRating(
           objId,
           category,
@@ -1567,6 +1603,9 @@
     </div>`;
   }
 
+  // Fixed -- the rater is always the Assistant Schools Division Superintendent.
+  const RATER_POSITION = "Assistant Schools Division Superintendent";
+
   function buildPrintHtml() {
     const h = printCache.header || {};
     const a = printCache.authority || {};
@@ -1585,7 +1624,7 @@
       </div>
       <table class="p-info">
         ${info("Name of Employee:", up(h.nameOfEmployee), "Name of Rater:", up(h.nameOfRater))}
-        ${info("Position/Designation:", h.positionOfEmployee, "Position:", h.positionOfRater)}
+        ${info("Position/Designation:", h.positionOfEmployee, "Position:", RATER_POSITION)}
         ${info("Review Period:", h.ratingPeriod, "Approving Authority:", up(a.name))}
         ${info("Strand/Bureau/Center/Service/Region/Division:", h.bureau, "Date of Review:", pFmtDate(h.dateOfReview))}
         <tr><th>Strand/Bureau/Center/Service/Region/Division Statement of Purpose:</th><td colspan="3">${pText(h.statementOfPurpose)}</td></tr>
