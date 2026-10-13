@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}EOPCRF Part I - EOPCRF_SH{% endblock
+{% extends "base.html" %} {% block title %}OPCRF Part I - EOPCRF_SH{% endblock
 %} {% block content %}
 
 <link
@@ -15,7 +15,7 @@
     <div class="eopcrf1-header-top">
       <div class="eopcrf1-header-title-main">
         <span class="eopcrf1-header-badge">
-          <span class="eopcrf1-header-badge-group">EOPCRF</span>
+          <span class="eopcrf1-header-badge-group">OPCRF</span>
           <span class="eopcrf1-header-badge-page">I</span>
         </span>
         <div class="eopcrf1-header-divider"></div>
@@ -40,80 +40,121 @@
   </div>
 
   <!-- Form details: the identifying block at the top of the printed OPCRF.
-       Each field saves on change through /api/eopcrf1/report-header. -->
+       Each field saves on change through /api/eopcrf1/report-header. The
+       Rater's and Approving Authority's positions are fixed (not editable). -->
   <details class="eopcrf1-details" id="eopcrf1-details">
     <summary>
-      <span class="eopcrf1-details-title">Form details</span>
-      <span class="eopcrf1-details-sum" id="eopcrf1-details-sum"
-        >Not filled in yet</span
-      >
+      <span class="eopcrf1-details-icon" aria-hidden="true"
+        ><i class="ti ti-file-description"></i
+      ></span>
+      <span class="eopcrf1-details-heading">
+        <span class="eopcrf1-details-title">Form details</span>
+        <span class="eopcrf1-details-sum" id="eopcrf1-details-sum"
+          >Not filled in yet</span
+        >
+      </span>
+      <span class="eopcrf1-details-toggle">
+        <span class="eopcrf1-when-closed">Click to expand</span>
+        <span class="eopcrf1-when-open">Collapse</span>
+        <i class="ti ti-chevron-down" aria-hidden="true"></i>
+      </span>
     </summary>
+
     <div class="eopcrf1-details-grid">
-      <label class="eopcrf1-field"
-        ><span class="eopcrf1-label">Name of employee</span
-        ><input
-          type="text"
-          id="eopcrf1-h-nameOfEmployee"
-          data-header="nameOfEmployee"
-          data-upper="1"
-      /></label>
-      <label class="eopcrf1-field"
-        ><span class="eopcrf1-label">Position / designation</span
-        ><input
-          type="text"
-          id="eopcrf1-h-positionOfEmployee"
-          data-header="positionOfEmployee"
-      /></label>
-      <label class="eopcrf1-field"
-        ><span class="eopcrf1-label">Name of rater</span
-        ><input
-          type="text"
-          id="eopcrf1-h-nameOfRater"
-          data-header="nameOfRater"
-          data-upper="1"
-      /></label>
-      <label class="eopcrf1-field"
-        ><span class="eopcrf1-label">Rater's position</span
-        ><input
-          type="text"
-          id="eopcrf1-h-positionOfRater"
-          data-header="positionOfRater"
-      /></label>
-      <label class="eopcrf1-field"
-        ><span class="eopcrf1-label">Approving authority</span
-        ><input
-          type="text"
-          id="eopcrf1-h-approvingAuthority"
-          data-authority="name"
-          data-upper="1"
-      /></label>
-      <label class="eopcrf1-field eopcrf1-field--wide"
-        ><span class="eopcrf1-label"
-          >Strand / bureau / center / service / region / division</span
-        ><input type="text" id="eopcrf1-h-bureau" data-header="bureau"
-      /></label>
-      <label class="eopcrf1-field"
-        ><span class="eopcrf1-label">Review period</span
-        ><input
-          type="text"
-          id="eopcrf1-h-ratingPeriod"
-          data-header="ratingPeriod"
-      /></label>
-      <label class="eopcrf1-field"
-        ><span class="eopcrf1-label">Date of review</span
-        ><input
-          type="date"
-          id="eopcrf1-h-dateOfReview"
-          data-header="dateOfReview"
-      /></label>
-      <label class="eopcrf1-field eopcrf1-field--wide"
-        ><span class="eopcrf1-label">Statement of purpose</span
-        ><textarea
-          id="eopcrf1-h-statementOfPurpose"
-          data-header="statementOfPurpose"
-          rows="3"
-        ></textarea>
-      </label>
+      <!-- Group 1: the employee being rated -->
+      <fieldset class="eopcrf1-dgroup">
+        <legend class="eopcrf1-dgroup-title">
+          <i class="ti ti-user" aria-hidden="true"></i>Employee
+        </legend>
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Name of employee</span
+          ><input
+            type="text"
+            id="eopcrf1-h-nameOfEmployee"
+            data-header="nameOfEmployee"
+            data-upper="1"
+        /></label>
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Position / designation</span
+          ><input
+            type="text"
+            id="eopcrf1-h-positionOfEmployee"
+            data-header="positionOfEmployee"
+        /></label>
+      </fieldset>
+
+      <!-- Group 2: who rates and approves -->
+      <fieldset class="eopcrf1-dgroup">
+        <legend class="eopcrf1-dgroup-title">
+          <i class="ti ti-user-check" aria-hidden="true"></i>Rater &amp;
+          approving authority
+        </legend>
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Name of rater</span
+          ><input
+            type="text"
+            id="eopcrf1-h-nameOfRater"
+            data-header="nameOfRater"
+            data-upper="1"
+          /><span class="eopcrf1-field-hint"
+            >Assistant Schools Division Superintendent</span
+          ></label
+        >
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Approving authority</span
+          ><input
+            type="text"
+            id="eopcrf1-h-approvingAuthority"
+            data-authority="name"
+            data-upper="1"
+          /><span class="eopcrf1-field-hint"
+            >Schools Division Superintendent</span
+          ></label
+        >
+      </fieldset>
+
+      <!-- Group 3: office and review period -->
+      <fieldset class="eopcrf1-dgroup">
+        <legend class="eopcrf1-dgroup-title">
+          <i class="ti ti-building" aria-hidden="true"></i>Office &amp; review
+          period
+        </legend>
+        <label class="eopcrf1-field eopcrf1-field--wide"
+          ><span class="eopcrf1-label"
+            >Strand / bureau / center / service / region / division</span
+          ><input type="text" id="eopcrf1-h-bureau" data-header="bureau"
+        /></label>
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Review period</span
+          ><input
+            type="text"
+            id="eopcrf1-h-ratingPeriod"
+            data-header="ratingPeriod"
+        /></label>
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Date of review</span
+          ><input
+            type="date"
+            id="eopcrf1-h-dateOfReview"
+            data-header="dateOfReview"
+        /></label>
+      </fieldset>
+
+      <!-- Group 4: statement of purpose -->
+      <fieldset class="eopcrf1-dgroup eopcrf1-dgroup--stretch">
+        <legend class="eopcrf1-dgroup-title">
+          <i class="ti ti-notes" aria-hidden="true"></i>Statement of purpose
+        </legend>
+        <label class="eopcrf1-field eopcrf1-field--grow"
+          ><span class="eopcrf1-label eopcrf1-label--sr"
+            >Statement of purpose</span
+          ><textarea
+            id="eopcrf1-h-statementOfPurpose"
+            data-header="statementOfPurpose"
+            rows="5"
+          ></textarea>
+        </label>
+      </fieldset>
     </div>
   </details>
 

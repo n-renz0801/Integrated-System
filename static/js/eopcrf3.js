@@ -12,7 +12,6 @@
   const overallEl = document.getElementById("eopcrf3-overall-score");
   const pmesNumericalEl = document.getElementById("eopcrf3-pmes-numerical");
   const pmesAdjectivalEl = document.getElementById("eopcrf3-pmes-adjectival");
-  const superiorNameEl = document.getElementById("eopcrf3-superior-name");
 
   // Part II-A / II-B each count for 2.5% of the final score: the section
   // average x 0.025 -- same constant eopcrf2.js uses for its
@@ -307,19 +306,25 @@
     </table>`;
   }
 
+  // Fixed -- the superior is the Rater, i.e. the Assistant Schools Division
+  // Superintendent (same as the Rater on the other pages).
+  const RATER_POSITION = "Assistant Schools Division Superintendent";
+
   function buildPrintHtml() {
     const up = (v) => (v == null ? "" : String(v).toUpperCase());
 
     const employee =
-      printCache.preparer.name || printCache.header.nameOfEmployee || "";
+      printCache.header.nameOfEmployee || printCache.preparer.name || "";
 
     const superior = printCache.header.nameOfRater || "";
 
-    const box = (label, name, date) => `
+    const box = (label, name, date, position) => `
 
       <div class="r-box">
 
         <div class="r-box-name"><span class="r-lbl">${label}</span><span class="r-val">${pText(up(name))}</span></div>
+
+        ${position ? `<div class="r-box-pos" style="font-size:9pt;margin-top:2px;">${pText(position)}</div>` : ""}
 
         <div class="r-box-sig">Signature:</div>
 
@@ -355,7 +360,7 @@
 
           ${box("Name of Employee:", employee, printCache.dates.prepared_by)}
 
-          ${box("Name of Superior:", superior, printCache.dates.checked_by)}
+          ${box("Name of Superior:", superior, printCache.dates.checked_by, RATER_POSITION)}
 
         </div>
 
@@ -410,53 +415,21 @@
 
   // ================= Initial load =================
   // Pure read-only view: nothing is stored for EOPCRF3. Obtained scores
-  // come from EOPCRF1's and EOPCRF2's own data endpoints. "Name of
-  // Employee" is the Home page's "Welcome, ___" name, filled in by
-  // index.js (#reportPreparedByName) like every other signatory block;
-  // "Name of Superior" comes from the rater name typed on EOPCRF1.
+  // come from OPCRF I's and OPCRF II's own data endpoints. "Name of
+  // Employee" and "Name of Superior" are filled live by index.js
+  // (#reportPreparedByName / #reportRaterName) from OPCRF I > Form details
+  // ("Name of employee" / "Name of rater").
   async function init() {
     try {
-      const [part1, part2, header] = await Promise.all([
+      const [part1, part2] = await Promise.all([
         apiGet("/irc/eopcrf1/data"),
         apiGet("/irc/eopcrf2/data"),
-        apiGet("/api/eopcrf1/report-header").catch(() => null),
       ]);
       render(part1.kras || [], part2.ratings || {}, part2.sections || {});
-      if (header) {
-        superiorNameEl.value = header.nameOfRater || "";
-      }
     } catch (err) {
       showError(err.message);
     }
   }
-
-  // "Name of Superior" is typeable. It's the same value as "Name of Rater"
-  // on EOPCRF Part I, so it saves to the same report-header record (a
-  // partial body, so no other header field is touched) and the two pages
-  // always agree.
-  let lastSavedSuperior = null;
-  superiorNameEl.addEventListener("focus", () => {
-    lastSavedSuperior = superiorNameEl.value;
-  });
-  superiorNameEl.addEventListener("blur", async () => {
-    const value = superiorNameEl.value.trim();
-    superiorNameEl.value = value;
-    if (value === (lastSavedSuperior || "").trim()) return;
-    try {
-      const res = await fetch("/api/eopcrf1/report-header", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nameOfRater: value }),
-      });
-      if (!res.ok) throw new Error("save failed");
-      lastSavedSuperior = value;
-    } catch (e) {
-      console.error("Couldn't save Name of Superior:", e);
-    }
-  });
-  superiorNameEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") superiorNameEl.blur();
-  });
 
   init();
 })();

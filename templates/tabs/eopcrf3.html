@@ -1,5 +1,5 @@
 {% extends "base.html" %} {% import "_macros.html" as macros %} {% block title
-%}EOPCRF Part III - EOPCRF_SH{% endblock %} {% block content %}
+%}OPCRF Part III - EOPCRF_SH{% endblock %} {% block content %}
 
 <link
   rel="stylesheet"
@@ -15,14 +15,14 @@
     <div class="eopcrf3-header-top">
       <div class="eopcrf3-header-title-main">
         <span class="eopcrf3-header-badge">
-          <span class="eopcrf3-header-badge-group">EOPCRF</span>
+          <span class="eopcrf3-header-badge-group">OPCRF</span>
           <span class="eopcrf3-header-badge-page">III</span>
         </span>
         <div class="eopcrf3-header-divider"></div>
         <div>
           <h2>Summary of Ratings</h2>
           <p class="eopcrf3-subtitle">
-            Read-only. Obtained scores mirror EOPCRF Part I and Part II live
+            Read-only. Obtained scores mirror OPCRF Part I and Part II live
             &mdash; edit ratings on those tabs.
           </p>
         </div>
@@ -228,13 +228,21 @@
                 <i class="ti ti-user"></i>
               </span>
               <div class="report-signatory-info">
-                <input
-                  type="text"
-                  id="eopcrf3-superior-name"
-                  class="report-signatory-name-input"
-                  placeholder="Full name"
-                  autocomplete="off"
-                />
+                <!-- Read-only: index.js fills this live with the Rater's name
+                     from OPCRF I > Form details (#reportRaterName). -->
+                <p
+                  class="report-signatory-name eopcrf3-sign-name"
+                  id="reportRaterName"
+                >
+                  &nbsp;
+                </p>
+                <!-- Same fixed position as the Rater on the other pages. -->
+                <p
+                  class="report-signatory-position"
+                  id="eopcrf3-superior-position"
+                >
+                  Assistant Schools Division Superintendent
+                </p>
                 {{ macros.signatory_date('checked_by', 'Name of Superior') }}
               </div>
             </div>

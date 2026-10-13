@@ -176,8 +176,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ---------- Report signatories (footer, read-only, live) ----------
-  // Ratee = Home page preparer; Rater = EOPCRF I's "Name of Rater" /
-  // "Rater's Position" (report-header record); Approving Authority = the
+  // Ratee = EOPCRF I's "Name of employee" / "Position / designation" and
+  // Rater = its "Name of rater" (both from the report-header record); Approving Authority = the
   // shared record. Display only -- only the signatory dates are editable
   // in the footer. No-op where the footer isn't rendered.
   //
@@ -192,9 +192,12 @@ document.addEventListener("DOMContentLoaded", function () {
     preparedName: document.getElementById("reportPreparedByName"),
     preparedPosition: document.getElementById("reportPreparedByPosition"),
     raterName: document.getElementById("reportRaterName"),
-    raterPosition: document.getElementById("reportRaterPosition"),
+    // Rater / Approving Authority positions are fixed (rendered in base.html
+    // as "Assistant Schools Division Superintendent" / "Schools Division
+    // Superintendent"), so they are never read, saved or overwritten here.
+    raterPosition: null,
     authorityName: document.getElementById("reportAuthorityName"),
-    authorityPosition: document.getElementById("reportAuthorityPosition"),
+    authorityPosition: null,
   };
 
   function setSig(nameEl, positionEl, name, position) {
@@ -210,16 +213,17 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function refreshSignatories() {
-    if (sig.preparedName) {
-      fetchJson("/api/preparer")
-        .then(function (d) {
-          setSig(sig.preparedName, sig.preparedPosition, d.name, d.position);
-        })
-        .catch(function () {});
-    }
-    if (sig.raterName) {
+    // Ratee and Rater both come from the OPCRF I form details
+    // (report-header record).
+    if (sig.preparedName || sig.raterName) {
       fetchJson("/api/eopcrf1/report-header")
         .then(function (d) {
+          setSig(
+            sig.preparedName,
+            sig.preparedPosition,
+            (d.nameOfEmployee || "").toUpperCase(),
+            d.positionOfEmployee || "",
+          );
           setSig(
             sig.raterName,
             sig.raterPosition,
@@ -248,14 +252,13 @@ document.addEventListener("DOMContentLoaded", function () {
     var tr = function (v) {
       return typeof v === "string" ? v.trim() : v;
     };
-    if (path === "/api/preparer") {
+    if (path === "/api/eopcrf1/report-header") {
       setSig(
         sig.preparedName,
         sig.preparedPosition,
-        tr(body.name),
-        tr(body.position),
+        up(body.nameOfEmployee),
+        tr(body.positionOfEmployee),
       );
-    } else if (path === "/api/eopcrf1/report-header") {
       setSig(
         sig.raterName,
         sig.raterPosition,

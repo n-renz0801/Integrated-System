@@ -188,10 +188,10 @@ def init_db_command():
 # (EOPCRF1, EOPCRF2, EOPCRF3, EOPCRF4) and this list will not grow.
 # ---------------------------------------------------------------------------
 TABS = [
-    {"id": "eopcrf1", "short": "EOPCRF I", "part": "Part I", "name": "EOPCRF Part I", "desc": "Individual Performance Commitment and Review Form (IPCRF)"},
-    {"id": "eopcrf2", "short": "EOPCRF II", "part": "Part II", "name": "EOPCRF Part II", "desc": "Leadership and Core Behavioral Competencies"},
-    {"id": "eopcrf3", "short": "EOPCRF III", "part": "Part III", "name": "EOPCRF Part III", "desc": "Summary of Ratings"},
-    {"id": "eopcrf4", "short": "EOPCRF IV", "part": "Part IV", "name": "EOPCRF Part IV", "desc": "Improvement and Development Plans"},
+    {"id": "eopcrf1", "short": "OPCRF I", "part": "Part I", "name": "OPCRF Part I", "desc": "Individual Performance Commitment and Review Form (IPCRF)"},
+    {"id": "eopcrf2", "short": "OPCRF II", "part": "Part II", "name": "OPCRF Part II", "desc": "Leadership and Core Behavioral Competencies"},
+    {"id": "eopcrf3", "short": "OPCRF III", "part": "Part III", "name": "OPCRF Part III", "desc": "Summary of Ratings"},
+    {"id": "eopcrf4", "short": "OPCRF IV", "part": "Part IV", "name": "OPCRF Part IV", "desc": "Improvement and Development Plans"},
 ]
 
 # Quick lookup by id, e.g. TAB_LOOKUP["eopcrf1"]
