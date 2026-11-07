@@ -1,0 +1,131 @@
+{% extends "base.html" %} {% block title %}SBM - EOPCRF_SH{% endblock %} {%
+block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sbm.css') }}" />
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/sbm_print.css') }}"
+/>
+
+<section id="sbm-tab" class="tab-panel sbm-panel">
+  <div class="sbm-header">
+    <div class="sbm-header-top">
+      <div class="sbm-header-title-main">
+        <span class="sbm-header-badge">SBM</span>
+        <div class="sbm-header-divider"></div>
+        <h2>
+          Annex A: School-Based Management (SBM) Self-Assessment Checklist
+        </h2>
+      </div>
+      <div class="sbm-header-actions">
+        <button type="button" id="sbm-print-btn" class="sbm-pdf-btn">
+          <i class="ti ti-file-type-pdf" aria-hidden="true"></i> Save to PDF
+        </button>
+        <button type="button" class="sbm-reset-btn" id="sbm-reset-btn">
+          <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset Data
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Intro paragraph from the form, tucked away so it doesn't crowd the
+       checklist. sbm.js also reads #sbm-intro for the printed copy. -->
+  <details class="sbm-about" id="sbm-about">
+    <summary>
+      <span class="sbm-about-icon" aria-hidden="true"
+        ><i class="ti ti-info-circle"></i
+      ></span>
+      <span class="sbm-about-title">About this checklist</span>
+      <span class="sbm-about-toggle">
+        <span class="sbm-when-closed">Click to expand</span>
+        <span class="sbm-when-open">Collapse</span>
+        <i class="ti ti-chevron-down" aria-hidden="true"></i>
+      </span>
+    </summary>
+    <p class="sbm-about-text" id="sbm-intro">
+      The <em>SBM Self-Assessment Checklist</em> provides a comprehensive
+      understanding of the status of continuous improvement in the various areas
+      of school operation. The school assesses the six (6) SBM Dimensions and
+      determines the degree of manifestation for each SBM Indicator. These
+      indicators are listed as observable school practices and attainable
+      learning outcomes. The extent by which the indicators are manifested is
+      described as follows:
+      <em>not yet manifested, rarely manifested, frequently manifested,</em> and
+      <em>always manifested.</em>
+    </p>
+  </details>
+
+  <!-- Overall progress: one segment per dimension (click to jump) -->
+  <div class="sbm-progress" id="sbm-progress">
+    <div class="sbm-progress-summary">
+      <span class="sbm-progress-count" id="sbm-progress-count"></span>
+      <span class="sbm-save-status" id="sbm-save-status" role="status"></span>
+    </div>
+    <div
+      class="sbm-segments"
+      id="sbm-segments"
+      role="progressbar"
+      aria-label="Overall progress"
+      aria-valuemin="0"
+      aria-valuemax="42"
+      aria-valuenow="0"
+    ></div>
+    <button type="button" class="sbm-next-btn" id="sbm-next-unanswered">
+      <i class="ti ti-player-skip-forward" aria-hidden="true"></i> Go to next
+      unanswered
+    </button>
+    <!-- Replaces the button once every indicator is answered. Not a control. -->
+    <span class="sbm-done-badge" id="sbm-done-badge" hidden>
+      <i class="ti ti-circle-check" aria-hidden="true"></i> Checklist complete
+    </span>
+  </div>
+
+  <div id="sbm-workspace" class="sbm-workspace">
+    <div class="sbm-nav-col">
+      <!-- A div, not <nav>: base.css styles bare nav/header elements. -->
+      <div
+        id="sbm-nav"
+        class="sbm-nav"
+        role="navigation"
+        aria-label="SBM Dimensions"
+      ></div>
+    </div>
+    <div id="sbm-detail" class="sbm-detail"></div>
+  </div>
+
+  <div
+    id="sbm-error-state"
+    class="sbm-error-state"
+    style="display: none"
+    role="alert"
+  ></div>
+</section>
+
+<!-- ================= RESET CONFIRMATION MODAL ================= -->
+<div id="sbm-reset-confirm-overlay" class="sbm-confirm-overlay">
+  <div class="sbm-confirm-box" role="dialog" aria-modal="true">
+    <h4>Reset this checklist?</h4>
+    <p class="sbm-reset-intro">
+      This clears every selected degree of manifestation and every remark.
+    </p>
+    <div class="sbm-confirm-actions">
+      <button type="button" id="sbm-reset-confirm-cancel" class="sbm-btn">
+        Cancel
+      </button>
+      <button
+        type="button"
+        id="sbm-reset-confirm-confirm"
+        class="sbm-btn sbm-btn--danger"
+      >
+        Yes, reset
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Print-only copy of the form; built and moved to <body> by sbm.js -->
+<div id="sbm-print-root"></div>
+
+<script src="{{ url_for('static', filename='js/sbm.js') }}"></script>
+
+{% endblock %}

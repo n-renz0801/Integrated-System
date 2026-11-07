@@ -1,3 +1,5 @@
+# run using python -m scripts.structure_printer
+
 import os
 
 SKIP = {"env", "__pycache__", ".git", ".venv", "node_modules"}

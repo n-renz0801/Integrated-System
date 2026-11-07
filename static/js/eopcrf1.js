@@ -607,7 +607,9 @@
             <span class="eopcrf1-label">Objective ${escapeHtml(code)}</span>
             <h3>${title ? escapeHtml(title) : "Untitled objective"}</h3>
           </div>
-          <div class="eopcrf1-obj-actions">${objActions}</div>
+          <div class="eopcrf1-obj-actions">
+            <span class="eopcrf1-obj-score" title="Weighted average for this objective"><span class="eopcrf1-obj-score-k">Weighted score</span><span class="eopcrf1-obj-score-v${score === null ? " is-empty" : ""}">${score === null ? "—" : fmt3(score)}</span></span>${objActions}
+          </div>
         </div>
 
         <div class="eopcrf1-group eopcrf1-group--plan">
@@ -1652,19 +1654,57 @@
     if (a.status === "fulfilled") printCache.authority = a.value;
   }
 
+  // The header image only starts downloading once the print copy is built,
+  // so printing straight away used to catch it before it had loaded (blank
+  // on the first print, fine on the second once it was cached). Two fixes:
+  //  1. preload the image as soon as the page opens, so it is cached, and
+  //  2. before printing, wait (up to 4s) for every image in the print copy.
+  if (printRoot && printRoot.dataset.headerImg) {
+    const preload = new Image();
+    preload.src = printRoot.dataset.headerImg;
+  }
+
+  function imagesReady(root, timeoutMs) {
+    const waits = Array.from(root.querySelectorAll("img")).map((img) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise((resolve) => {
+            img.addEventListener("load", resolve, { once: true });
+            img.addEventListener("error", resolve, { once: true });
+          }),
+    );
+    return Promise.race([
+      Promise.all(waits),
+      new Promise((resolve) => setTimeout(resolve, timeoutMs)),
+    ]);
+  }
+
   if (printBtn && printRoot) {
+    // Set while the button's own print is in progress, so the beforeprint
+    // handler below doesn't rebuild the copy (and reload the image) again.
+    let builtForButton = false;
     printBtn.addEventListener("click", async () => {
       printBtn.disabled = true;
+      const restore = () => {
+        builtForButton = false;
+        window.removeEventListener("afterprint", restore);
+      };
+      window.addEventListener("afterprint", restore);
       try {
         await loadPrintExtras();
         refreshPrintRoot();
+        await imagesReady(printRoot, 4000);
+        builtForButton = true;
         window.print();
       } finally {
         printBtn.disabled = false;
       }
     });
-    // Ctrl+P / browser menu print gets the same layout from cached data.
-    window.addEventListener("beforeprint", refreshPrintRoot);
+    // Ctrl+P / browser menu print gets the same layout from cached data
+    // (the image is already cached from the preload above).
+    window.addEventListener("beforeprint", () => {
+      if (!builtForButton) refreshPrintRoot();
+    });
   }
 
   // ================= Initial load =================

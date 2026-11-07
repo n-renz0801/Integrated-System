@@ -26,6 +26,9 @@ from models import (
     ReportSignatoryDate,
     EOPCRF2_SECTION_LEADERSHIP,
     EOPCRF2_SECTION_CBC,
+    SBMResponse,
+    SBM_DEGREES,
+    SBM_INDICATOR_COUNT,
 )
 
 
@@ -193,6 +196,16 @@ TABS = [
     {"id": "eopcrf3", "short": "OPCRF III", "part": "Part III", "name": "OPCRF Part III", "desc": "Summary of Ratings"},
     {"id": "eopcrf4", "short": "OPCRF IV", "part": "Part IV", "name": "OPCRF Part IV", "desc": "Improvement and Development Plans"},
 ]
+
+# The SBM Self-Assessment Checklist is a standalone page (no sub-parts), so it
+# lives outside TABS: TABS drives the OPCRF card's Part links on Home and the
+# OPCRF nav entries. base.html adds the SBM nav entry separately.
+SBM_TAB = {
+    "id": "sbm",
+    "short": "SBM",
+    "name": "School-Based Management (SBM) Self-Assessment Checklist",
+    "desc": "School-Based Management (SBM) Self-Assessment Checklist",
+}
 
 # Quick lookup by id, e.g. TAB_LOOKUP["eopcrf1"]
 TAB_LOOKUP = {tab["id"]: tab for tab in TABS}
@@ -1052,6 +1065,76 @@ def reset_eopcrf4_data():
 # (/api/eopcrf1/report-header) directly, since there's nothing
 # EOPCRF3-specific to store.
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# SBM -- School-Based Management (SBM) Self-Assessment Checklist (Annex A)
+#
+# One row per (year, indicator number 1-42): the selected Degree of
+# Manifestation (or NULL) and the free-text Remarks. The dimension and
+# indicator wording is hardcoded in sbm.js.
+# ---------------------------------------------------------------------------
+@app.route("/sbm")
+def sbm():
+    return render_template("tabs/sbm.html", tabs=TABS, active_tab=SBM_TAB)
+
+
+@app.route("/sbm/data", methods=["GET"])
+def get_sbm_data():
+    year = request.args.get("year", type=int) or _current_year()
+    responses = {}
+    for row in SBMResponse.query.filter_by(year=year).all():
+        if row.degree or row.remarks:
+            responses[str(row.indicator_no)] = {"degree": row.degree, "remarks": row.remarks or ""}
+    return jsonify({"year": year, "responses": responses}), 200
+
+
+@app.route("/sbm/response", methods=["POST"])
+def save_sbm_response():
+    """Expected JSON body:
+        { "year": 2026, "indicatorNo": 7, "degree": "frequently", "remarks": "Optional text" }
+
+    'degree' and 'remarks' are each optional -- only the fields present in
+    the body are changed. degree: null clears a previously-selected degree
+    (sbm.js does this when the selected option is clicked again, or Clear is
+    pressed); remarks: "" clears the remark.
+    """
+    data = request.get_json(silent=True) or {}
+    year = data.get("year") or _current_year()
+    indicator_no = data.get("indicatorNo")
+
+    if not isinstance(indicator_no, int) or isinstance(indicator_no, bool) or not 1 <= indicator_no <= SBM_INDICATOR_COUNT:
+        return jsonify({"error": f"Invalid indicatorNo: {indicator_no!r}"}), 400
+    if "degree" in data and data["degree"] is not None and data["degree"] not in SBM_DEGREES:
+        return jsonify({"error": f"Invalid degree: {data['degree']!r}"}), 400
+    if "remarks" in data and data["remarks"] is not None and not isinstance(data["remarks"], str):
+        return jsonify({"error": "'remarks' must be a string"}), 400
+
+    row = SBMResponse.query.filter_by(year=year, indicator_no=indicator_no).first()
+    if row is None:
+        row = SBMResponse(year=year, indicator_no=indicator_no, remarks="")
+        db.session.add(row)
+    if "degree" in data:
+        row.degree = data["degree"]
+    if "remarks" in data:
+        row.remarks = data["remarks"] or ""
+    db.session.commit()
+
+    return jsonify({
+        "year": year,
+        "indicatorNo": indicator_no,
+        "degree": row.degree,
+        "remarks": row.remarks,
+    }), 200
+
+
+@app.route("/sbm/reset", methods=["DELETE"])
+def reset_sbm_data():
+    """Clears every answer and remark for the given year."""
+    year = request.args.get("year", type=int) or _current_year()
+    SBMResponse.query.filter_by(year=year).delete()
+    db.session.commit()
+    return jsonify({"reset": True, "year": year}), 200
 
 
 @app.errorhandler(404)

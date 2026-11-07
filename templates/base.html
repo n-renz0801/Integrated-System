@@ -60,6 +60,14 @@
                 </a>
         </li>
         {% endfor %}
+        <li>
+          <!-- prettier-ignore -->
+          <a href="{{ url_for('sbm') }}"
+                   title="School-Based Management (SBM) Self-Assessment Checklist"
+                   {% if active_tab and active_tab.id == 'sbm' %}class="active"{% endif %}>
+                    SBM
+                </a>
+        </li>
       </ul>
     </nav>
 
@@ -76,7 +84,7 @@
            Authority layout. Hidden on Home, which has no report to sign. "Ratee" is populated client-side from
            /api/preparer (see index.js), i.e. whatever was last saved on the
            Home page. -->
-      {% if active_tab and active_tab.id not in ['irc8c', 'eopcrf3'] %}
+      {% if active_tab and active_tab.id not in ['irc8c', 'eopcrf3', 'sbm'] %}
       <div class="report-signatory">
         <div class="report-signatory-title">
           <i class="ti ti-clipboard-text" aria-hidden="true"></i>

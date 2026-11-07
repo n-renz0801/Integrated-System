@@ -116,16 +116,26 @@ block extra_css %}
       </div>
     </div>
 
-    <!-- Cards 2-4: placeholders for future report cards, not yet built. -->
-    <div class="carousel-card carousel-card--ghost" aria-disabled="true">
+    <!-- Card 2: SBM -- a single page, so the whole card is the link. -->
+    <div class="carousel-card card-color-teal">
       <div class="carousel-card-body">
-        <p class="carousel-card__code carousel-card__code--ghost">SBM</p>
-        <p class="carousel-card__label carousel-card__label--ghost">&mdash;</p>
+        <p class="carousel-card__code">SBM</p>
+        <p class="carousel-card__label">
+          School-Based Management (SBM) Self-Assessment Checklist
+        </p>
       </div>
-      <span class="carousel-card__soon-cta">
-        <i class="ti ti-hourglass-high" aria-hidden="true"></i> Coming Soon
-      </span>
+      <a
+        href="{{ url_for('sbm') }}"
+        class="carousel-card__link"
+        aria-label="Open SBM Self-Assessment Checklist"
+      ></a>
+      <i
+        class="ti ti-chevron-right carousel-card__arrow"
+        aria-hidden="true"
+      ></i>
     </div>
+
+    <!-- Cards 3-4: placeholders for future report cards, not yet built. -->
     <div class="carousel-card carousel-card--ghost" aria-disabled="true">
       <div class="carousel-card-body">
         <p class="carousel-card__code carousel-card__code--ghost">AIP</p>

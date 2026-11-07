@@ -105,6 +105,31 @@ class EOPCRF2Rating(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+# SBM (School-Based Management) Self-Assessment Checklist -- Annex A.
+# 42 indicators across six dimensions, numbered 1-42 on the form. The text of
+# the dimensions/indicators is hardcoded in sbm.js (DIMENSIONS constant) --
+# only what the user enters is persisted, one row per (year, indicator).
+SBM_INDICATOR_COUNT = 42
+SBM_DEGREES = ("not_yet", "rarely", "frequently", "always")  # Degree of Manifestation
+
+
+class SBMResponse(db.Model):
+    __tablename__ = "sbm_responses"
+    __table_args__ = (
+        db.UniqueConstraint("year", "indicator_no", name="uq_sbm_year_indicator"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    year = db.Column(db.Integer, nullable=False, index=True)
+    indicator_no = db.Column(db.Integer, nullable=False)  # 1-42, as numbered on the form
+
+    degree = db.Column(db.String(12), nullable=True)  # one of SBM_DEGREES, or NULL if not answered / cleared
+    remarks = db.Column(db.Text, nullable=False, default="", server_default="")
+
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 # ---------------------------------------------------------------------------
 # EOPCRF1 -- Individual Performance Commitment and Review Form (IPCRF)
 #
