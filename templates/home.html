@@ -135,16 +135,26 @@ block extra_css %}
       ></i>
     </div>
 
-    <!-- Cards 3-4: placeholders for future report cards, not yet built. -->
-    <div class="carousel-card carousel-card--ghost" aria-disabled="true">
+    <!-- Card 3: AIP -- a single page, so the whole card is the link. -->
+    <div class="carousel-card card-color-violet">
       <div class="carousel-card-body">
-        <p class="carousel-card__code carousel-card__code--ghost">AIP</p>
-        <p class="carousel-card__label carousel-card__label--ghost">&mdash;</p>
+        <p class="carousel-card__code">AIP</p>
+        <p class="carousel-card__label">
+          School Annual Implementation Plan (AIP) Accomplishment Report
+        </p>
       </div>
-      <span class="carousel-card__soon-cta">
-        <i class="ti ti-hourglass-high" aria-hidden="true"></i> Coming Soon
-      </span>
+      <a
+        href="{{ url_for('aip') }}"
+        class="carousel-card__link"
+        aria-label="Open School Annual Implementation Plan (AIP) Accomplishment Report"
+      ></a>
+      <i
+        class="ti ti-chevron-right carousel-card__arrow"
+        aria-hidden="true"
+      ></i>
     </div>
+
+    <!-- Card 4: placeholder for a future report card, not yet built. -->
     <div class="carousel-card carousel-card--ghost" aria-disabled="true">
       <div class="carousel-card-body">
         <p class="carousel-card__code carousel-card__code--ghost">DASHBOARD</p>

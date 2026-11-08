@@ -1,0 +1,142 @@
+/* AIP print layout: the school's AIP report on long bond (13 x 8.5 in),
+   landscape, like OPCRF I. Green header and green dividers between the
+   program/projects, three signatories at the end. The copy (#aip-print-root)
+   is built and moved to <body> by aip.js and stays hidden on screen. The MOV
+   link is never part of it. To use another paper size, change the @page size. */
+
+@page {
+  size: 13in 8.5in;
+  margin: 0.4in;
+}
+
+#aip-print-root {
+  display: none;
+}
+
+@media print {
+  body > *:not(#aip-print-root) {
+    display: none !important;
+  }
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background-image: none !important;
+  }
+  html::before,
+  html::after,
+  body::before,
+  body::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  #aip-print-root {
+    display: block;
+    color: #000;
+    font-family: "Arial Narrow", Arial, "Liberation Sans Narrow", sans-serif;
+    font-stretch: condensed;
+    font-size: 9pt;
+    line-height: 1.25;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  #aip-print-root *,
+  #aip-print-root *::before,
+  #aip-print-root *::after {
+    box-sizing: border-box;
+    font-family: inherit;
+    font-stretch: inherit;
+  }
+
+  .ap-head {
+    text-align: center;
+  }
+  .ap-school {
+    margin-top: 1px;
+    font-weight: 700;
+  }
+  .ap-plan {
+    font-weight: 700;
+    color: #4ea72e;
+  }
+  .ap-title {
+    margin: 14pt 0 0;
+    text-align: center;
+    font-weight: 700;
+  }
+  .ap-sy {
+    text-align: center;
+    font-size: 8pt;
+  }
+
+  .ap-table {
+    width: 100%;
+    margin-top: 6pt;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+  .ap-table thead {
+    display: table-header-group; /* repeat the green header on every page */
+  }
+  .ap-table th {
+    padding: 3pt 4pt;
+    text-align: center;
+    font-weight: 700;
+    background: #a9d18e;
+    border: 0.5pt solid #7aa85c;
+  }
+  .ap-table td {
+    padding: 3pt 5pt;
+    vertical-align: top;
+    text-align: left;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    border-left: 0.5pt solid #000;
+    border-right: 0.5pt solid #000;
+  }
+  .ap-table tr.ap-row {
+    break-inside: avoid;
+  }
+  .ap-table tr.ap-row td {
+    min-height: 30pt;
+    height: 30pt;
+  }
+  .ap-table tr.ap-band td {
+    height: 7pt;
+    padding: 0;
+    background: #a9d18e;
+    border-left: 0.5pt solid #000;
+    border-right: 0.5pt solid #000;
+  }
+  .ap-table tbody tr:last-child td {
+    border-bottom: 0.5pt solid #000;
+  }
+
+  .ap-signs {
+    display: flex;
+    justify-content: space-between;
+    gap: 24pt;
+    margin-top: 18pt;
+    break-inside: avoid;
+  }
+  .ap-sign {
+    flex: 1;
+    min-width: 0;
+  }
+  .ap-sign-name {
+    margin-top: 22pt;
+    text-align: center;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .ap-sign-pos {
+    text-align: center;
+  }
+}

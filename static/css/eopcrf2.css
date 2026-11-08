@@ -159,102 +159,536 @@
 }
 
 /* ------------------------------------------------------------------
-   Guided Flow — numbered rail (1-2) tying the dashboard summary and
-   the ratings section together as a top-to-bottom sequence, copied
-   from IRC1a's .irc1a-flow (no 3rd "performance overview" step here --
-   the dashboard step below covers that role using the page's own
-   summary averages instead of a trend chart).
+   Layout (mirrors IRC8A): collapsible rating scale, part cards,
+   then a sidebar of competencies + a detail panel for the one open.
 ------------------------------------------------------------------ */
 
-.eopcrf2-flow {
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  grid-template-rows: auto auto auto auto;
-  column-gap: 20px;
-  row-gap: 1.25rem;
+.eopcrf2-panel {
+  --e2-ink: #1c2530;
+  --e2-muted: #667282;
+  --e2-line: #e2e6ec;
+  --e2-line-strong: #cdd4dd;
+  --e2-surface: #ffffff;
+  --e2-subtle: #f6f8fa;
+  --e2-accent: var(--navy-deep, #0b2a5b);
+  --e2-ok: #1b7a4b;
+  --e2-warn: #a45a06;
+  --e2-radius: 8px;
+  color: var(--e2-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.eopcrf2-panel *,
+.eopcrf2-panel *::before,
+.eopcrf2-panel *::after {
+  box-sizing: border-box;
+}
+.eopcrf2-panel h3 {
+  margin: 0;
+  font-weight: 600;
+}
+.eopcrf2-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--e2-muted);
 }
 
-.eopcrf2-flow-rail {
-  grid-column: 1;
-  grid-row: 1 / span 4;
-  display: grid;
-  grid-template-rows: subgrid;
-  position: relative;
+/* ---------- Collapsible rating scale ---------- */
+.eopcrf2-details {
+  margin-bottom: 16px;
+  background: var(--e2-surface);
+  border: 1px solid var(--e2-line);
+  border-radius: 10px;
+  overflow: hidden;
 }
-
-.eopcrf2-flow-rail::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 20px;
-  bottom: 20px;
-  width: 2px;
-  background: var(--border-strong, #d0d5dd);
-  transform: translateX(-50%);
-}
-
-.eopcrf2-flow-badge {
-  align-self: start;
-  justify-self: center;
-  margin-top: 20px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #1f2937;
-  color: #fff;
+.eopcrf2-details summary {
   display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  list-style: none;
+  cursor: pointer;
+}
+.eopcrf2-details summary::-webkit-details-marker {
+  display: none;
+}
+.eopcrf2-details summary:hover {
+  background: var(--e2-subtle);
+}
+.eopcrf2-details summary:focus-visible {
+  outline: 2px solid var(--e2-accent);
+  outline-offset: -2px;
+}
+.eopcrf2-details-icon {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
-  font-weight: 700;
-  z-index: 1;
-  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  color: var(--e2-accent);
+  background: #eaf0fa;
+  border-radius: 8px;
+  font-size: 18px;
 }
-
-.eopcrf2-flow-section-1,
-.eopcrf2-flow-section-2,
-.eopcrf2-flow-section-3,
-.eopcrf2-flow-section-4 {
-  grid-column: 2;
+.eopcrf2-details-heading {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   min-width: 0;
 }
-
-.eopcrf2-flow-section-1 {
-  grid-row: 1;
+.eopcrf2-details-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--e2-ink);
+}
+.eopcrf2-details-sum {
+  font-size: 12.5px;
+  color: var(--e2-muted);
+}
+.eopcrf2-details-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--e2-muted);
+}
+.eopcrf2-details-toggle i {
+  transition: transform 0.15s;
+}
+.eopcrf2-details[open] .eopcrf2-details-toggle i {
+  transform: rotate(180deg);
+}
+.eopcrf2-details .eopcrf2-when-open,
+.eopcrf2-details[open] .eopcrf2-when-closed {
+  display: none;
+}
+.eopcrf2-details[open] .eopcrf2-when-open {
+  display: inline;
 }
 
-.eopcrf2-flow-section-2 {
-  grid-row: 2;
+/* ---------- Part cards ---------- */
+.eopcrf2-part-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.eopcrf2-part-tab,
+.eopcrf2-part-total {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 14px 18px;
+  font: inherit;
+  text-align: left;
+  color: var(--e2-ink);
+  background: var(--e2-surface);
+  border: 1px solid var(--e2-line-strong);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(11, 42, 91, 0.06);
+}
+.eopcrf2-part-tab {
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.eopcrf2-part-tab:hover {
+  border-color: var(--e2-accent);
+  background: var(--e2-subtle);
+}
+.eopcrf2-part-tab:focus-visible {
+  outline: 2px solid var(--e2-accent);
+  outline-offset: 2px;
+}
+.eopcrf2-part-tab.is-active {
+  color: #fff;
+  background: var(--e2-accent);
+  border-color: var(--e2-accent);
+  box-shadow: 0 2px 8px rgba(11, 42, 91, 0.25);
+}
+/* The total card is informational, so it sits apart in a soft gold tint. */
+.eopcrf2-part-total {
+  background: #fbf6e6;
+  border-color: #ecdca6;
+}
+.eopcrf2-part-tab-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--e2-accent);
+}
+.eopcrf2-part-tab.is-active .eopcrf2-part-tab-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+.eopcrf2-part-tab-name {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.eopcrf2-part-tab-stats {
+  display: flex;
+  gap: 28px;
+  margin-top: 10px;
+}
+.eopcrf2-part-tab-stat {
+  display: flex;
+  flex-direction: column;
+}
+.eopcrf2-part-tab-k {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--e2-muted);
+  line-height: 1.3;
+}
+.eopcrf2-part-tab.is-active .eopcrf2-part-tab-k {
+  color: rgba(255, 255, 255, 0.7);
+}
+.eopcrf2-part-tab-v {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.eopcrf2-part-tab-v.is-empty {
+  color: var(--e2-muted);
+  font-weight: 500;
+}
+.eopcrf2-part-tab.is-active .eopcrf2-part-tab-v.is-empty {
+  color: rgba(255, 255, 255, 0.6);
+}
+.eopcrf2-part-tab-desc {
+  margin-top: 4px;
+  min-height: 1.4em;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--e2-muted);
+}
+.eopcrf2-part-tab.is-active .eopcrf2-part-tab-desc {
+  color: rgba(255, 255, 255, 0.8);
 }
 
-.eopcrf2-flow-section-3 {
-  grid-row: 3;
+/* ---------- Workspace: sidebar + detail ---------- */
+.eopcrf2-workspace {
+  display: grid;
+  grid-template-columns: clamp(260px, 26%, 340px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+  min-height: max(560px, calc(100vh - 260px));
 }
-
-.eopcrf2-flow-section-4 {
-  grid-row: 4;
+.eopcrf2-nav-col {
+  position: relative;
+  min-width: 0;
 }
-
-.eopcrf2-flow-label {
-  margin: 20px 0 10px 2px;
-  height: 36px;
+/* NOTE: this element is a <nav>, so base.css's global `nav { ... }` rule
+   (top navbar: flex, centered, z-index:100, shadow, navy background) also
+   applies. The resets below undo those inherited navbar styles (same fix as
+   the IRC8A nav). */
+.eopcrf2-nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: auto;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  background: var(--e2-surface);
+  border: 1px solid var(--e2-line);
+  border-radius: var(--e2-radius);
+  box-shadow: none;
+  z-index: 1;
+}
+.eopcrf2-nav-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+.eopcrf2-nav-group-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 10px 10px 11px;
+  background: #d6e2f6;
+  border-left: 4px solid var(--e2-accent);
+  border-bottom: 1px solid var(--e2-line-strong);
+}
+.eopcrf2-nav-group-label {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--e2-accent);
+}
+.eopcrf2-nav-group-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.eopcrf2-nav-group-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--e2-ink);
+}
+.eopcrf2-nav-group-weight {
+  flex-shrink: 0;
+  padding: 2px 9px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--e2-accent);
+  border-radius: 999px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.eopcrf2-nav-item {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px 10px 28px;
+  text-align: left;
+  font: inherit;
+  color: var(--e2-ink);
+  background: none;
+  border: 0;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+.eopcrf2-nav-item + .eopcrf2-nav-item {
+  border-top: 1px solid var(--e2-line);
+}
+.eopcrf2-nav-item::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--e2-line-strong);
+}
+.eopcrf2-nav-item:hover {
+  background: var(--e2-subtle);
+}
+.eopcrf2-nav-item.is-selected {
+  background: #f1f5fc;
+  border-left-color: var(--e2-accent);
+}
+.eopcrf2-nav-item:focus-visible {
+  outline: 2px solid var(--e2-accent);
+  outline-offset: -2px;
+}
+.eopcrf2-nav-main {
   display: flex;
   align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.eopcrf2-nav-progress {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+.eopcrf2-ring {
+  width: 100%;
+  height: 100%;
+}
+.eopcrf2-ring-track {
+  fill: none;
+  stroke: var(--e2-line-strong);
+  stroke-width: 3;
+}
+.eopcrf2-ring-arc {
+  fill: none;
+  stroke: var(--e2-warn);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.eopcrf2-ring-fill {
+  fill: var(--e2-ok);
+}
+.eopcrf2-ring-check {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.eopcrf2-nav-code {
   font-size: 13px;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #1f2937;
-  box-sizing: border-box;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--e2-ink);
+}
+.eopcrf2-nav-avg {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--e2-muted);
+  font-variant-numeric: tabular-nums;
+}
+.eopcrf2-nav-item.is-selected .eopcrf2-nav-code {
+  color: var(--e2-accent);
+  font-weight: 700;
+}
+.eopcrf2-nav-item.is-selected .eopcrf2-nav-avg {
+  color: var(--e2-accent);
+  font-weight: 600;
+}
+
+/* ---------- Detail panel ---------- */
+.eopcrf2-detail {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.eopcrf2-intro {
+  overflow: hidden;
+  background: var(--e2-surface);
+  border: 1px solid #0033a0;
+  border-radius: var(--e2-radius);
+}
+.eopcrf2-intro-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(90deg, #001550, #00247a);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+}
+.eopcrf2-intro-head .eopcrf2-label {
+  margin-bottom: 2px;
+  color: #b9c9e6;
+}
+.eopcrf2-panel .eopcrf2-intro-head h3 {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #fff;
+}
+.eopcrf2-intro-weighted {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.eopcrf2-intro-weighted strong {
+  font-size: 18px;
+  color: #f0cf7d;
+  font-variant-numeric: tabular-nums;
+}
+.eopcrf2-intro-desc {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 12.5px;
+  font-style: italic;
+  line-height: 1.55;
+  color: #4b5563;
+  background: #eef2fb;
+}
+
+.eopcrf2-subsection-card {
+  overflow: hidden;
+  background: var(--e2-surface);
+  border: 1px solid var(--e2-line-strong);
+  border-radius: var(--e2-radius);
+}
+.eopcrf2-subsection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, #00247a, #0033a0);
+}
+.eopcrf2-subsection-header .eopcrf2-label {
+  margin-bottom: 2px;
+  color: #b9c9e6;
+}
+.eopcrf2-panel .eopcrf2-subsection-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+.eopcrf2-subsection-avg {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.eopcrf2-criteria-list {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+.eopcrf2-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--e2-subtle);
+  border-top: 1px solid var(--e2-line);
+}
+.eopcrf2-pager-btn {
+  max-width: 48%;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--e2-accent);
+  background: #fff;
+  border: 1.5px solid var(--e2-line-strong);
+  border-radius: 7px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.eopcrf2-pager-btn:hover:not(:disabled) {
+  border-color: var(--e2-accent);
+  background: #eaf0fa;
+}
+.eopcrf2-pager-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* ---------- DepEd Competencies Scale (rating scale table) ---------- */
 
 .eopcrf2-scale {
-  background: #f7f8fa;
-  border: 1px solid #e2e5ea;
-  padding: 14px 22px 18px;
-  border-radius: 10px;
+  padding: 14px 18px 18px;
+  border-top: 1px solid var(--e2-line);
 }
 
 .eopcrf2-scale-title {
@@ -306,214 +740,15 @@
   font-size: 11px;
 }
 
-/* ------------------------------------------------------------------
-   Dashboard — overall summary, shown as its own guided-flow step
-   before the data-entry section. Same dark-gradient card language as
-   IRC1a's analytics header/badge card, laid out as 3 equal metrics
-   instead of IRC1a's single big score, since there's no monthly trend
-   to chart here.
------------------------------------------------------------------- */
-
-.eopcrf2-summary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  padding: 24px 20px;
-  background: linear-gradient(160deg, #1f2937 0%, #2d3f57 100%);
-  border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-  box-sizing: border-box;
-}
-
-.eopcrf2-summary-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 4px;
-  min-width: 0;
-}
-
-.eopcrf2-summary-item + .eopcrf2-summary-item {
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-.eopcrf2-summary-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: #9fb3d1;
-}
-
-.eopcrf2-summary-value {
-  font-size: 34px;
-  font-weight: 700;
-  line-height: 1;
-  color: #fff;
-}
-
-.eopcrf2-summary-item--overall .eopcrf2-summary-value {
-  color: #f0cf7d;
-}
-
-.eopcrf2-summary-desc {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #b7c3d4;
-}
-
-.eopcrf2-summary-weighted {
-  font-size: 11px;
-  font-weight: 600;
-  color: #9fb3d1;
-}
-
-.eopcrf2-summary-weighted:empty,
-.eopcrf2-summary-desc:empty {
-  display: none;
-}
-
-.eopcrf2-summary-item--overall .eopcrf2-summary-desc {
-  color: #e3cd93;
-}
-
-/* ---------- Sections (data entry) ---------- */
-
-.eopcrf2-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 26px;
-}
-
-.eopcrf2-section {
-  background: #fff;
-  border: 1px solid #dde1e7;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-/* Section header — same shared dark-analytics gradient as IRC1a's
-   .irc1a-dark-header (trend/table card headers), for a consistent
-   "dark header on every card" look across pages. */
-.eopcrf2-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 22px;
-  background: linear-gradient(160deg, #1f2937 0%, #2d3f57 100%);
-  border-bottom: none;
-  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.22);
-}
-
-.eopcrf2-section-title {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #7fa8e0;
-}
-
-.eopcrf2-section-avg {
-  font-size: 15px;
-  font-weight: 700;
-  color: #f0cf7d;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 5px 14px;
-  border-radius: 6px;
-}
-
-.eopcrf2-section-desc {
-  margin: 0;
-  padding: 14px 22px 0;
-  font-size: 12.5px;
-  font-style: italic;
-  line-height: 1.55;
-  color: #4b5563;
-}
-
-.eopcrf2-section-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 22px;
-  border-top: 1px solid #e5e8ec;
-  background: #f7f8fa;
-  font-size: 13px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.eopcrf2-section-footer-value {
-  background: #1f2937;
-  color: #f0cf7d;
-  padding: 4px 14px;
-  border-radius: 6px;
-}
-
-/* Two-column subsection grid */
-.eopcrf2-subsection-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  padding: 18px;
-  align-items: start;
-}
-
-/* ---------- Subsection cards ---------- */
-
-.eopcrf2-subsection-card {
-  border: 1px solid #d5d9df;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-/* Subsection header — a lighter dark tone than the section header
-   above (rather than the previous light-gray band), so it still reads
-   as "dark", just a step down in the same hierarchy. */
-.eopcrf2-subsection-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 14px;
-  background: #2d3f57;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
-}
-
-.eopcrf2-subsection-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #cbd5e1;
-}
-
-.eopcrf2-subsection-avg {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-size: 12.5px;
-  font-weight: 700;
-  padding: 4px 11px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  flex-shrink: 0;
-}
-
-.eopcrf2-criteria-list {
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-}
-
 /* ---------- Criterion row ---------- */
 
 .eopcrf2-criterion-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 12px;
+  align-items: start;
+  padding: 16px 18px;
   border-top: 1px solid #eef0f3;
 }
 
@@ -544,106 +779,102 @@
 }
 
 .eopcrf2-criterion-text {
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: #333;
-  line-height: 1.45;
+  line-height: 1.5;
   text-align: justify;
   hyphens: auto;
   -webkit-hyphens: auto;
   overflow-wrap: break-word;
 }
 
-/* Rating column: buttons on top, adjectival rating of the selection below */
-.eopcrf2-rate-col {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 7px;
-  width: 210px;
-  flex-shrink: 0;
-}
-
-/* Adjectival rating -- subtle tinted pill, color-coded per rating */
-.eopcrf2-rate-label {
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  background: transparent;
-  font-size: 11.5px;
-  font-weight: 600;
-  font-style: italic;
-  line-height: 1.25;
-  text-align: center;
-  color: #9aa3af;
-}
-
-.eopcrf2-rate-label--set {
-  font-style: normal;
-}
-
-.eopcrf2-rate-label--r5 {
-  background: #ecfdf3;
-  border-color: #c3ebd2;
-  color: #1d7a45;
-}
-
-.eopcrf2-rate-label--r4 {
-  background: #f4faea;
-  border-color: #d9eab9;
-  color: #5a7d1a;
-}
-
-.eopcrf2-rate-label--r3 {
-  background: #fffaeb;
-  border-color: #f5e2a8;
-  color: #9a6a0a;
-}
-
-.eopcrf2-rate-label--r2 {
-  background: #fff4ec;
-  border-color: #f8d3b7;
-  color: #b4540f;
-}
-
-.eopcrf2-rate-label--r1 {
-  background: #fef2f2;
-  border-color: #f6c6c6;
-  color: #b42323;
-}
-
-.eopcrf2-rate-group {
-  display: flex;
-  width: 100%;
-  margin-top: 1px;
-  gap: 4px;
-  flex-shrink: 0;
+/* Rating bar: five large segments under the indicator text. The selected
+   one is filled with that rating's color (green = 5 ... red = 1). */
+.eopcrf2-rate-seg {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .eopcrf2-rate-btn {
-  flex: 1;
+  --rc: #6b7280;
+  --rc-soft: #f3f4f6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
   min-width: 0;
-  height: 26px;
-  border-radius: 6px;
-  border: 1px solid #d8dde4;
+  height: 54px;
+  padding: 0 4px;
+  font: inherit;
+  color: #374151;
   background: #fff;
-  color: #4b5563;
-  font-size: 12px;
-  font-weight: 700;
+  border: 1.5px solid #d8dde4;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.eopcrf2-rate-btn b {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--rc);
+}
+
+.eopcrf2-rate-btn small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #6b7280;
+}
+
+.eopcrf2-rate-btn--r5 {
+  --rc: #1d7a45;
+  --rc-soft: #ecfdf3;
+}
+.eopcrf2-rate-btn--r4 {
+  --rc: #5a7d1a;
+  --rc-soft: #f4faea;
+}
+.eopcrf2-rate-btn--r3 {
+  --rc: #9a6a0a;
+  --rc-soft: #fffaeb;
+}
+.eopcrf2-rate-btn--r2 {
+  --rc: #b4540f;
+  --rc-soft: #fff4ec;
+}
+.eopcrf2-rate-btn--r1 {
+  --rc: #b42323;
+  --rc-soft: #fef2f2;
 }
 
 .eopcrf2-rate-btn:hover {
-  border-color: #9aa3af;
-  background: #f7f9fc;
+  border-color: var(--rc);
+  background: var(--rc-soft);
 }
 
-.eopcrf2-rate-btn--selected {
-  background: #1f2937;
-  border-color: #1f2937;
+.eopcrf2-rate-btn:focus-visible {
+  outline: 2px solid var(--rc);
+  outline-offset: 2px;
+}
+
+.eopcrf2-rate-btn.is-selected {
+  background: var(--rc);
+  border-color: var(--rc);
+}
+
+.eopcrf2-rate-btn.is-selected b,
+.eopcrf2-rate-btn.is-selected small {
   color: #fff;
 }
 
@@ -729,19 +960,14 @@
 /* ---------- Responsive ---------- */
 
 @media (max-width: 900px) {
-  .eopcrf2-subsection-list {
+  /* Sidebar stacks above the detail panel and stops being absolutely placed. */
+  .eopcrf2-workspace {
     grid-template-columns: 1fr;
+    min-height: 0;
   }
-
-  .eopcrf2-summary {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .eopcrf2-summary-item + .eopcrf2-summary-item {
-    border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.14);
-    padding-top: 16px;
+  .eopcrf2-nav {
+    position: static;
+    max-height: 320px;
   }
 }
 
@@ -776,14 +1002,33 @@
     flex: 1;
     justify-content: center;
   }
+
+  .eopcrf2-details-toggle .eopcrf2-when-closed,
+  .eopcrf2-details-toggle .eopcrf2-when-open {
+    display: none !important;
+  }
 }
 
 @media (max-width: 640px) {
   .eopcrf2-criterion-row {
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .eopcrf2-rate-col {
-    width: 100%;
+  .eopcrf2-criterion-num {
+    display: none;
+  }
+
+  .eopcrf2-rate-seg {
+    grid-column: 1;
+    gap: 5px;
+  }
+
+  /* Numbers only on phones; the full rating name stays in the tooltip. */
+  .eopcrf2-rate-btn {
+    height: 46px;
+  }
+
+  .eopcrf2-rate-btn small {
+    display: none;
   }
 }

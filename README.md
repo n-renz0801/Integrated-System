@@ -53,3 +53,4 @@ small programs that are not from a big company. Choose "More info" and then
 "Run anyway", or ask your IT person to allow it.
 
 ---
+python -m PyInstaller --clean --onefile --windowed --name project_measure --icon="static/images/project_measure.ico" --add-data "templates;templates" --add-data "static;static" --hidden-import webview desktop.py

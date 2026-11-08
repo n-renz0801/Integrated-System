@@ -1,6 +1,7 @@
 import os
 import sys
 from datetime import datetime
+from urllib.parse import urlsplit
 from flask import Flask, render_template, abort, request, jsonify
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
@@ -27,6 +28,9 @@ from models import (
     EOPCRF2_SECTION_LEADERSHIP,
     EOPCRF2_SECTION_CBC,
     SBMResponse,
+    SBMSchoolInfo,
+    AIPProject,
+    AIPSchoolInfo,
     SBM_DEGREES,
     SBM_INDICATOR_COUNT,
 )
@@ -123,6 +127,9 @@ def _ensure_eopcrf1_schema():
         hdr_cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(eopcrf1_report_header)").fetchall()]
         if hdr_cols and "statement_of_purpose" not in hdr_cols:
             conn.exec_driver_sql("ALTER TABLE eopcrf1_report_header ADD COLUMN statement_of_purpose TEXT NOT NULL DEFAULT ''")
+        # School year, entered in Form details and printed at the top of SBM.
+        if hdr_cols and "school_year" not in hdr_cols:
+            conn.exec_driver_sql("ALTER TABLE eopcrf1_report_header ADD COLUMN school_year VARCHAR(50) NOT NULL DEFAULT ''")
         conn.commit()
 
 
@@ -132,6 +139,17 @@ def _ensure_seeded_kras(year):
     models.py -- idempotent, so calling this on every request is cheap
     (one indexed lookup) once a year's KRAs already exist."""
     seed_eopcrf1_defaults(year)
+
+
+def _ensure_sbm_schema():
+    """Adds sbm_responses.mov_link (MOV link per SBM indicator) to databases
+    created before it existed. No-op once present, and on a brand-new DB where
+    create_all() already built the table with the column."""
+    with db.engine.connect() as conn:
+        cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(sbm_responses)").fetchall()]
+        if cols and "mov_link" not in cols:
+            conn.exec_driver_sql("ALTER TABLE sbm_responses ADD COLUMN mov_link VARCHAR(2000) NOT NULL DEFAULT ''")
+            conn.commit()
 
 
 def _ensure_eopcrf2_schema():
@@ -183,6 +201,7 @@ def init_db_command():
         db.create_all()
         _ensure_eopcrf1_schema()
         _ensure_eopcrf2_schema()
+        _ensure_sbm_schema()
         print(f"Database ready at {app.config['SQLALCHEMY_DATABASE_URI']}")
 
 
@@ -205,6 +224,15 @@ SBM_TAB = {
     "short": "SBM",
     "name": "School-Based Management (SBM) Self-Assessment Checklist",
     "desc": "School-Based Management (SBM) Self-Assessment Checklist",
+}
+
+# AIP: a standalone page like SBM (not part of TABS, so it has no signatory
+# footer or /<tab_id> route; base.html links it explicitly).
+AIP_TAB = {
+    "id": "aip",
+    "short": "AIP",
+    "name": "School Annual Implementation Plan (AIP) Accomplishment Report",
+    "desc": "School Annual Implementation Plan (AIP) Accomplishment Report",
 }
 
 # Quick lookup by id, e.g. TAB_LOOKUP["eopcrf1"]
@@ -1071,9 +1099,93 @@ def reset_eopcrf4_data():
 # SBM -- School-Based Management (SBM) Self-Assessment Checklist (Annex A)
 #
 # One row per (year, indicator number 1-42): the selected Degree of
-# Manifestation (or NULL) and the free-text Remarks. The dimension and
+# Manifestation (or NULL), the free-text Remarks and the MOV link (required:
+# an indicator is only complete with a degree AND a link). The MOV link is
+# on-screen only and is never part of the printed form. The dimension and
 # indicator wording is hardcoded in sbm.js.
 # ---------------------------------------------------------------------------
+SBM_MOV_MAX = 2000
+
+
+def _get_sbm_school_info():
+    """Single global row with the SBM printout's school details. Created
+    lazily; the very first time, it is pre-filled once from OPCRF I's Form
+    details (Strand/bureau/... -> school, Name of employee -> school head,
+    School year) so nobody has to retype them. After that the two forms are
+    completely independent."""
+    info = SBMSchoolInfo.query.first()
+    if info is None:
+        info = SBMSchoolInfo()
+        hdr = EOPCRF1ReportHeader.query.first()
+        if hdr is not None:
+            info.school_name = hdr.bureau or ""
+            info.school_head = hdr.name_of_employee or ""
+            info.school_year = hdr.school_year or ""
+        db.session.add(info)
+        db.session.commit()
+    return info
+
+
+@app.route("/sbm/school-info", methods=["GET"])
+def get_sbm_school_info():
+    return jsonify(_get_sbm_school_info().to_dict()), 200
+
+
+@app.route("/sbm/school-info", methods=["POST"])
+def save_sbm_school_info():
+    """Partial body: only the fields present are changed.
+        { "schoolName": "...", "schoolHead": "...", "schoolYear": "2025-2026" }
+    The school name and the school head's name are always stored in capitals, like the printed form."""
+    data = request.get_json(silent=True) or {}
+    info = _get_sbm_school_info()
+    fields = {
+        "schoolName": ("school_name", 255),
+        "schoolHead": ("school_head", 255),
+        "schoolYear": ("school_year", 50),
+    }
+    cleaned = {}
+    for key, (column, limit) in fields.items():
+        if key not in data:
+            continue
+        value = data.get(key)
+        if value is not None and not isinstance(value, str):
+            return jsonify({"error": f"'{key}' must be a string"}), 400
+        value = (value or "").strip()
+        if len(value) > limit:
+            return jsonify({"error": f"'{key}' is too long (max {limit} characters)"}), 400
+        if key in ("schoolHead", "schoolName"):
+            value = value.upper()
+        cleaned[column] = value
+    for column, value in cleaned.items():
+        setattr(info, column, value)
+    db.session.commit()
+    return jsonify(info.to_dict()), 200
+
+
+def _clean_mov_link(value):
+    """Returns (link, error). "" / None clears the link; anything else must be
+    a single http(s) URL with a host, no whitespace, at most SBM_MOV_MAX chars."""
+    if value is None:
+        return "", None
+    if not isinstance(value, str):
+        return None, "'movLink' must be a string"
+    value = value.strip()
+    if not value:
+        return "", None
+    if len(value) > SBM_MOV_MAX:
+        return None, f"MOV link is too long (max {SBM_MOV_MAX} characters)"
+    if any(ch.isspace() for ch in value):
+        return None, "MOV link cannot contain spaces"
+    try:
+        parts = urlsplit(value)
+        host = parts.hostname
+    except ValueError:
+        return None, "MOV link is not a valid URL"
+    if parts.scheme not in ("http", "https") or not host:
+        return None, "MOV link must start with http:// or https://"
+    return value, None
+
+
 @app.route("/sbm")
 def sbm():
     return render_template("tabs/sbm.html", tabs=TABS, active_tab=SBM_TAB)
@@ -1084,20 +1196,25 @@ def get_sbm_data():
     year = request.args.get("year", type=int) or _current_year()
     responses = {}
     for row in SBMResponse.query.filter_by(year=year).all():
-        if row.degree or row.remarks:
-            responses[str(row.indicator_no)] = {"degree": row.degree, "remarks": row.remarks or ""}
+        if row.degree or row.remarks or row.mov_link:
+            responses[str(row.indicator_no)] = {
+                "degree": row.degree,
+                "remarks": row.remarks or "",
+                "movLink": row.mov_link or "",
+            }
     return jsonify({"year": year, "responses": responses}), 200
 
 
 @app.route("/sbm/response", methods=["POST"])
 def save_sbm_response():
     """Expected JSON body:
-        { "year": 2026, "indicatorNo": 7, "degree": "frequently", "remarks": "Optional text" }
+        { "year": 2026, "indicatorNo": 7, "degree": "frequently", "remarks": "Optional text",
+          "movLink": "https://..." }
 
-    'degree' and 'remarks' are each optional -- only the fields present in
+    'degree', 'remarks' and 'movLink' are each optional -- only the fields present in
     the body are changed. degree: null clears a previously-selected degree
     (sbm.js does this when the selected option is clicked again, or Clear is
-    pressed); remarks: "" clears the remark.
+    pressed); remarks: "" clears the remark; movLink: "" removes the link.
     """
     data = request.get_json(silent=True) or {}
     year = data.get("year") or _current_year()
@@ -1109,6 +1226,11 @@ def save_sbm_response():
         return jsonify({"error": f"Invalid degree: {data['degree']!r}"}), 400
     if "remarks" in data and data["remarks"] is not None and not isinstance(data["remarks"], str):
         return jsonify({"error": "'remarks' must be a string"}), 400
+    mov_link = None
+    if "movLink" in data:
+        mov_link, err = _clean_mov_link(data["movLink"])
+        if err:
+            return jsonify({"error": err}), 400
 
     row = SBMResponse.query.filter_by(year=year, indicator_no=indicator_no).first()
     if row is None:
@@ -1118,6 +1240,8 @@ def save_sbm_response():
         row.degree = data["degree"]
     if "remarks" in data:
         row.remarks = data["remarks"] or ""
+    if "movLink" in data:
+        row.mov_link = mov_link
     db.session.commit()
 
     return jsonify({
@@ -1125,16 +1249,183 @@ def save_sbm_response():
         "indicatorNo": indicator_no,
         "degree": row.degree,
         "remarks": row.remarks,
+        "movLink": row.mov_link or "",
     }), 200
 
 
 @app.route("/sbm/reset", methods=["DELETE"])
 def reset_sbm_data():
-    """Clears every answer and remark for the given year."""
+    """Clears every answer, remark and MOV link for the given year."""
     year = request.args.get("year", type=int) or _current_year()
     SBMResponse.query.filter_by(year=year).delete()
     db.session.commit()
     return jsonify({"reset": True, "year": year}), 200
+
+
+# ===========================================================================
+# AIP -- School Annual Implementation Plan accomplishment report
+# ===========================================================================
+AIP_TEXT_LIMIT = 10000
+
+# JSON key -> (AIPProject column)
+AIP_PROJECT_FIELDS = {
+    "title": "title",
+    "objective": "objective",
+    "target": "target",
+    "accomplishment": "accomplishment",
+    "gainGap": "gain_gap",
+    "recommendation": "recommendation",
+}
+
+# JSON key -> (AIPSchoolInfo column, max length, store in capitals)
+AIP_INFO_FIELDS = {
+    "schoolName": ("school_name", 255, True),
+    "schoolHead": ("school_head", 255, True),
+    "headPosition": ("head_position", 255, False),
+    "schoolYear": ("school_year", 50, False),
+    "reportTitle": ("report_title", 255, False),
+    "region": ("region", 255, False),
+    "division": ("division", 255, False),
+    "district": ("district", 255, False),
+    "checkedByName": ("checked_by_name", 255, True),
+    "checkedByPosition": ("checked_by_position", 255, False),
+    "notedByName": ("noted_by_name", 255, True),
+    "notedByPosition": ("noted_by_position", 255, False),
+}
+
+
+def _get_aip_info():
+    info = AIPSchoolInfo.query.first()
+    if info is None:
+        info = AIPSchoolInfo()
+        db.session.add(info)
+        db.session.commit()
+    return info
+
+
+def _aip_ordered_projects():
+    return AIPProject.query.order_by(AIPProject.position, AIPProject.id).all()
+
+
+def _apply_aip_project_fields(project, data):
+    """Copies the fields present in `data` onto `project`. Returns an error
+    message (str) or None. Nothing is committed here."""
+    cleaned = {}
+    for key, column in AIP_PROJECT_FIELDS.items():
+        if key not in data:
+            continue
+        value = data.get(key)
+        if value is not None and not isinstance(value, str):
+            return f"'{key}' must be a string"
+        value = value or ""
+        if len(value) > AIP_TEXT_LIMIT:
+            return f"'{key}' is too long (max {AIP_TEXT_LIMIT} characters)"
+        cleaned[column] = value
+    if "movLink" in data:
+        link, err = _clean_mov_link(data["movLink"])
+        if err:
+            return err
+        cleaned["mov_link"] = link
+    for column, value in cleaned.items():
+        setattr(project, column, value)
+    return None
+
+
+@app.route("/aip")
+def aip():
+    return render_template("tabs/aip.html", tabs=TABS, active_tab=AIP_TAB)
+
+
+@app.route("/aip/data", methods=["GET"])
+def aip_data():
+    return jsonify({
+        "info": _get_aip_info().to_dict(),
+        "projects": [p.to_dict() for p in _aip_ordered_projects()],
+    }), 200
+
+
+@app.route("/aip/info", methods=["POST"])
+def aip_save_info():
+    """Partial body with any of the AIP_INFO_FIELDS keys; only those change."""
+    data = request.get_json(silent=True) or {}
+    info = _get_aip_info()
+    cleaned = {}
+    for key, (column, limit, upper) in AIP_INFO_FIELDS.items():
+        if key not in data:
+            continue
+        value = data.get(key)
+        if value is not None and not isinstance(value, str):
+            return jsonify({"error": f"'{key}' must be a string"}), 400
+        value = (value or "").strip()
+        if len(value) > limit:
+            return jsonify({"error": f"'{key}' is too long (max {limit} characters)"}), 400
+        cleaned[column] = value.upper() if upper else value
+    for column, value in cleaned.items():
+        setattr(info, column, value)
+    db.session.commit()
+    return jsonify(info.to_dict()), 200
+
+
+@app.route("/aip/project", methods=["POST"])
+def aip_create_project():
+    """Adds a program/project at the end of the list. Any field may be given."""
+    data = request.get_json(silent=True) or {}
+    last = db.session.query(db.func.max(AIPProject.position)).scalar()
+    project = AIPProject(position=(last + 1) if last is not None else 0)
+    err = _apply_aip_project_fields(project, data)
+    if err:
+        return jsonify({"error": err}), 400
+    db.session.add(project)
+    db.session.commit()
+    return jsonify(project.to_dict()), 201
+
+
+@app.route("/aip/project/<int:project_id>", methods=["POST"])
+def aip_update_project(project_id):
+    """Partial update: only the fields present in the body change."""
+    project = AIPProject.query.get(project_id)
+    if project is None:
+        return jsonify({"error": "Program/project not found"}), 404
+    data = request.get_json(silent=True) or {}
+    err = _apply_aip_project_fields(project, data)
+    if err:
+        return jsonify({"error": err}), 400
+    db.session.commit()
+    return jsonify(project.to_dict()), 200
+
+
+@app.route("/aip/project/<int:project_id>", methods=["DELETE"])
+def aip_delete_project(project_id):
+    project = AIPProject.query.get(project_id)
+    if project is None:
+        return jsonify({"error": "Program/project not found"}), 404
+    db.session.delete(project)
+    db.session.commit()
+    return jsonify({"ok": True}), 200
+
+
+@app.route("/aip/reorder", methods=["POST"])
+def aip_reorder():
+    """Body: { "ids": [3, 1, 2] } -- every existing project id, in the new order."""
+    data = request.get_json(silent=True) or {}
+    ids = data.get("ids")
+    if not isinstance(ids, list) or not all(isinstance(i, int) for i in ids):
+        return jsonify({"error": "'ids' must be a list of project ids"}), 400
+    projects = {p.id: p for p in AIPProject.query.all()}
+    if len(ids) != len(set(ids)) or set(ids) != set(projects):
+        return jsonify({"error": "The list changed. Reload the page and try again."}), 409
+    for position, pid in enumerate(ids):
+        projects[pid].position = position
+    db.session.commit()
+    return jsonify({"ok": True}), 200
+
+
+@app.route("/aip/reset", methods=["DELETE"])
+def aip_reset():
+    """Deletes every program/project. School details are kept."""
+    AIPProject.query.delete()
+    db.session.commit()
+    return jsonify({"ok": True}), 200
 
 
 @app.errorhandler(404)
@@ -1151,4 +1442,5 @@ if __name__ == "__main__":
         db.create_all()
         _ensure_eopcrf1_schema()
         _ensure_eopcrf2_schema()
+        _ensure_sbm_schema()
     app.run(debug=True)

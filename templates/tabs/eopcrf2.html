@@ -39,135 +39,77 @@
     </div>
   </div>
 
-  <!-- ================= GUIDED FLOW: 1. Overall summary -> 2. Rating Scale -> 3. Part II-A Leadership -> 4. Part II-B Core Behavioral ================= -->
-  <div class="eopcrf2-flow">
-    <div class="eopcrf2-flow-rail" aria-hidden="true">
-      <span class="eopcrf2-flow-badge">1</span>
-      <span class="eopcrf2-flow-badge">2</span>
-      <span class="eopcrf2-flow-badge">3</span>
-      <span class="eopcrf2-flow-badge">4</span>
+  <!-- Rating scale: collapsed by default, same pattern as eopcrf1's "Form details" -->
+  <details class="eopcrf2-details" id="eopcrf2-scale-details">
+    <summary>
+      <span class="eopcrf2-details-icon" aria-hidden="true"
+        ><i class="ti ti-star"></i
+      ></span>
+      <span class="eopcrf2-details-heading">
+        <span class="eopcrf2-details-title">Rating scale</span>
+        <span class="eopcrf2-details-sum"
+          >DepEd Competencies Scale &middot; 5 (Role Model) to 1 (Rarely
+          Demonstrated)</span
+        >
+      </span>
+      <span class="eopcrf2-details-toggle">
+        <span class="eopcrf2-when-closed">Click to expand</span>
+        <span class="eopcrf2-when-open">Collapse</span>
+        <i class="ti ti-chevron-down" aria-hidden="true"></i>
+      </span>
+    </summary>
+    <div class="eopcrf2-scale">
+      <table class="eopcrf2-scale-table">
+        <thead>
+          <tr>
+            <th>Numerical Rating</th>
+            <th>Adjectival Rating</th>
+            <th>Definition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>5</strong></td>
+            <td>Role Model</td>
+            <td>
+              Behavioral indicator is consistently exhibited and is worthy of
+              emulation.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>4</strong></td>
+            <td>Consistently Demonstrated</td>
+            <td>Behavioral indicator is constantly shown.</td>
+          </tr>
+          <tr>
+            <td><strong>3</strong></td>
+            <td>Most of the Time Demonstrated</td>
+            <td>Behavioral indicator is often shown.</td>
+          </tr>
+          <tr>
+            <td><strong>2</strong></td>
+            <td>Sometimes Demonstrated</td>
+            <td>Behavioral indicator is irregularly shown.</td>
+          </tr>
+          <tr>
+            <td><strong>1</strong></td>
+            <td>Rarely Demonstrated</td>
+            <td>Behavioral indicator is seldom shown.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+  </details>
 
-    <!-- 2. DASHBOARD: overall summary, shown before data entry -->
-    <div class="eopcrf2-flow-section eopcrf2-flow-section-1">
-      <p class="eopcrf2-flow-label">Overall summary</p>
-      <div id="eopcrf2-summary" class="eopcrf2-summary">
-        <div class="eopcrf2-summary-item">
-          <span class="eopcrf2-summary-label"
-            >Part II-A &middot; Leadership</span
-          >
-          <span class="eopcrf2-summary-value" id="eopcrf2-summary-lead"
-            >&mdash;</span
-          >
-          <span
-            class="eopcrf2-summary-desc"
-            id="eopcrf2-summary-lead-desc"
-          ></span>
-          <span
-            class="eopcrf2-summary-weighted"
-            id="eopcrf2-summary-lead-w"
-          ></span>
-        </div>
-        <div class="eopcrf2-summary-item">
-          <span class="eopcrf2-summary-label"
-            >Part II-B &middot; Core Behavioural</span
-          >
-          <span class="eopcrf2-summary-value" id="eopcrf2-summary-cbc"
-            >&mdash;</span
-          >
-          <span
-            class="eopcrf2-summary-desc"
-            id="eopcrf2-summary-cbc-desc"
-          ></span>
-          <span
-            class="eopcrf2-summary-weighted"
-            id="eopcrf2-summary-cbc-w"
-          ></span>
-        </div>
-        <div class="eopcrf2-summary-item eopcrf2-summary-item--overall">
-          <span class="eopcrf2-summary-label">Total Weighted Score</span>
-          <span class="eopcrf2-summary-value" id="eopcrf2-summary-overall"
-            >&mdash;</span
-          >
-          <span
-            class="eopcrf2-summary-desc"
-            id="eopcrf2-summary-overall-desc"
-          ></span>
-          <span
-            class="eopcrf2-summary-weighted"
-            id="eopcrf2-summary-overall-w"
-          ></span>
-        </div>
-      </div>
-    </div>
+  <!-- Part II-A / II-B cards (clickable) + total score card; built by eopcrf2.js -->
+  <div id="eopcrf2-part-tabs" class="eopcrf2-part-tabs" role="tablist"></div>
 
-    <!-- 3. RATING SCALE — its own step, shown once ahead of both data-entry sections below -->
-    <div class="eopcrf2-flow-section eopcrf2-flow-section-2">
-      <p class="eopcrf2-flow-label">Rating scale</p>
-      <div class="eopcrf2-scale">
-        <div class="eopcrf2-scale-title">DepEd Competencies Scale</div>
-        <table class="eopcrf2-scale-table">
-          <thead>
-            <tr>
-              <th>Numerical Rating</th>
-              <th>Adjectival Rating</th>
-              <th>Definition</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>5</strong></td>
-              <td>Role Model</td>
-              <td>
-                Behavioral indicator is consistently exhibited and is worthy of
-                emulation.
-              </td>
-            </tr>
-            <tr>
-              <td><strong>4</strong></td>
-              <td>Consistently Demonstrated</td>
-              <td>Behavioral indicator is constantly shown.</td>
-            </tr>
-            <tr>
-              <td><strong>3</strong></td>
-              <td>Most of the Time Demonstrated</td>
-              <td>Behavioral indicator is often shown.</td>
-            </tr>
-            <tr>
-              <td><strong>2</strong></td>
-              <td>Sometimes Demonstrated</td>
-              <td>Behavioral indicator is irregularly shown.</td>
-            </tr>
-            <tr>
-              <td><strong>1</strong></td>
-              <td>Rarely Demonstrated</td>
-              <td>Behavioral indicator is seldom shown.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+  <!-- Sidebar (competencies) + detail panel (indicators to rate) -->
+  <div id="eopcrf2-workspace" class="eopcrf2-workspace">
+    <div class="eopcrf2-nav-col">
+      <nav id="eopcrf2-nav" class="eopcrf2-nav" aria-label="Competencies"></nav>
     </div>
-
-    <!-- 4. DATA ENTRY: Part II-A Leadership Competencies -->
-    <div class="eopcrf2-flow-section eopcrf2-flow-section-3">
-      <p class="eopcrf2-flow-label">
-        Part II-A: Leadership Competencies (2.5%)
-      </p>
-      <div id="eopcrf2-sections-lead" class="eopcrf2-sections">
-        <!-- Leadership section / subsection / indicator cards rendered here by eopcrf2.js -->
-      </div>
-    </div>
-
-    <!-- 5. DATA ENTRY: Part II-B Core Behavioural Competencies -->
-    <div class="eopcrf2-flow-section eopcrf2-flow-section-4">
-      <p class="eopcrf2-flow-label">
-        Part II-B: Core Behavioural Competencies (2.5%)
-      </p>
-      <div id="eopcrf2-sections-cbc" class="eopcrf2-sections">
-        <!-- Core Behavioural section / subsection / indicator cards rendered here by eopcrf2.js -->
-      </div>
-    </div>
-    <!-- /.eopcrf2-flow -->
+    <div id="eopcrf2-detail" class="eopcrf2-detail"></div>
   </div>
 </section>
 

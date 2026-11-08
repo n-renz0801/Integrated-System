@@ -68,6 +68,14 @@
                     SBM
                 </a>
         </li>
+        <li>
+          <!-- prettier-ignore -->
+          <a href="{{ url_for('aip') }}"
+                   title="School Annual Implementation Plan (AIP) Accomplishment Report"
+                   {% if active_tab and active_tab.id == 'aip' %}class="active"{% endif %}>
+                    AIP
+                </a>
+        </li>
       </ul>
     </nav>
 
@@ -84,7 +92,8 @@
            Authority layout. Hidden on Home, which has no report to sign. "Ratee" is populated client-side from
            /api/preparer (see index.js), i.e. whatever was last saved on the
            Home page. -->
-      {% if active_tab and active_tab.id not in ['irc8c', 'eopcrf3', 'sbm'] %}
+      {% if active_tab and active_tab.id not in ['irc8c', 'eopcrf3', 'sbm',
+      'aip'] %}
       <div class="report-signatory">
         <div class="report-signatory-title">
           <i class="ti ti-clipboard-text" aria-hidden="true"></i>

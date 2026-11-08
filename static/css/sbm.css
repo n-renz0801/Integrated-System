@@ -227,10 +227,68 @@
   color: #3a4654;
 }
 
+/* ---------- School details (reuses the About panel's frame) ---------- */
+.sbm-school {
+  margin-bottom: 12px;
+}
+.sbm-school-sum {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12.5px;
+  color: var(--sb-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sbm-school-sum.is-incomplete {
+  color: #7a4f00;
+}
+.sbm-school-body {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 14px 16px;
+  padding: 14px 20px 14px;
+  border-top: 1px solid var(--sb-line);
+}
+.sbm-school-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.sbm-school-label {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.sbm-school-field input {
+  height: 38px;
+  padding: 0 10px;
+  font: inherit;
+  color: var(--sb-ink);
+  background: var(--sb-surface);
+  border: 1px solid var(--sb-line-strong);
+  border-radius: var(--sb-radius);
+}
+.sbm-school-field input:focus {
+  outline: 2px solid var(--sb-accent);
+  outline-offset: -1px;
+  border-color: var(--sb-accent);
+}
+.sbm-school-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--sb-muted);
+}
+.sbm-school-status.is-error {
+  margin-left: 8px;
+  color: var(--sb-danger);
+}
+
 /* ---------- Overall progress (tinted panel, one segment per dimension) ---------- */
 .sbm-progress {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  /* Fixed outer columns keep the segments from shifting as the count changes. */
+  grid-template-columns: 160px minmax(0, 1fr) 208px;
   align-items: center;
   gap: 24px;
   margin-bottom: 20px;
@@ -242,7 +300,6 @@
 .sbm-progress-summary {
   display: flex;
   flex-direction: column;
-  min-width: 118px;
 }
 .sbm-progress-count {
   display: inline-flex;
@@ -343,6 +400,13 @@
 .sbm-next-btn[hidden],
 .sbm-done-badge[hidden] {
   display: none;
+}
+/* Same footprint in both states so nothing in the panel shifts. */
+.sbm-next-btn,
+.sbm-done-badge {
+  box-sizing: border-box;
+  width: 208px;
+  justify-content: center;
 }
 .sbm-done-badge {
   display: inline-flex;
@@ -503,9 +567,9 @@
     border-color 0.15s ease,
     box-shadow 0.15s ease;
 }
-.sbm-card.is-answered {
+.sbm-card.is-complete {
   border-color: var(--sb-line-strong);
-  box-shadow: inset 3px 0 0 var(--sb-accent);
+  box-shadow: inset 3px 0 0 var(--sb-ok);
 }
 .sbm-card.is-flash {
   animation: sbm-flash 1.4s ease;
@@ -605,13 +669,71 @@
   transform: rotate(45deg);
 }
 
-/* Card footer: remarks toggle + clear */
+/* Card footer: the whole line is one Remarks toggle */
 .sbm-card-foot {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
   margin-top: 6px;
-  min-height: 28px;
+}
+.sbm-remarks-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: left;
+  color: var(--sb-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.sbm-remarks-toggle:hover {
+  color: var(--sb-accent);
+  background: var(--sb-subtle);
+}
+.sbm-remarks-toggle:focus-visible {
+  outline: 2px solid var(--sb-accent);
+  outline-offset: -2px;
+}
+.sbm-remarks-toggle.has-remarks {
+  color: var(--sb-accent);
+  font-weight: 600;
+}
+.sbm-remarks-icon {
+  font-size: 15px;
+}
+.sbm-remarks-toggle-text {
+  flex-shrink: 0;
+}
+.sbm-remarks-snippet {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--sb-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sbm-remarks-snippet[hidden] {
+  display: none;
+}
+.sbm-remarks-chev {
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--sb-muted);
+  transition: transform 0.15s ease;
+}
+.sbm-remarks-toggle[aria-expanded="true"] .sbm-remarks-chev {
+  transform: rotate(180deg);
 }
 .sbm-link {
   display: inline-flex;
@@ -634,10 +756,6 @@
 }
 .sbm-link[hidden] {
   display: none;
-}
-.sbm-clear {
-  margin-left: 0;
-  margin-right: -6px;
 }
 .sbm-dot {
   width: 7px;
@@ -670,6 +788,198 @@
   outline: 2px solid var(--sb-accent);
   outline-offset: -1px;
   border-color: var(--sb-accent);
+}
+
+/* ---------- MOV link strip (bottom of each card; screen only) ---------- */
+.sbm-mov {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 10px -18px -10px;
+  padding: 10px 18px;
+  background: var(--sb-subtle);
+  border-top: 1px solid var(--sb-line);
+  border-radius: 0 0 10px 10px;
+}
+.sbm-mov.is-missing {
+  background: #fffaf0;
+  border-top-color: #f1dfb5;
+}
+.sbm-mov-label {
+  flex: 0 0 92px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.sbm-mov-label em {
+  display: block;
+  font-style: normal;
+  color: #7a4f00;
+}
+.sbm-mov-input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  font: inherit;
+  color: var(--sb-ink);
+  background: var(--sb-surface);
+  border: 1px solid var(--sb-line-strong);
+  border-radius: var(--sb-radius);
+}
+.sbm-mov-input:focus {
+  outline: 2px solid var(--sb-accent);
+  outline-offset: -1px;
+  border-color: var(--sb-accent);
+}
+.sbm-mov-input[aria-invalid="true"] {
+  border-color: var(--sb-danger);
+}
+.sbm-mov-err {
+  flex-basis: 100%;
+  padding-left: 102px;
+  font-size: 12.5px;
+  color: var(--sb-danger);
+}
+.sbm-mov-err[hidden] {
+  display: none;
+}
+.sbm-mov-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  padding: 5px 12px 5px 5px;
+  color: var(--sb-accent);
+  background: var(--sb-surface);
+  border: 1px solid var(--sb-line-strong);
+  border-radius: var(--sb-radius);
+  text-decoration: none;
+}
+a.sbm-mov-tile:hover {
+  border-color: var(--sb-accent);
+  background: var(--sb-accent-soft);
+}
+a.sbm-mov-tile:focus-visible {
+  outline: 2px solid var(--sb-accent);
+  outline-offset: 1px;
+}
+.sbm-mov-ico {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  font-size: 16px;
+  background: var(--sb-accent-soft);
+  border-radius: 6px;
+}
+.sbm-mov-host {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sbm-mov-ext {
+  flex-shrink: 0;
+  color: var(--sb-muted);
+}
+.sbm-mov-ask {
+  font-size: 13px;
+  font-weight: 500;
+}
+.sbm-mov-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 36px;
+  padding: 0 12px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--sb-ink);
+  background: var(--sb-surface);
+  border: 1px solid var(--sb-line-strong);
+  border-radius: var(--sb-radius);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sbm-mov-btn:hover {
+  background: var(--sb-subtle);
+  border-color: #9fb0c8;
+}
+.sbm-mov-btn--primary {
+  padding: 0 16px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--sb-accent);
+  border-color: var(--sb-accent);
+}
+.sbm-mov-btn--primary:hover {
+  background: var(--sb-accent);
+  filter: brightness(1.15);
+}
+.sbm-mov-btn--primary:disabled {
+  color: #46546a;
+  background: #c9d2e0;
+  border-color: #c9d2e0;
+  filter: none;
+  cursor: not-allowed;
+}
+/* Edit / remove: quiet icon-only buttons, grouped so they read as one control */
+.sbm-mov-tools {
+  display: inline-flex;
+  gap: 2px;
+}
+.sbm-mov-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 17px;
+  color: var(--sb-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--sb-radius);
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.sbm-mov-icon:hover {
+  color: var(--sb-accent);
+  background: var(--sb-accent-soft);
+}
+.sbm-mov-icon--danger:hover {
+  color: var(--sb-danger);
+  background: #fdecea;
+}
+.sbm-mov-icon:focus-visible {
+  outline: 2px solid var(--sb-accent);
+  outline-offset: 1px;
+}
+.sbm-mov-btn--danger {
+  color: #fff;
+  background: var(--sb-danger);
+  border-color: var(--sb-danger);
+}
+.sbm-mov-btn--danger:hover {
+  background: var(--sb-danger);
+  filter: brightness(1.1);
+}
+.sbm-mov-btn:focus-visible {
+  outline: 2px solid var(--sb-accent);
+  outline-offset: 1px;
+}
+/* The MOV link is never part of the printed form. */
+@media print {
+  .sbm-mov {
+    display: none !important;
+  }
 }
 
 /* ---------- Previous / next dimension ---------- */

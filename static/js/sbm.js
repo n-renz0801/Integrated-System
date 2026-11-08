@@ -120,9 +120,10 @@
   // ================= State =================
   const state = {
     year: null,
-    responses: {}, // { "7": { degree: "rarely" | null, remarks: "..." } }
+    responses: {}, // { "7": { degree: "rarely" | null, remarks: "...", movLink: "https://..." } }
     active: 0, // index into DIMENSIONS
     open: new Set(), // indicator numbers whose Remarks box is expanded
+    mov: {}, // { "7": "edit" | "confirm" } transient MOV-link UI mode per indicator
   };
 
   const el = (id) => document.getElementById(id);
@@ -175,12 +176,18 @@
   function resp(n) {
     const key = String(n);
     if (!state.responses[key])
-      state.responses[key] = { degree: null, remarks: "" };
+      state.responses[key] = { degree: null, remarks: "", movLink: "" };
     return state.responses[key];
   }
 
+  // An indicator is finished only when it has a degree AND a MOV link.
+  function isComplete(n) {
+    const r = resp(n);
+    return !!(r.degree && r.movLink);
+  }
+
   function answeredIn(dim) {
-    return dim.items.filter((it) => resp(it.n).degree).length;
+    return dim.items.filter((it) => isComplete(it.n)).length;
   }
 
   function answeredTotal() {
@@ -214,7 +221,7 @@
     const done = answeredTotal();
     const complete = done === TOTAL;
     progressCountEl.classList.toggle("is-complete", complete);
-    progressCountEl.innerHTML = `<strong>${done} of ${TOTAL}</strong><span>answered</span>`;
+    progressCountEl.innerHTML = `<strong>${done} of ${TOTAL}</strong><span>complete</span>`;
     segsEl.setAttribute("aria-valuenow", String(done));
     segsEl.innerHTML = DIMENSIONS.map((dim, i) => {
       const d = answeredIn(dim);
@@ -263,13 +270,113 @@
     ).join("");
   }
 
+  // ================= MOV link =================
+  const MOV_MAX = 2000;
+
+  // Accepts what people actually paste: adds https:// when no scheme is given.
+  function normalizeMovUrl(raw) {
+    let v = String(raw || "").trim();
+    if (!v) return { error: "Paste the link to your evidence." };
+    if (/\s/.test(v)) return { error: "A link can\u2019t contain spaces." };
+    if (/^[a-z][a-z0-9+.-]*:(?!\/\/|\d)/i.test(v))
+      return { error: "Use a link that starts with http:// or https://." };
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(v)) v = "https://" + v;
+    let u;
+    try {
+      u = new URL(v);
+    } catch (e) {
+      return { error: "That doesn\u2019t look like a valid link." };
+    }
+    if (u.protocol !== "http:" && u.protocol !== "https:")
+      return { error: "Use a link that starts with http:// or https://." };
+    if (!u.hostname.includes(".") && u.hostname !== "localhost")
+      return { error: "That doesn\u2019t look like a valid link." };
+    if (v.length > MOV_MAX)
+      return {
+        error: "That link is too long (max " + MOV_MAX + " characters).",
+      };
+    return { url: v };
+  }
+
+  // Long links: only the host is shown; the full address is on the tooltip
+  // and opens on click.
+  function splitMovUrl(url) {
+    try {
+      const u = new URL(url);
+      let rest = u.pathname + u.search + u.hash;
+      if (rest === "/") rest = "";
+      return { host: u.host, rest };
+    } catch (e) {
+      return { host: url, rest: "" };
+    }
+  }
+
+  function movHtml(n) {
+    const link = resp(n).movLink;
+    const mode = state.mov[n];
+    const label = `<span class="sbm-mov-label">MOV link${link ? "" : "<em>required</em>"}</span>`;
+    if (!link || mode === "edit") {
+      const verb = link ? "Save" : "Attach";
+      return `
+        <div class="sbm-mov${link ? "" : " is-missing"}">
+          ${label}
+          <input type="text" inputmode="url" class="sbm-mov-input" value="${escapeHtml(link)}"
+                 placeholder="Paste the link to your evidence (https://\u2026)" autocomplete="off" spellcheck="false"
+                 aria-label="MOV link for indicator ${n}" />
+          <button type="button" class="sbm-mov-btn sbm-mov-btn--primary sbm-mov-save" ${link ? "" : "disabled"}>${verb}</button>
+          ${link ? '<button type="button" class="sbm-mov-btn sbm-mov-cancel">Cancel</button>' : ""}
+          <span class="sbm-mov-err" role="alert" hidden></span>
+        </div>`;
+    }
+    const { host } = splitMovUrl(link);
+    const safe = /^https?:\/\//i.test(link);
+    const inner = `
+      <span class="sbm-mov-ico"><i class="ti ti-link" aria-hidden="true"></i></span>
+      <span class="sbm-mov-host">${escapeHtml(host)}</span>
+      ${safe ? '<i class="ti ti-external-link sbm-mov-ext" aria-hidden="true"></i>' : ""}`;
+    const tile = safe
+      ? `<a class="sbm-mov-tile" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(link)}" aria-label="Open MOV link for indicator ${n}: ${escapeHtml(host)} (opens in a new tab)">${inner}</a>`
+      : `<span class="sbm-mov-tile" title="${escapeHtml(link)}">${inner}</span>`;
+    const actions =
+      mode === "confirm"
+        ? `<span class="sbm-mov-ask">Remove this link?</span>
+           <button type="button" class="sbm-mov-btn sbm-mov-btn--danger sbm-mov-remove-yes">Remove</button>
+           <button type="button" class="sbm-mov-btn sbm-mov-remove-no">Keep</button>`
+        : `<span class="sbm-mov-tools">
+             <button type="button" class="sbm-mov-icon sbm-mov-edit" aria-label="Edit MOV link for indicator ${n}" title="Edit link"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+             <button type="button" class="sbm-mov-icon sbm-mov-icon--danger sbm-mov-remove" aria-label="Remove MOV link for indicator ${n}" title="Remove link"><i class="ti ti-trash" aria-hidden="true"></i></button>
+           </span>`;
+    return `<div class="sbm-mov">${label}${tile}${actions}</div>`;
+  }
+
+  // First non-empty line of a remark, shown beside the toggle when collapsed.
+  function remarksSnippet(text) {
+    const line = String(text || "")
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .find(Boolean);
+    return line || "";
+  }
+
+  // Inside of the whole-line Remarks toggle. Used by the first render and by
+  // the click handler, so both always show the same thing.
+  function remarksToggleInner(n, isOpen) {
+    const text = resp(n).remarks;
+    const has = !!text.trim();
+    const snippet = !isOpen && has ? remarksSnippet(text) : "";
+    return `
+      <i class="ti ${has ? "ti-message-circle-filled" : "ti-message-plus"} sbm-remarks-icon" aria-hidden="true"></i>
+      <span class="sbm-remarks-toggle-text">${has || isOpen ? "Remarks" : "Add remarks"}</span>
+      <span class="sbm-remarks-snippet"${snippet ? "" : " hidden"}>${escapeHtml(snippet)}</span>
+      <i class="ti ti-chevron-down sbm-remarks-chev" aria-hidden="true"></i>`;
+  }
+
   function cardHtml(item) {
     const r = resp(item.n);
-    const hasRemarks = !!r.remarks;
-    const isOpen = state.open.has(item.n) || hasRemarks;
-    if (hasRemarks) state.open.add(item.n);
+    const hasRemarks = !!r.remarks.trim();
+    const isOpen = state.open.has(item.n);
     return `
-      <article class="sbm-card${r.degree ? " is-answered" : ""}" data-n="${item.n}" id="sbm-card-${item.n}">
+      <article class="sbm-card${isComplete(item.n) ? " is-complete" : ""}" data-n="${item.n}" id="sbm-card-${item.n}">
         <div class="sbm-card-main">
           <p class="sbm-indicator"><span class="sbm-no">${item.n}.</span><span class="sbm-indicator-text">${item.html}</span></p>
           <div class="sbm-opts" role="radiogroup" aria-label="Degree of Manifestation for indicator ${item.n}">
@@ -277,18 +384,14 @@
           </div>
         </div>
         <div class="sbm-card-foot">
-          <button type="button" class="sbm-link sbm-remarks-toggle" aria-expanded="${isOpen}">
-            <i class="ti ${isOpen ? "ti-chevron-down" : "ti-message-plus"}" aria-hidden="true"></i>
-            <span class="sbm-remarks-toggle-text">${hasRemarks || isOpen ? "Remarks" : "Add remarks"}</span>
-            <span class="sbm-dot" ${hasRemarks && !isOpen ? "" : "hidden"} aria-hidden="true"></span>
-          </button>
-          <button type="button" class="sbm-link sbm-clear" ${r.degree ? "" : "hidden"}>
-            <i class="ti ti-x" aria-hidden="true"></i> Clear
+          <button type="button" class="sbm-remarks-toggle${hasRemarks ? " has-remarks" : ""}" aria-expanded="${isOpen}">
+            ${remarksToggleInner(item.n, isOpen)}
           </button>
         </div>
         <div class="sbm-remarks" ${isOpen ? "" : "hidden"}>
           <textarea rows="3" aria-label="Remarks for indicator ${item.n}">${escapeHtml(r.remarks)}</textarea>
         </div>
+        ${movHtml(item.n)}
       </article>`;
   }
 
@@ -331,13 +434,12 @@
     const card = el("sbm-card-" + n);
     if (!card) return;
     const r = resp(n);
-    card.classList.toggle("is-answered", !!r.degree);
+    card.classList.toggle("is-complete", isComplete(n));
     card.querySelectorAll(".sbm-opt").forEach((btn) => {
       const on = btn.dataset.degree === r.degree;
       btn.classList.toggle("is-selected", on);
       btn.setAttribute("aria-checked", String(on));
     });
-    card.querySelector(".sbm-clear").hidden = !r.degree;
   }
 
   function refreshCounts() {
@@ -380,6 +482,8 @@
     if (!card) return;
     const n = Number(card.dataset.n);
 
+    if (e.target.closest(".sbm-mov")) return handleMovClick(n, e);
+
     const opt = e.target.closest(".sbm-opt");
     if (opt) {
       const r = resp(n);
@@ -396,20 +500,6 @@
       return;
     }
 
-    if (e.target.closest(".sbm-clear")) {
-      const r = resp(n);
-      const previous = r.degree;
-      r.degree = null;
-      updateCard(n);
-      refreshCounts();
-      save(n, { degree: null }).catch(() => {
-        r.degree = previous;
-        updateCard(n);
-        refreshCounts();
-      });
-      return;
-    }
-
     if (e.target.closest(".sbm-remarks-toggle")) {
       const box = card.querySelector(".sbm-remarks");
       const nowOpen = box.hidden; // it's about to open
@@ -417,13 +507,9 @@
       if (nowOpen) state.open.add(n);
       else state.open.delete(n);
       const btn = card.querySelector(".sbm-remarks-toggle");
-      const hasText = !!resp(n).remarks;
       btn.setAttribute("aria-expanded", String(nowOpen));
-      btn.querySelector("i").className =
-        "ti " + (nowOpen ? "ti-chevron-down" : "ti-message-plus");
-      btn.querySelector(".sbm-remarks-toggle-text").textContent =
-        nowOpen || hasText ? "Remarks" : "Add remarks";
-      btn.querySelector(".sbm-dot").hidden = nowOpen || !hasText;
+      btn.classList.toggle("has-remarks", !!resp(n).remarks.trim());
+      btn.innerHTML = remarksToggleInner(n, nowOpen);
       if (nowOpen) {
         const ta = box.querySelector("textarea");
         autoGrow(ta);
@@ -433,6 +519,14 @@
   });
 
   detailEl.addEventListener("input", (e) => {
+    const movInput = e.target.closest(".sbm-mov-input");
+    if (movInput) {
+      const strip = movInput.closest(".sbm-mov");
+      showMovError(strip, "");
+      if (strip.classList.contains("is-missing"))
+        strip.querySelector(".sbm-mov-save").disabled = !movInput.value.trim();
+      return;
+    }
     const ta = e.target.closest("textarea");
     if (!ta) return;
     const n = Number(ta.closest(".sbm-card").dataset.n);
@@ -447,10 +541,107 @@
     if (ta) flushRemarks(Number(ta.closest(".sbm-card").dataset.n));
   });
 
-  // Go to the first indicator with no degree selected.
+  // ---- MOV link actions ----
+  function movEl(n) {
+    const card = el("sbm-card-" + n);
+    return card && card.querySelector(".sbm-mov");
+  }
+  function rerenderMov(n) {
+    const old = movEl(n);
+    if (old) old.outerHTML = movHtml(n);
+    return movEl(n);
+  }
+  function showMovError(strip, msg) {
+    const err = strip.querySelector(".sbm-mov-err");
+    const input = strip.querySelector(".sbm-mov-input");
+    err.textContent = msg;
+    err.hidden = !msg;
+    input.setAttribute("aria-invalid", msg ? "true" : "false");
+  }
+  function setMov(n, value) {
+    const r = resp(n);
+    const previous = r.movLink;
+    r.movLink = value;
+    delete state.mov[n];
+    const strip = rerenderMov(n);
+    updateCard(n);
+    refreshCounts();
+    const focusTarget = value
+      ? strip.querySelector(".sbm-mov-edit")
+      : strip.querySelector(".sbm-mov-input");
+    if (focusTarget) focusTarget.focus();
+    save(n, { movLink: value }).catch(() => {
+      r.movLink = previous;
+      rerenderMov(n);
+      updateCard(n);
+      refreshCounts();
+    });
+  }
+  function commitMov(n) {
+    const strip = movEl(n);
+    const input = strip.querySelector(".sbm-mov-input");
+    const res = normalizeMovUrl(input.value);
+    if (res.error) {
+      showMovError(strip, res.error);
+      input.focus();
+      return;
+    }
+    if (res.url === resp(n).movLink) {
+      delete state.mov[n];
+      rerenderMov(n).querySelector(".sbm-mov-edit").focus();
+      return;
+    }
+    setMov(n, res.url);
+  }
+  function cancelMov(n) {
+    delete state.mov[n];
+    const strip = rerenderMov(n);
+    const edit = strip.querySelector(".sbm-mov-edit");
+    if (edit) edit.focus();
+  }
+  function handleMovClick(n, e) {
+    const btn = e.target.closest("button");
+    if (!btn) return; // the link tile itself just opens normally
+    const has = (c) => btn.classList.contains(c);
+    if (has("sbm-mov-save")) return commitMov(n);
+    if (has("sbm-mov-cancel")) return cancelMov(n);
+    if (has("sbm-mov-edit")) {
+      state.mov[n] = "edit";
+      const input = rerenderMov(n).querySelector(".sbm-mov-input");
+      input.focus();
+      input.select();
+      return;
+    }
+    if (has("sbm-mov-remove")) {
+      state.mov[n] = "confirm";
+      rerenderMov(n).querySelector(".sbm-mov-remove-no").focus();
+      return;
+    }
+    if (has("sbm-mov-remove-no")) {
+      delete state.mov[n];
+      rerenderMov(n).querySelector(".sbm-mov-remove").focus();
+      return;
+    }
+    if (has("sbm-mov-remove-yes")) return setMov(n, "");
+  }
+
+  detailEl.addEventListener("keydown", (e) => {
+    const input = e.target.closest && e.target.closest(".sbm-mov-input");
+    if (!input) return;
+    const n = Number(input.closest(".sbm-card").dataset.n);
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commitMov(n);
+    } else if (e.key === "Escape" && resp(n).movLink) {
+      e.preventDefault();
+      cancelMov(n);
+    }
+  });
+
+  // Go to the first indicator that isn't finished yet (no degree or no link).
   nextBtn.addEventListener("click", () => {
     for (let d = 0; d < DIMENSIONS.length; d++) {
-      const item = DIMENSIONS[d].items.find((it) => !resp(it.n).degree);
+      const item = DIMENSIONS[d].items.find((it) => !isComplete(it.n));
       if (!item) continue;
       if (d !== state.active) goToDimension(d, { keepScroll: true });
       const card = el("sbm-card-" + item.n);
@@ -491,6 +682,7 @@
       });
       state.responses = {};
       state.open.clear();
+      state.mov = {};
       closeReset();
       renderProgress();
       renderNav();
@@ -506,6 +698,111 @@
   const printRoot = el("sbm-print-root");
   const printBtn = el("sbm-print-btn");
   if (printRoot) document.body.appendChild(printRoot);
+
+  // School details for the top of the printout. They are typed in the "School
+  // details" panel at the top of this page and saved through /sbm/school-info
+  // (independent of OPCRF I's Form details). `schoolInfo` always mirrors the
+  // inputs, so Ctrl+P (which can't wait for a request) prints what is on screen.
+  const schoolInfo = { school: "", head: "", year: "" };
+  const schoolEl = el("sbm-school");
+  const schoolSumEl = el("sbm-school-sum");
+  const schoolStatusEl = el("sbm-school-status");
+  const schoolInputs = Array.from(document.querySelectorAll("[data-school]"));
+  const schoolTimers = {};
+
+  function syncSchoolInfo() {
+    const v = (key) =>
+      (schoolInputs.find((i) => i.dataset.school === key).value || "").trim();
+    schoolInfo.school = v("schoolName").toUpperCase();
+    schoolInfo.head = v("schoolHead").toUpperCase();
+    schoolInfo.year = v("schoolYear");
+    const bits = [schoolInfo.school, schoolInfo.head, schoolInfo.year].filter(
+      Boolean,
+    );
+    const missing = bits.length < 3;
+    schoolSumEl.textContent = !bits.length
+      ? "Not filled in yet"
+      : bits.join(" \u00b7 ") + (missing ? " (incomplete)" : "");
+    schoolSumEl.classList.toggle("is-incomplete", missing);
+  }
+
+  function setSchoolStatus(message) {
+    schoolStatusEl.classList.toggle("is-error", !!message);
+    schoolStatusEl.textContent = message
+      ? "Couldn\u2019t save: " + message
+      : "";
+  }
+
+  async function saveSchoolField(input) {
+    const key = input.dataset.school;
+    clearTimeout(schoolTimers[key]);
+    delete schoolTimers[key];
+    try {
+      await apiCall("POST", "/sbm/school-info", { [key]: input.value });
+      setSchoolStatus("");
+    } catch (err) {
+      setSchoolStatus(err.message);
+    }
+  }
+
+  // Save anything still waiting on its typing delay (used before printing).
+  async function flushSchool() {
+    const pending = schoolInputs.filter(
+      (i) => schoolTimers[i.dataset.school] !== undefined,
+    );
+    await Promise.all(pending.map(saveSchoolField));
+  }
+
+  schoolInputs.forEach((input) => {
+    input.addEventListener("input", () => {
+      if (input.dataset.upper) {
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.value = input.value.toUpperCase();
+        try {
+          input.setSelectionRange(start, end);
+        } catch (e) {
+          /* not supported for this input type */
+        }
+      }
+      syncSchoolInfo();
+      clearTimeout(schoolTimers[input.dataset.school]);
+      schoolTimers[input.dataset.school] = setTimeout(
+        () => saveSchoolField(input),
+        600,
+      );
+    });
+    input.addEventListener("blur", () => {
+      if (schoolTimers[input.dataset.school] !== undefined)
+        saveSchoolField(input);
+    });
+  });
+
+  async function loadSchoolInfo() {
+    try {
+      const h = await apiCall("GET", "/sbm/school-info");
+      schoolInputs.forEach((input) => {
+        const v = h[input.dataset.school] || "";
+        input.value = input.dataset.upper ? v.toUpperCase() : v;
+      });
+      syncSchoolInfo();
+      // Open the panel while anything is still missing, so it isn't overlooked.
+      if (!schoolInfo.school || !schoolInfo.head || !schoolInfo.year)
+        schoolEl.open = true;
+    } catch (err) {
+      /* leave the lines blank to be filled in by hand */
+    }
+  }
+
+  function schoolNoteHtml() {
+    const row = (label, value) =>
+      `<div class="sp-school-row"><span class="sp-school-label">${label}</span><span class="sp-school-value">${escapeHtml(value)}</span></div>`;
+    return `<div class="sp-school">
+      ${row("Name of School:", schoolInfo.school)}
+      ${row("Name of School Head:", schoolInfo.head)}
+      ${row("School Year:", schoolInfo.year)}
+    </div>`;
+  }
 
   function buildPrintHtml() {
     const intro = el("sbm-intro").innerHTML;
@@ -540,6 +837,7 @@
         </table>`;
     }).join("");
     return `<div class="sp-sheet">
+      ${schoolNoteHtml()}
       <h1 class="sp-title">${TITLE}</h1>
       <p class="sp-intro">${intro}</p>
       ${tables}
@@ -552,9 +850,10 @@
 
   if (printBtn && printRoot) {
     let builtForButton = false;
-    printBtn.addEventListener("click", () => {
+    printBtn.addEventListener("click", async () => {
       // Make sure any remark still being typed is in the state first.
       Object.keys(saveTimers).forEach((k) => flushRemarks(Number(k)));
+      await flushSchool(); // make sure the latest school details are saved
       const restore = () => {
         builtForButton = false;
         window.removeEventListener("afterprint", restore);
@@ -572,6 +871,7 @@
 
   // ================= Initial load =================
   async function init() {
+    loadSchoolInfo();
     renderProgress();
     renderNav();
     renderDetail();
@@ -582,6 +882,7 @@
         state.responses[n] = {
           degree: r.degree || null,
           remarks: r.remarks || "",
+          movLink: r.movLink || "",
         };
       });
       renderProgress();

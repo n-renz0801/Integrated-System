@@ -126,8 +126,105 @@ class SBMResponse(db.Model):
 
     degree = db.Column(db.String(12), nullable=True)  # one of SBM_DEGREES, or NULL if not answered / cleared
     remarks = db.Column(db.Text, nullable=False, default="", server_default="")
+    # Means of Verification link for this indicator ("" = none attached yet).
+    # An indicator only counts as complete when it has a degree AND a link.
+    mov_link = db.Column(db.String(2000), nullable=False, default="", server_default="")
 
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# ---------------------------------------------------------------------------
+# SBM school details: the Name of School / School Head / School Year printed at
+# the top of the SBM checklist. Single global row, lazily created, independent
+# of OPCRF I's Form details (editing one never changes the other). Not
+# year-scoped (the school year is itself one of the fields) and untouched by
+# SBM's Reset.
+# ---------------------------------------------------------------------------
+class SBMSchoolInfo(db.Model):
+    __tablename__ = "sbm_school_info"
+
+    id = db.Column(db.Integer, primary_key=True)
+    school_name = db.Column(db.String(255), nullable=False, default="", server_default="")
+    school_head = db.Column(db.String(255), nullable=False, default="", server_default="")
+    school_year = db.Column(db.String(50), nullable=False, default="", server_default="")
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "schoolName": self.school_name or "",
+            "schoolHead": self.school_head or "",
+            "schoolYear": self.school_year or "",
+        }
+
+
+# ---------------------------------------------------------------------------
+# AIP -- School Annual Implementation Plan accomplishment report (Project
+# MEASURE-AIP). One AIPProject per program/project (any number, user-ordered by
+# `position`); each holds the seven parts of one row of the printed report.
+# The MOV link is on-screen only and never printed. AIPSchoolInfo is a single,
+# lazily-created row with the school details and the print header/signatories;
+# it is independent of SBM's and OPCRF I's details and untouched by AIP Reset.
+# ---------------------------------------------------------------------------
+class AIPProject(db.Model):
+    __tablename__ = "aip_projects"
+
+    id = db.Column(db.Integer, primary_key=True)
+    position = db.Column(db.Integer, nullable=False, default=0, server_default="0", index=True)
+    title = db.Column(db.Text, nullable=False, default="", server_default="")
+    objective = db.Column(db.Text, nullable=False, default="", server_default="")
+    target = db.Column(db.Text, nullable=False, default="", server_default="")
+    accomplishment = db.Column(db.Text, nullable=False, default="", server_default="")
+    gain_gap = db.Column(db.Text, nullable=False, default="", server_default="")
+    recommendation = db.Column(db.Text, nullable=False, default="", server_default="")
+    mov_link = db.Column(db.String(2000), nullable=False, default="", server_default="")
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title or "",
+            "objective": self.objective or "",
+            "target": self.target or "",
+            "accomplishment": self.accomplishment or "",
+            "gainGap": self.gain_gap or "",
+            "recommendation": self.recommendation or "",
+            "movLink": self.mov_link or "",
+        }
+
+
+class AIPSchoolInfo(db.Model):
+    __tablename__ = "aip_school_info"
+
+    id = db.Column(db.Integer, primary_key=True)
+    school_name = db.Column(db.String(255), nullable=False, default="", server_default="")
+    school_head = db.Column(db.String(255), nullable=False, default="", server_default="")
+    head_position = db.Column(db.String(255), nullable=False, default="", server_default="")
+    school_year = db.Column(db.String(50), nullable=False, default="", server_default="")
+    report_title = db.Column(db.String(255), nullable=False, default="AIP PRESENTATION YEAR 1")
+    region = db.Column(db.String(255), nullable=False, default="Region IV-A CALABARZON")
+    division = db.Column(db.String(255), nullable=False, default="City Schools Division Office of Antipolo")
+    district = db.Column(db.String(255), nullable=False, default="DISTRICT I-B")
+    checked_by_name = db.Column(db.String(255), nullable=False, default="", server_default="")
+    checked_by_position = db.Column(db.String(255), nullable=False, default="", server_default="")
+    noted_by_name = db.Column(db.String(255), nullable=False, default="", server_default="")
+    noted_by_position = db.Column(db.String(255), nullable=False, default="", server_default="")
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "schoolName": self.school_name or "",
+            "schoolHead": self.school_head or "",
+            "headPosition": self.head_position or "",
+            "schoolYear": self.school_year or "",
+            "reportTitle": self.report_title or "",
+            "region": self.region or "",
+            "division": self.division or "",
+            "district": self.district or "",
+            "checkedByName": self.checked_by_name or "",
+            "checkedByPosition": self.checked_by_position or "",
+            "notedByName": self.noted_by_name or "",
+            "notedByPosition": self.noted_by_position or "",
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -1292,6 +1389,10 @@ class EOPCRF1ReportHeader(db.Model):
     bureau = db.Column(db.String(255), nullable=False, default="")  # "Bureau/Center/Service/Division"
     rating_period = db.Column(db.String(255), nullable=False, default="")
     date_of_review = db.Column(db.Date, nullable=True)
+    # LEGACY / unused: School year used to be typed here for the SBM printout.
+    # SBM now has its own SBMSchoolInfo row. Kept only so existing databases
+    # keep working and so its old value can seed SBMSchoolInfo once.
+    school_year = db.Column(db.String(50), nullable=False, default="", server_default="")
     # Printed in the "Statement of Purpose" row of the OPCRF header block.
     # NOTE: new column -- added to existing DBs by _ensure_eopcrf1_schema().
     statement_of_purpose = db.Column(db.Text, nullable=False, default="", server_default="")
