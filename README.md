@@ -45,7 +45,7 @@ just like the official form.
 
 ## How do I start the program?
 
-Open **project_measure.exe**. A window will appear. That's all. You do not need
+Open **Project-MEASURE-School.exe**. A window will appear. That's all. You do not need
 to install anything else, and you do not need internet.
 
 If Windows or your antivirus shows a warning the first time, that is normal for
@@ -53,4 +53,4 @@ small programs that are not from a big company. Choose "More info" and then
 "Run anyway", or ask your IT person to allow it.
 
 ---
-python -m PyInstaller --clean --onefile --windowed --name project_measure --icon="static/images/project_measure.ico" --add-data "templates;templates" --add-data "static;static" --hidden-import webview desktop.py
+python -m PyInstaller --clean --onefile --windowed --name Project-MEASURE-School --icon="static/images/project_measure.ico" --add-data "templates;templates" --add-data "static;static" --hidden-import webview desktop.py
