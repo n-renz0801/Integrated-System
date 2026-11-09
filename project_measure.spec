@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='project_measure',
+    name='Project-MEASURE-School',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
