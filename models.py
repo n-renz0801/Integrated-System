@@ -1,5 +1,5 @@
 """
-EOPCRF_SH -- Database Models
+Project-MEASURE-School -- Database Models
 =============================
 SQLAlchemy models for this app's four tabs -- EOPCRF1 (IPCRF), EOPCRF2 (Part II:
 Leadership and Core Behavioural Competencies), EOPCRF3 (read-only Part III: Summary of Ratings), and EOPCRF4
