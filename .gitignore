@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
 *.egg-info/
 
 # Virtual environments
@@ -8,26 +9,46 @@ env/
 venv/
 .venv/
 
-# PyInstaller build output
+# PyInstaller build output (the .spec file stays tracked so builds are reproducible)
 build/
 dist/
-# Keep project_measure.spec tracked (it holds your build settings)
 
-# Local database (contains real employee/rating data)
+# Local database / application data
 instance/
+uploads/
 *.db
+*.sqlite
 *.sqlite3
 
-# Excel temp/lock files (created while the workbook is open)
+# Personal documents, reference and working files (do not track)
+docs/
+excel/
+reference/
+data/*.xlsx
+data/*.csv
+/*.xlsx
+/*.pdf
+/*.docx
+
+# Local Adobe Illustrator files
+adobe_illustrator/
+
+# Microsoft Office temporary/lock files
 ~$*
 
-# Environment / secrets
-.env
+# Logs and test/cache folders
+*.log
+.pytest_cache/
+.mypy_cache/
 
-# Editors and OS
+# Environment variables / secrets
+.env
+.env.*
+
+# IDE / editor files
 .vscode/
 .idea/
+
+# OS-generated files
 .DS_Store
 Thumbs.db
-# Real school data (do not track)
-excel/*.xlsx
