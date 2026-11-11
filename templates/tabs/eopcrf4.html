@@ -11,209 +11,101 @@
 />
 
 <section id="eopcrf4-tab" class="tab-panel eopcrf4-panel">
-  <!-- ================= 1. PAGE HEADER ================= -->
+  <!-- Header: title and actions in one card -->
   <div class="eopcrf4-header">
     <div class="eopcrf4-header-top">
       <div class="eopcrf4-header-title-main">
-        <span class="eopcrf4-header-badge">
-          <span class="eopcrf4-header-badge-group">OPCRF</span>
-          <span class="eopcrf4-header-badge-page">IV</span>
-        </span>
-        <div class="eopcrf4-header-divider"></div>
+        <span class="eopcrf4-header-badge">OPCRF IV</span>
         <div>
-          <h2>IMPROVEMENT AND DEVELOPMENT PLANS</h2>
-          <p class="eopcrf4-subtitle">DepEd OPCRF (ver.Feb2025), page 4 of 4</p>
+          <h2>Improvement and Development Plans</h2>
         </div>
       </div>
       <div class="eopcrf4-header-actions">
         <button type="button" id="eopcrf4-print-btn" class="eopcrf4-pdf-btn">
           <i class="ti ti-file-type-pdf" aria-hidden="true"></i> Save to PDF
         </button>
-        <button type="button" id="eopcrf4-reset-btn" class="eopcrf4-reset-btn">
-          <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset All Data
+        <button type="button" class="eopcrf4-reset-btn" id="eopcrf4-reset-btn">
+          <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset Data
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ================= GUIDED FLOW: 1. Part IV-A -> 2. Part IV-B (Ratee / Rater / Approving Authority sign off in base.html's report-signatory footer) ================= -->
-  <div class="eopcrf4-flow">
-    <div class="eopcrf4-flow-rail" aria-hidden="true">
-      <span class="eopcrf4-flow-badge">1</span>
-      <span class="eopcrf4-flow-badge">2</span>
+  <!-- Overall progress: one segment per row (click to jump). -->
+  <div class="eopcrf4-progress" id="eopcrf4-progress">
+    <div class="eopcrf4-progress-summary">
+      <span
+        class="eopcrf4-progress-count"
+        id="eopcrf4-progress-count"
+        title="A row is complete when every field is filled in"
+      ></span>
+      <span
+        class="eopcrf4-save-status"
+        id="eopcrf4-save-status"
+        role="status"
+      ></span>
     </div>
-
-    <!-- 1. PART IV-A: OFFICE IMPROVEMENT PLAN -->
-    <div class="eopcrf4-flow-section eopcrf4-flow-section-1">
-      <p class="eopcrf4-flow-label">Office gaps &amp; interventions</p>
-      <div class="eopcrf4-card">
-        <div class="eopcrf4-card-header">
-          <h3>Part IV-A: Office Improvement Plan</h3>
-        </div>
-        <div class="eopcrf4-table-wrapper">
-          <table id="eopcrf4-table-a" class="eopcrf4-dev-table">
-            <colgroup>
-              <col class="eopcrf4-col-edit" />
-              <col class="eopcrf4-col-content" />
-              <col class="eopcrf4-col-content" />
-              <col class="eopcrf4-col-content" />
-              <col class="eopcrf4-col-content" />
-              <col class="eopcrf4-col-content" />
-              <col class="eopcrf4-col-content" />
-            </colgroup>
-            <thead>
-              <tr class="eopcrf4-head-top">
-                <th rowspan="2" class="eopcrf4-col-edit"></th>
-                <th rowspan="2">
-                  Gap Analysis<br /><span class="eopcrf4-th-sub">(SWOT)</span>
-                </th>
-                <th rowspan="2">Improvement Area</th>
-                <th colspan="2" class="eopcrf4-th-group">Action Plan</th>
-                <th rowspan="2">Timeline</th>
-                <th rowspan="2">Resources Needed</th>
-              </tr>
-              <tr class="eopcrf4-head-sub">
-                <th>General Objective</th>
-                <th>Recommended Improvement Intervention</th>
-              </tr>
-            </thead>
-            <tbody id="eopcrf4-table-body-a">
-              <!-- rows injected by eopcrf4.js -->
-            </tbody>
-          </table>
-        </div>
-        <div class="eopcrf4-feedback">
-          <label class="eopcrf4-feedback-label" for="eopcrf4-feedback-a"
-            >Feedback:</label
-          >
-          <textarea
-            id="eopcrf4-feedback-a"
-            class="eopcrf4-feedback-input"
-            data-part="A"
-            rows="3"
-          ></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. PART IV-B: INDIVIDUAL DEVELOPMENT PLAN -->
-    <div class="eopcrf4-flow-section eopcrf4-flow-section-2">
-      <p class="eopcrf4-flow-label">Ratee strengths &amp; needs</p>
-      <div class="eopcrf4-card">
-        <div class="eopcrf4-card-header">
-          <h3>Part IV-B: Individual Development Plan</h3>
-        </div>
-        <div class="eopcrf4-table-wrapper">
-          <table id="eopcrf4-table-b" class="eopcrf4-dev-table">
-            <colgroup>
-              <col class="eopcrf4-col-edit" />
-              <col class="eopcrf4-col-content" />
-              <col class="eopcrf4-col-content" />
-              <col class="eopcrf4-col-content" />
-              <col class="eopcrf4-col-content" />
-              <col class="eopcrf4-col-content" />
-              <col class="eopcrf4-col-content" />
-            </colgroup>
-            <thead>
-              <tr class="eopcrf4-head-top">
-                <th rowspan="2" class="eopcrf4-col-edit"></th>
-                <th rowspan="2">Strengths</th>
-                <th rowspan="2">Improvement Needs</th>
-                <th colspan="2" class="eopcrf4-th-group">Action Plan</th>
-                <th rowspan="2">Timeline</th>
-                <th rowspan="2">Resources Needed</th>
-              </tr>
-              <tr class="eopcrf4-head-sub">
-                <th>
-                  Learning Objective<br /><span class="eopcrf4-th-sub"
-                    >(based on the developmental intervention)</span
-                  >
-                </th>
-                <th>Recommended Developmental Intervention</th>
-              </tr>
-            </thead>
-            <tbody id="eopcrf4-table-body-b">
-              <!-- rows injected by eopcrf4.js -->
-            </tbody>
-          </table>
-        </div>
-        <div class="eopcrf4-feedback">
-          <label class="eopcrf4-feedback-label" for="eopcrf4-feedback-b"
-            >Feedback:</label
-          >
-          <textarea
-            id="eopcrf4-feedback-b"
-            class="eopcrf4-feedback-input"
-            data-part="B"
-            rows="3"
-          ></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- /.eopcrf4-flow -->
+    <div
+      class="eopcrf4-segments"
+      id="eopcrf4-segments"
+      role="progressbar"
+      aria-label="Overall progress"
+      aria-valuemin="0"
+      aria-valuemax="7"
+      aria-valuenow="0"
+    ></div>
+    <button type="button" class="eopcrf4-next-btn" id="eopcrf4-next-incomplete">
+      <i class="ti ti-player-skip-forward" aria-hidden="true"></i> Next
+      incomplete
+    </button>
+    <span class="eopcrf4-done-badge" id="eopcrf4-done-badge" hidden>
+      <i class="ti ti-circle-check" aria-hidden="true"></i> Plan complete
+    </span>
   </div>
+
+  <div id="eopcrf4-workspace" class="eopcrf4-workspace">
+    <div class="eopcrf4-nav-col">
+      <!-- A div, not <nav>: base.css styles bare nav/header elements. -->
+      <div
+        id="eopcrf4-list"
+        class="eopcrf4-list"
+        role="navigation"
+        aria-label="Part IV rows"
+      ></div>
+    </div>
+    <div id="eopcrf4-editor" class="eopcrf4-editor"></div>
+  </div>
+
+  <div
+    id="eopcrf4-error-state"
+    class="eopcrf4-error-state"
+    style="display: none"
+    role="alert"
+  ></div>
 </section>
 
-<!-- ================= ROW EDIT MODAL (opened by each row's edit button) ================= -->
-<div id="eopcrf4-edit-overlay" class="eopcrf4-edit-overlay">
-  <form
-    id="eopcrf4-edit-form"
-    class="eopcrf4-edit-box"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="eopcrf4-edit-title"
-    novalidate
-  >
-    <div class="eopcrf4-edit-header">
-      <h4 id="eopcrf4-edit-title">Edit row</h4>
-      <p id="eopcrf4-edit-sub" class="eopcrf4-edit-sub"></p>
-    </div>
-    <div id="eopcrf4-edit-fields" class="eopcrf4-edit-fields">
-      <!-- fields injected by eopcrf4.js -->
-    </div>
-    <p id="eopcrf4-edit-error" class="eopcrf4-edit-error" hidden></p>
-    <div class="eopcrf4-edit-actions">
-      <button
-        type="button"
-        id="eopcrf4-edit-cancel"
-        class="eopcrf4-btn-secondary"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        id="eopcrf4-edit-submit"
-        class="eopcrf4-btn-primary"
-      >
-        Submit
-      </button>
-    </div>
-  </form>
-</div>
-
-<!-- ================= RESET-PAGE CONFIRMATION MODAL ================= -->
+<!-- ================= RESET CONFIRMATION MODAL ================= -->
 <div id="eopcrf4-reset-confirm-overlay" class="eopcrf4-confirm-overlay">
-  <div class="eopcrf4-confirm-box">
-    <h4>Reset the contents of this page?</h4>
-    <p>
-      This will clear every row in Part IV-A and Part IV-B, along with both
-      Feedback boxes, back to blank and locked. This cannot be undone.
+  <div class="eopcrf4-confirm-box" role="dialog" aria-modal="true">
+    <h4>Reset this plan?</h4>
+    <p class="eopcrf4-reset-intro">
+      This clears every row in Part IV-A and Part IV-B, along with both Feedback
+      boxes. This cannot be undone.
     </p>
     <div class="eopcrf4-confirm-actions">
       <button
         type="button"
         id="eopcrf4-reset-confirm-cancel"
-        class="eopcrf4-btn-secondary"
+        class="eopcrf4-btn"
       >
         Cancel
       </button>
       <button
         type="button"
         id="eopcrf4-reset-confirm-confirm"
-        class="eopcrf4-btn-danger"
+        class="eopcrf4-btn eopcrf4-btn--danger"
       >
-        Yes, Reset
+        Yes, reset
       </button>
     </div>
   </div>

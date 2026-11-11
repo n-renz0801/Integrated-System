@@ -1,5 +1,5 @@
-{% extends "base.html" %} {% block title %}SBM - Project-MEASURE-School{% endblock %} {%
-block content %}
+{% extends "base.html" %} {% block title %}SBM - Project-MEASURE-School{%
+endblock %} {% block content %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/sbm.css') }}" />
 <link
@@ -8,14 +8,14 @@ block content %}
 />
 
 <section id="sbm-tab" class="tab-panel sbm-panel">
+  <!-- Header: title, actions and the school summary in one card -->
   <div class="sbm-header">
     <div class="sbm-header-top">
       <div class="sbm-header-title-main">
         <span class="sbm-header-badge">SBM</span>
-        <div class="sbm-header-divider"></div>
-        <h2>
-          Annex A: School-Based Management (SBM) Self-Assessment Checklist
-        </h2>
+        <div>
+          <h2>School-Based Management Self-Assessment Checklist</h2>
+        </div>
       </div>
       <div class="sbm-header-actions">
         <button type="button" id="sbm-print-btn" class="sbm-pdf-btn">
@@ -26,90 +26,18 @@ block content %}
         </button>
       </div>
     </div>
+    <div class="sbm-meta">
+      <i class="ti ti-school" aria-hidden="true"></i>
+      <span class="sbm-school-sum" id="sbm-school-sum">Not filled in yet</span>
+      <span class="sbm-meta-gap"></span>
+      <button type="button" class="sbm-link-btn" id="sbm-school-open">
+        Edit school details
+      </button>
+    </div>
   </div>
 
-  <!-- School details for the printout's header. Independent of OPCRF I's Form
-       details; saved through /sbm/school-info by sbm.js. -->
-  <details class="sbm-about sbm-school" id="sbm-school">
-    <summary>
-      <span class="sbm-about-icon" aria-hidden="true"
-        ><i class="ti ti-school"></i
-      ></span>
-      <span class="sbm-about-title">School details</span>
-      <span class="sbm-school-sum" id="sbm-school-sum">Not filled in yet</span>
-      <span class="sbm-about-toggle">
-        <span class="sbm-when-closed">Click to expand</span>
-        <span class="sbm-when-open">Collapse</span>
-        <i class="ti ti-chevron-down" aria-hidden="true"></i>
-      </span>
-    </summary>
-    <div class="sbm-school-body">
-      <label class="sbm-school-field sbm-school-field--wide"
-        ><span class="sbm-school-label">Name of School</span
-        ><input
-          type="text"
-          data-school="schoolName"
-          data-upper="1"
-          maxlength="255"
-          autocomplete="off"
-      /></label>
-      <label class="sbm-school-field"
-        ><span class="sbm-school-label">Name of School Head</span
-        ><input
-          type="text"
-          data-school="schoolHead"
-          data-upper="1"
-          maxlength="255"
-          autocomplete="off"
-      /></label>
-      <label class="sbm-school-field sbm-school-field--year"
-        ><span class="sbm-school-label">School Year</span
-        ><input
-          type="text"
-          data-school="schoolYear"
-          maxlength="50"
-          placeholder="e.g. 2025-2026"
-          autocomplete="off"
-      /></label>
-      <p class="sbm-school-note">
-        These appear at the top of the printed checklist.
-        <span
-          class="sbm-school-status"
-          id="sbm-school-status"
-          role="status"
-        ></span>
-      </p>
-    </div>
-  </details>
-
-  <!-- Intro paragraph from the form, tucked away so it doesn't crowd the
-       checklist. sbm.js also reads #sbm-intro for the printed copy. -->
-  <details class="sbm-about" id="sbm-about">
-    <summary>
-      <span class="sbm-about-icon" aria-hidden="true"
-        ><i class="ti ti-info-circle"></i
-      ></span>
-      <span class="sbm-about-title">About this checklist</span>
-      <span class="sbm-about-toggle">
-        <span class="sbm-when-closed">Click to expand</span>
-        <span class="sbm-when-open">Collapse</span>
-        <i class="ti ti-chevron-down" aria-hidden="true"></i>
-      </span>
-    </summary>
-    <p class="sbm-about-text" id="sbm-intro">
-      The <em>SBM Self-Assessment Checklist</em> provides a comprehensive
-      understanding of the status of continuous improvement in the various areas
-      of school operation. The school assesses the six (6) SBM Dimensions and
-      determines the degree of manifestation for each SBM Indicator. These
-      indicators are listed as observable school practices and attainable
-      learning outcomes. The extent by which the indicators are manifested is
-      described as follows:
-      <em>not yet manifested, rarely manifested, frequently manifested,</em> and
-      <em>always manifested.</em>
-    </p>
-  </details>
-
-  <!-- Overall progress: one segment per dimension (click to jump) -->
+  <!-- Overall progress: sticks to the top while the checklist scrolls.
+       One segment per dimension (click to jump). -->
   <div class="sbm-progress" id="sbm-progress">
     <div class="sbm-progress-summary">
       <span class="sbm-progress-count" id="sbm-progress-count"></span>
@@ -125,10 +53,9 @@ block content %}
       aria-valuenow="0"
     ></div>
     <button type="button" class="sbm-next-btn" id="sbm-next-unanswered">
-      <i class="ti ti-player-skip-forward" aria-hidden="true"></i> Go to next
+      <i class="ti ti-player-skip-forward" aria-hidden="true"></i> Next
       incomplete
     </button>
-    <!-- Replaces the button once every indicator is answered. Not a control. -->
     <span class="sbm-done-badge" id="sbm-done-badge" hidden>
       <i class="ti ti-circle-check" aria-hidden="true"></i> Checklist complete
     </span>
@@ -176,6 +103,85 @@ block content %}
       </button>
     </div>
   </div>
+</div>
+
+<!-- ================= SCHOOL DETAILS + ABOUT DRAWER =================
+     School details are independent of OPCRF I's Form details and are saved
+     through /sbm/school-info by sbm.js (as you type). #sbm-intro is also read
+     by sbm.js for the printed copy, so it must stay in the page. -->
+<div id="sbm-drawer-overlay" class="sbm-drawer-overlay">
+  <aside
+    class="sbm-drawer"
+    id="sbm-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="sbm-drawer-title"
+  >
+    <div class="sbm-drawer-head">
+      <h4 id="sbm-drawer-title">School details</h4>
+      <button
+        type="button"
+        class="sbm-btn sbm-drawer-close"
+        id="sbm-drawer-close"
+        aria-label="Close school details"
+      >
+        <i class="ti ti-x" aria-hidden="true"></i> Close
+      </button>
+    </div>
+    <div class="sbm-drawer-body">
+      <p class="sbm-school-note">
+        These appear at the top of the printed checklist. Changes save as you
+        type.
+        <span
+          class="sbm-school-status"
+          id="sbm-school-status"
+          role="status"
+        ></span>
+      </p>
+      <label class="sbm-school-field"
+        ><span class="sbm-school-label">Name of School</span
+        ><input
+          type="text"
+          data-school="schoolName"
+          data-upper="1"
+          maxlength="255"
+          autocomplete="off"
+      /></label>
+      <label class="sbm-school-field"
+        ><span class="sbm-school-label">Name of School Head</span
+        ><input
+          type="text"
+          data-school="schoolHead"
+          data-upper="1"
+          maxlength="255"
+          autocomplete="off"
+      /></label>
+      <label class="sbm-school-field"
+        ><span class="sbm-school-label">School Year</span
+        ><input
+          type="text"
+          data-school="schoolYear"
+          maxlength="50"
+          placeholder="e.g. 2025-2026"
+          autocomplete="off"
+      /></label>
+
+      <section class="sbm-about" id="sbm-about" tabindex="-1">
+        <h5>About this checklist</h5>
+        <p class="sbm-about-text" id="sbm-intro">
+          The <em>SBM Self-Assessment Checklist</em> provides a comprehensive
+          understanding of the status of continuous improvement in the various
+          areas of school operation. The school assesses the six (6) SBM
+          Dimensions and determines the degree of manifestation for each SBM
+          Indicator. These indicators are listed as observable school practices
+          and attainable learning outcomes. The extent by which the indicators
+          are manifested is described as follows:
+          <em>not yet manifested, rarely manifested, frequently manifested,</em>
+          and <em>always manifested.</em>
+        </p>
+      </section>
+    </div>
+  </aside>
 </div>
 
 <!-- Print-only copy of the form; built and moved to <body> by sbm.js -->

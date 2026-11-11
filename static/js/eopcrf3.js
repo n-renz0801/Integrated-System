@@ -12,6 +12,15 @@
   const overallEl = document.getElementById("eopcrf3-overall-score");
   const pmesNumericalEl = document.getElementById("eopcrf3-pmes-numerical");
   const pmesAdjectivalEl = document.getElementById("eopcrf3-pmes-adjectival");
+  const scaleSegs = document.querySelectorAll("#eopcrf3-scale [data-band]");
+  const bandLabels = document.querySelectorAll(
+    "#eopcrf3-band-labels [data-band]",
+  );
+  const pinEl = document.getElementById("eopcrf3-pin");
+  const pinValueEl = document.getElementById("eopcrf3-pin-value");
+  const emptyEl = document.getElementById("eopcrf3-empty");
+  const sub1El = document.getElementById("eopcrf3-sub-1");
+  const sub2El = document.getElementById("eopcrf3-sub-2");
 
   // Part II-A / II-B each count for 2.5% of the final score: the section
   // average x 0.025 -- same constant eopcrf2.js uses for its
@@ -135,16 +144,29 @@
       scoreEls[key].textContent = fmtScore(scores[key]);
     });
 
+    // Part subtotals: the sum of whichever component scores exist.
+    const subtotal = (keys) => {
+      const vals = keys.map((k) => scores[k]).filter((v) => v !== null);
+      return vals.length ? vals.reduce((a, b) => a + b, 0) : null;
+    };
+    sub1El.textContent = fmtScore(subtotal(["1a", "1b", "1c"]));
+    sub2El.textContent = fmtScore(subtotal(["2a", "2b"]));
+
     const present = Object.values(scores).filter((v) => v !== null);
-    pmesNumericalEl.className = "eopcrf3-center eopcrf3-pmes";
-    pmesAdjectivalEl.className = "eopcrf3-center eopcrf3-pmes";
+
+    scaleSegs.forEach((seg) => seg.classList.remove("is-active"));
+    bandLabels.forEach((lbl) => lbl.classList.remove("is-active"));
+    pinEl.hidden = true;
 
     if (present.length === 0) {
       overallEl.textContent = "—";
       pmesNumericalEl.textContent = "";
       pmesAdjectivalEl.textContent = "";
+      emptyEl.hidden = false;
       return;
     }
+
+    emptyEl.hidden = true;
 
     const overall = present.reduce((sum, v) => sum + v, 0);
     overallEl.textContent = fmtScore(overall);
@@ -152,17 +174,27 @@
     const band = pmesBand(overall);
     printState.overall = overall;
     printState.band = band;
-    pmesNumericalEl.textContent = String(band.numerical);
     pmesAdjectivalEl.textContent = band.label;
-    pmesNumericalEl.classList.add("eopcrf3-pmes--" + band.cls);
-    pmesAdjectivalEl.classList.add("eopcrf3-pmes--" + band.cls);
+    pmesNumericalEl.textContent = "Rating " + band.numerical + " of 5";
+    scaleSegs.forEach((seg) => {
+      if (seg.dataset.band === band.cls) seg.classList.add("is-active");
+    });
+    bandLabels.forEach((lbl) => {
+      if (lbl.dataset.band === band.cls) lbl.classList.add("is-active");
+    });
+
+    // Pin: position of the score on the 1-5 scale.
+    const pct = ((Math.min(5, Math.max(1, overall)) - 1) / 4) * 100;
+    pinEl.style.left = pct + "%";
+    pinValueEl.textContent = overall.toFixed(2);
+    pinEl.hidden = false;
   }
 
   function showError(message) {
     const errBox = document.createElement("div");
     errBox.className = "eopcrf3-load-error";
     errBox.textContent = "Couldn't load this report: " + message;
-    const flow = document.querySelector(".eopcrf3-flow");
+    const flow = document.querySelector(".eopcrf3-body");
     flow.parentNode.insertBefore(errBox, flow);
   }
 

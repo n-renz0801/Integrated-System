@@ -10,34 +10,65 @@
   const el = (id) => document.getElementById(id);
   const listEl = el("aip-list");
   const editorEl = el("aip-editor");
-  const countEl = el("aip-count");
+  const progressCountEl = el("aip-progress-count");
+  const segsEl = el("aip-segments");
+  const nextBtn = el("aip-next-incomplete");
+  const doneBadge = el("aip-done-badge");
   const statusEl = el("aip-save-status");
   const workspaceEl = el("aip-workspace");
   const errorEl = el("aip-error-state");
 
-  // The seven parts, in the order they appear in the editor. The first six are
-  // plain text; the MOV link has its own strip at the bottom of the editor.
-  const SECTIONS = [
+  // The parts of a program/project, in the order they read on the printed
+  // report: title, then Plan (objective, target), Result (accomplishment,
+  // gain/gap) and Next steps (recommendation). The MOV link has its own strip
+  // at the bottom of the editor. `hint` is the placeholder shown when empty.
+  const FIELDS = {
+    title: {
+      label: "Program/Project title",
+      rows: 2,
+      hint: "Title of the program or project",
+    },
+    objective: {
+      label: "Objective",
+      rows: 4,
+      hint: "What should this program/project achieve?",
+    },
+    target: {
+      label: "Target",
+      rows: 4,
+      hint: "What was planned: figures, activities, schedule",
+    },
+    accomplishment: {
+      label: "Accomplishment",
+      rows: 4,
+      hint: "What was actually done or achieved",
+    },
+    gainGap: {
+      label: "Gain/Gap",
+      rows: 4,
+      hint: "How the accomplishment compares with the target",
+    },
+    recommendation: {
+      label: "Recommendation",
+      rows: 3,
+      hint: "What should be done next, or what needs support",
+    },
+  };
+  const STAGES = [
     {
-      name: "1 \u00b7 Plan",
-      fields: [
-        { key: "title", label: "Program/Project title", rows: 2, wide: true },
-        { key: "objective", label: "Objective", rows: 3, wide: true },
-        { key: "target", label: "Target", rows: 5, wide: true },
-      ],
+      name: "Plan",
+      note: "What it set out to do",
+      keys: ["objective", "target"],
     },
     {
-      name: "2 \u00b7 Result",
-      fields: [
-        { key: "accomplishment", label: "Accomplishment", rows: 5 },
-        { key: "gainGap", label: "Gain/Gap", rows: 5 },
-      ],
+      name: "Result",
+      note: "What came out of it",
+      keys: ["accomplishment", "gainGap"],
     },
     {
-      name: "3 \u00b7 Next steps",
-      fields: [
-        { key: "recommendation", label: "Recommendation", rows: 3, wide: true },
-      ],
+      name: "Next steps",
+      note: "What should follow",
+      keys: ["recommendation"],
     },
   ];
 
@@ -46,6 +77,7 @@
     selectedId: null,
     movMode: null, // null | "edit" | "confirm" for the selected project
     confirmDelete: false,
+    confirmClear: false, // "Clear fields" is waiting for Clear / Keep
   };
   const saveTimers = {}; // `${id}:${field}` -> timeout id
 
@@ -96,9 +128,29 @@
     return byId(state.selectedId);
   }
 
-  // A program/project is finished only when it has a title AND a MOV link.
+  // Every part is required: the five text fields plus the MOV link. These
+  // helpers drive the list, the progress segments and the status chip.
+  const REQUIRED = [
+    "title",
+    "objective",
+    "target",
+    "accomplishment",
+    "gainGap",
+    "recommendation",
+  ];
+  const PART_TOTAL = REQUIRED.length + 1; // + the MOV link
+  function missingParts(p) {
+    const miss = REQUIRED.filter((k) => !String(p[k] || "").trim()).map(
+      (k) => FIELDS[k].label,
+    );
+    if (!p.movLink) miss.push("MOV link");
+    return miss;
+  }
+  function filledCount(p) {
+    return PART_TOTAL - missingParts(p).length;
+  }
   function isComplete(p) {
-    return !!(p.title.trim() && p.movLink);
+    return missingParts(p).length === 0;
   }
 
   function titleLines(p) {
@@ -146,13 +198,11 @@
   function movHtml(p) {
     const link = p.movLink;
     const mode = state.movMode;
-    const label = `<span class="aip-mov-label">MOV link${link ? "" : "<em>required</em>"}</span>`;
     if (!link || mode === "edit") {
       return `
         <div class="aip-mov${link ? "" : " is-missing"}">
-          ${label}
           <input type="text" inputmode="url" class="aip-mov-input" value="${escapeHtml(link)}"
-                 placeholder="Paste the link to your evidence (https://\u2026)" autocomplete="off" spellcheck="false"
+                 placeholder="Paste your MOV link here (required)" autocomplete="off" spellcheck="false"
                  aria-label="MOV link for this program/project" />
           <button type="button" class="aip-mov-btn aip-mov-btn--primary aip-mov-save" ${link ? "" : "disabled"}>${link ? "Save" : "Attach"}</button>
           ${link ? '<button type="button" class="aip-mov-btn aip-mov-cancel">Cancel</button>' : ""}
@@ -177,59 +227,123 @@
              <button type="button" class="aip-mov-icon aip-mov-edit" aria-label="Edit MOV link" title="Edit link"><i class="ti ti-pencil" aria-hidden="true"></i></button>
              <button type="button" class="aip-mov-icon aip-mov-icon--danger aip-mov-remove" aria-label="Remove MOV link" title="Remove link"><i class="ti ti-trash" aria-hidden="true"></i></button>
            </span>`;
-    return `<div class="aip-mov">${label}${tile}${actions}</div>`;
+    return `<div class="aip-mov">${tile}${actions}</div>`;
   }
 
   // ================= list (left) =================
+  // Not started / half done / complete, for the dot and the progress segment.
+  function projectState(p) {
+    const n = filledCount(p);
+    if (n === PART_TOTAL) return "done";
+    return n > 0 ? "partial" : "empty";
+  }
+
+  // One list row, built like an SBM dimension item (name + count, with a
+  // progress bar under them), plus the program/project's category line and a
+  // grip for reordering.
   function rowHtml(p, index) {
     const lines = titleLines(p);
     const cat = lines.length > 1 ? lines[0] : "";
     const name = lines.length > 1 ? lines[1] : lines[0] || "";
-    const ok = isComplete(p);
+    const n = filledCount(p);
+    const isDone = n === PART_TOTAL;
+    const still = isDone
+      ? ""
+      : ` title="Still needed: ${escapeHtml(missingParts(p).join(", "))}"`;
     return `
-      <div class="aip-row${p.id === state.selectedId ? " is-active" : ""}" role="listitem" data-id="${p.id}">
+      <div class="aip-row${p.id === state.selectedId ? " is-active" : ""}${isDone ? " is-complete" : ""}" role="listitem" data-id="${p.id}">
+        <button type="button" class="aip-row-main" aria-current="${p.id === state.selectedId}">
+          <span class="aip-row-top">
+            <span class="aip-row-text">
+              ${cat ? `<span class="aip-row-cat">${escapeHtml(cat)}</span>` : ""}
+              <span class="aip-row-name${name ? "" : " is-empty"}">${name ? escapeHtml(name) : "Untitled program/project"}</span>
+            </span>
+            <span class="aip-row-count"${still}>${isDone ? '<i class="ti ti-circle-check-filled" aria-hidden="true"></i>' : ""}${n}/${PART_TOTAL}</span>
+          </span>
+          <span class="aip-row-bar" aria-hidden="true"><span style="width:${(n / PART_TOTAL) * 100}%"></span></span>
+        </button>
         <button type="button" class="aip-grip" aria-label="Reorder program/project ${index + 1}. Drag, or press the up and down arrow keys."
                 title="Drag to reorder"><i class="ti ti-grip-vertical" aria-hidden="true"></i></button>
-        <span class="aip-row-no">${index + 1}</span>
-        <button type="button" class="aip-row-main" aria-current="${p.id === state.selectedId}">
-          ${cat ? `<span class="aip-row-cat">${escapeHtml(cat)}</span>` : ""}
-          <span class="aip-row-name${name ? "" : " is-empty"}">${name ? escapeHtml(name) : "Untitled program/project"}</span>
-        </button>
-        <span class="aip-dot ${ok ? "is-ok" : "is-warn"}" title="${ok ? "MOV link attached" : p.movLink ? "Add a title" : "MOV link required"}"></span>
       </div>`;
   }
 
-  function renderCount() {
+  // Overall progress panel: one segment per entry (a single bar when there
+  // are too many for readable segments).
+  const SEG_MAX = 12;
+  function renderProgress() {
     const total = state.projects.length;
     const done = state.projects.filter(isComplete).length;
-    countEl.textContent = total
-      ? `${done} of ${total} complete (title + MOV link)`
-      : "No program/projects yet";
+    const complete = total > 0 && done === total;
+    progressCountEl.classList.toggle("is-complete", complete);
+    progressCountEl.innerHTML = total
+      ? `<strong>${done} of ${total}</strong><span>complete</span>`
+      : `<strong>0</strong><span>entries</span>`;
+    segsEl.setAttribute("aria-valuemax", String(total));
+    segsEl.setAttribute("aria-valuenow", String(done));
+    const bar = (pct, label) =>
+      `<div class="aip-seg aip-seg--static"><span class="aip-seg-bar"><span style="width:${pct}%"></span></span><span class="aip-seg-label">${label}</span></div>`;
+    if (total === 0) {
+      segsEl.innerHTML = bar(0, "No program/projects yet");
+    } else if (total > SEG_MAX) {
+      segsEl.innerHTML = bar(
+        (done / total) * 100,
+        `${done} of ${total} complete`,
+      );
+    } else {
+      segsEl.innerHTML = state.projects
+        .map((p, i) => {
+          const st = projectState(p);
+          const w = (filledCount(p) / PART_TOTAL) * 100;
+          const lines = titleLines(p);
+          const nm = lines.length > 1 ? lines[1] : lines[0] || "Untitled";
+          return `
+        <button type="button" class="aip-seg${p.id === state.selectedId ? " is-active" : ""}${st === "done" ? " is-complete" : ""}"
+                data-id="${p.id}" title="${escapeHtml(nm)}: ${filledCount(p)} of ${PART_TOTAL} filled">
+          <span class="aip-seg-bar"><span style="width:${w}%"></span></span>
+          <span class="aip-seg-label">${i + 1}</span>
+        </button>`;
+        })
+        .join("");
+    }
+    nextBtn.hidden = complete || total === 0;
+    doneBadge.hidden = !complete;
   }
 
   function renderList() {
     listEl.innerHTML = state.projects.map(rowHtml).join("");
-    renderCount();
+    renderProgress();
   }
 
   // ================= editor (right) =================
-  function fieldHtml(p, f) {
+  function fieldHtml(p, key) {
+    const f = FIELDS[key];
     return `
-      <label class="aip-fld${f.wide ? " aip-fld--wide" : ""}">
+      <label class="aip-fld">
         <span class="aip-fl">${f.label}</span>
-        <textarea rows="${f.rows}" data-field="${f.key}" style="min-height:calc(${f.rows} * 1.45em + 18px)">${escapeHtml(p[f.key])}</textarea>
+        <textarea rows="${f.rows}" data-field="${key}" placeholder="${escapeHtml(f.hint)}" style="min-height:calc(${f.rows} * 1.45em + 18px)">${escapeHtml(p[key])}</textarea>
       </label>`;
   }
 
-  function sectionHtml(p, s) {
-    const wide = s.fields.length === 1 || s.fields[0].wide;
-    const inner = s.fields.map((f) => fieldHtml(p, f)).join("");
-    return `<div class="aip-sect">${s.name}</div>${
-      wide ? inner : `<div class="aip-fgrid">${inner}</div>`
-    }`;
+  // Title on top, then one block per stage. A stage with two fields shows them
+  // side by side at the same height, so the form reads left to right and top
+  // to bottom like the columns of the printed report.
+  function bodyHtml(p) {
+    return `
+      <div class="aip-ed-body">
+        <div class="aip-ed-top">${fieldHtml(p, "title")}</div>
+        ${STAGES.map(
+          (s) => `
+          <section class="aip-stage">
+            <div class="aip-stage-h"><h4>${s.name}</h4><span>${s.note}</span></div>
+            <div class="aip-stage-grid${s.keys.length > 1 ? " aip-duo" : ""}">
+              ${s.keys.map((k) => fieldHtml(p, k)).join("")}
+            </div>
+          </section>`,
+        ).join("")}
+      </div>`;
   }
 
-  // Pinned banner at the top of the editor: number badge, title (first line
+  // Banner at the top of the editor: number badge, title (first line
   // small above, second line large, like the list), status chip, Delete.
   function headParts(p) {
     const lines = titleLines(p);
@@ -239,29 +353,24 @@
     };
   }
 
-  function chipHtml(p) {
-    if (isComplete(p))
-      return `<span class="aip-chip is-ok"><i class="ti ti-circle-check" aria-hidden="true"></i> MOV link attached</span>`;
-    return `<span class="aip-chip is-warn"><i class="ti ti-alert-circle" aria-hidden="true"></i> ${
-      p.movLink ? "Add a title" : "MOV link needed"
-    }</span>`;
-  }
-
   function headHtml(p) {
     const { cat, name } = headParts(p);
-    const del = state.confirmDelete
-      ? `<span class="aip-ed-ask">Delete this program/project?</span>
+    const del = state.confirmClear
+      ? `<span class="aip-ed-ask">Clear this program/project?</span>
+         <button type="button" class="aip-ed-del aip-ed-del--confirm" data-act="clear-yes">Clear</button>
+         <button type="button" class="aip-ed-del" data-act="clear-no">Keep</button>`
+      : state.confirmDelete
+        ? `<span class="aip-ed-ask">Delete this program/project?</span>
          <button type="button" class="aip-ed-del aip-ed-del--confirm" data-act="delete-yes">Delete</button>
          <button type="button" class="aip-ed-del" data-act="delete-no">Keep</button>`
-      : `<button type="button" class="aip-ed-del" data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> Delete</button>`;
+        : `<button type="button" class="aip-ed-del" data-act="clear"><i class="ti ti-eraser" aria-hidden="true"></i> Clear fields</button>
+         <button type="button" class="aip-ed-del" data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> Delete</button>`;
     return `
       <div class="aip-ed-head" id="aip-ed-head">
-        <span class="aip-ed-badge" id="aip-ed-badge" title="Position in the report">${state.projects.indexOf(p) + 1}</span>
         <span class="aip-ed-title">
           <span class="aip-ed-cat" id="aip-ed-cat">${escapeHtml(cat)}</span>
           <span class="aip-ed-name${name ? "" : " is-empty"}" id="aip-ed-name">${name ? escapeHtml(name) : "Untitled program/project"}</span>
         </span>
-        <span id="aip-ed-chip">${chipHtml(p)}</span>
         <span class="aip-ed-actions">${del}</span>
       </div>`;
   }
@@ -275,7 +384,6 @@
     const nameEl = el("aip-ed-name");
     nameEl.textContent = name || "Untitled program/project";
     nameEl.classList.toggle("is-empty", !name);
-    el("aip-ed-chip").innerHTML = chipHtml(p);
   }
 
   function renderEditor() {
@@ -291,7 +399,7 @@
     }
     editorEl.innerHTML = `
       ${headHtml(p)}
-      ${SECTIONS.map((s) => sectionHtml(p, s)).join("")}
+      ${bodyHtml(p)}
       ${movHtml(p)}`;
     editorEl.querySelectorAll("textarea").forEach(autosize);
   }
@@ -307,8 +415,16 @@
   // Not user-resizable: each box starts at its default height (its min-height,
   // set from `rows`) and grows only when the text needs more room.
   function autosize(ta) {
-    ta.style.height = "auto";
-    ta.style.height = ta.scrollHeight + 2 + "px"; // +2 = the 1px borders
+    const duo = ta.closest(".aip-duo");
+    const boxes = duo ? Array.from(duo.querySelectorAll("textarea")) : [ta];
+    // Side-by-side boxes share the taller height so their edges line up.
+    const h = Math.max(
+      ...boxes.map((b) => {
+        b.style.height = "auto";
+        return b.scrollHeight + 2; // +2 = the 1px borders
+      }),
+    );
+    boxes.forEach((b) => (b.style.height = h + "px"));
   }
   window.addEventListener("resize", () =>
     editorEl.querySelectorAll("textarea").forEach(autosize),
@@ -318,6 +434,7 @@
     state.selectedId = id;
     state.movMode = null;
     state.confirmDelete = false;
+    state.confirmClear = false;
     renderList();
     renderEditor();
     if (focusTitle) {
@@ -362,10 +479,13 @@
     if (ta) {
       const p = selected();
       if (!p) return;
+      const before = filledCount(p);
       p[ta.dataset.field] = ta.value;
       autosize(ta);
       scheduleSave(p.id, ta.dataset.field);
-      if (ta.dataset.field === "title") {
+      // The list, progress and chip follow what is filled in, so refresh them
+      // when the title text changes or a field goes from empty to filled.
+      if (ta.dataset.field === "title" || filledCount(p) !== before) {
         renderList();
         refreshHead();
       }
@@ -495,16 +615,28 @@
     const what = act.dataset.act;
     if (what === "delete") {
       state.confirmDelete = true;
+      state.confirmClear = false;
       renderEditor();
       const keep = editorEl.querySelector('[data-act="delete-no"]');
       if (keep) keep.focus();
     } else if (what === "delete-no") {
       state.confirmDelete = false;
+      state.confirmClear = false;
       renderEditor();
       const del = editorEl.querySelector('[data-act="delete"]');
       if (del) del.focus();
     } else if (what === "delete-yes") {
       await deleteProject(p);
+    } else if (what === "clear" || what === "clear-no") {
+      state.confirmClear = what === "clear";
+      state.confirmDelete = false;
+      renderEditor();
+      const next = editorEl.querySelector(
+        what === "clear" ? '[data-act="clear-no"]' : '[data-act="clear"]',
+      );
+      if (next) next.focus();
+    } else if (what === "clear-yes") {
+      await clearProject(p);
     }
   });
 
@@ -544,17 +676,71 @@
       state.selectedId = next ? next.id : null;
       state.movMode = null;
       state.confirmDelete = false;
+      state.confirmClear = false;
       renderList();
       renderEditor();
       setStatus("");
     } catch (err) {
       state.confirmDelete = false;
+      state.confirmClear = false;
+      renderEditor();
+      setStatus(err.message);
+    }
+  }
+
+  // Empties every field and the MOV link of one program/project. The item
+  // stays in the list, in the same place (Delete removes it).
+  async function clearProject(p) {
+    Object.keys(saveTimers).forEach((k) => {
+      if (k.startsWith(p.id + ":")) {
+        clearTimeout(saveTimers[k]);
+        delete saveTimers[k];
+      }
+    });
+    const blank = {
+      title: "",
+      objective: "",
+      target: "",
+      accomplishment: "",
+      gainGap: "",
+      recommendation: "",
+      movLink: "",
+    };
+    try {
+      await apiCall("POST", "/aip/project/" + p.id, blank);
+      Object.assign(p, blank);
+      state.movMode = null;
+      state.confirmClear = false;
+      renderList();
+      renderEditor();
+      setStatus("");
+    } catch (err) {
+      state.confirmClear = false;
       renderEditor();
       setStatus(err.message);
     }
   }
 
   el("aip-add-btn").addEventListener("click", addProject);
+
+  segsEl.addEventListener("click", (e) => {
+    const seg = e.target.closest(".aip-seg[data-id]");
+    if (seg) select(Number(seg.dataset.id));
+  });
+
+  // Go to the next entry that isn't finished yet (any part still empty).
+  nextBtn.addEventListener("click", () => {
+    const n = state.projects.length;
+    if (!n) return;
+    const start = state.projects.findIndex((p) => p.id === state.selectedId);
+    for (let k = 1; k <= n; k++) {
+      const p = state.projects[(start + k + n) % n];
+      if (!isComplete(p)) {
+        select(p.id);
+        return;
+      }
+    }
+  });
 
   // ================= reorder: drag and drop, or arrow keys on the grip =================
   async function saveOrder(previous) {
@@ -676,7 +862,10 @@
     if (e.target === overlay) closeReset();
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeReset();
+    if (e.key === "Escape") {
+      closeReset();
+      closeDrawer();
+    }
   });
   el("aip-reset-confirm-confirm").addEventListener("click", async () => {
     try {
@@ -689,6 +878,7 @@
       state.selectedId = null;
       state.movMode = null;
       state.confirmDelete = false;
+      state.confirmClear = false;
       closeReset();
       renderList();
       renderEditor();
@@ -704,7 +894,7 @@
   // request) prints what is on screen.
   const info = {};
   const infoInputs = Array.from(document.querySelectorAll("[data-info]"));
-  const schoolEl = el("aip-school");
+  const schoolOpenBtn = el("aip-school-open");
   const schoolSumEl = el("aip-school-sum");
   const schoolStatusEl = el("aip-school-status");
   const infoTimers = {};
@@ -722,6 +912,9 @@
       ? "Not filled in yet"
       : bits.join(" \u00b7 ") + (missing ? " (incomplete)" : "");
     schoolSumEl.classList.toggle("is-incomplete", missing);
+    schoolOpenBtn.textContent = bits.length
+      ? "Edit school details"
+      : "Add school details";
   }
 
   function setSchoolStatus(message) {
@@ -789,10 +982,53 @@
       input.value = input.dataset.upper ? v.toUpperCase() : v;
     });
     syncInfo();
-    // Open the panel while the three main fields are incomplete, so it isn't overlooked.
-    if (!info.schoolName || !info.schoolHead || !info.schoolYear)
-      schoolEl.open = true;
   }
+
+  // ---- School and print details drawer ----
+  const drawerOverlay = el("aip-drawer-overlay");
+  const drawerEl = el("aip-drawer");
+  let drawerReturnFocus = null;
+
+  function openDrawer(sectionId) {
+    drawerReturnFocus = document.activeElement;
+    drawerOverlay.classList.add("visible");
+    const sec = el(sectionId);
+    const first = sec && sec.querySelector("input");
+    if (sec) sec.scrollIntoView({ block: "start" });
+    if (first) first.focus();
+  }
+
+  function closeDrawer() {
+    if (!drawerOverlay.classList.contains("visible")) return;
+    flushInfo(); // save anything still waiting on its typing delay
+    drawerOverlay.classList.remove("visible");
+    if (drawerReturnFocus && drawerReturnFocus.focus) drawerReturnFocus.focus();
+  }
+
+  el("aip-school-open").addEventListener("click", () =>
+    openDrawer("aip-sec-school"),
+  );
+  el("aip-drawer-close").addEventListener("click", closeDrawer);
+  drawerOverlay.addEventListener("mousedown", (e) => {
+    if (e.target === drawerOverlay) closeDrawer();
+  });
+  // Keep Tab inside the open drawer.
+  drawerEl.addEventListener("keydown", (e) => {
+    if (e.key !== "Tab") return;
+    const f = Array.from(drawerEl.querySelectorAll("input, button")).filter(
+      (x) => !x.disabled,
+    );
+    if (!f.length) return;
+    const first = f[0];
+    const last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
 
   // ================= Print copy (layout of the school's AIP report) =================
   const printRoot = el("aip-print-root");

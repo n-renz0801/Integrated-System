@@ -1,169 +1,92 @@
-{% extends "base.html" %} {% block title %}Home - Project-MEASURE-School{% endblock %} {%
-block extra_css %}
+{% extends "base.html" %} {% block title %}Home - Project-MEASURE-School{%
+endblock %} {% block extra_css %}
 <link
   rel="stylesheet"
   href="{{ url_for('static', filename='css/home.css') }}"
 />
-<style>
-  /* Four report cards, always on a single row. */
-  .irc-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 20px;
-  }
-  .irc-cards-grid > .carousel-card {
-    width: auto;
-    min-width: 0;
-    max-width: none;
-    margin: 0;
-  }
-  /* Masthead text hierarchy, stacked top to bottom:
-     1. .dashboard-title  2. .dashboard-subtitle  3. .dashboard-edition.
-     A plain vertical stack replaces the old two-column grid (which held the
-     preparer fields), so the lines can never share a cell or overlap. */
-  .masthead-row-grid.masthead-titles {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 4px;
-  }
-  .masthead-titles > .dashboard-title,
-  .masthead-titles > .dashboard-subtitle {
-    grid-row: auto;
-    grid-column: auto;
-    position: static;
-    align-self: auto;
-    margin: 0;
-  }
-  /* Level 3: smaller and lighter than the subtitle. */
-  .masthead-titles > .dashboard-edition {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    opacity: 0.85;
-  }
-  /* "DASHBOARD" is a longer label than the other card codes. */
-  .irc-cards-grid .carousel-card__code {
-    overflow-wrap: anywhere;
-  }
-  @media (max-width: 700px) {
-    .irc-cards-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-</style>
 {% endblock %} {% block content %}
-<div class="dashboard-header">
-  <!-- Row 1: Org masthead -->
-  <div class="header-admin-bar">
-    <div class="masthead-org">
-      <span class="org-name">Schools Division Office of Antipolo City</span>
-      <span class="org-sgod"
-        >School Governance and Operations Division (SGOD)</span
-      >
-    </div>
+<!-- ===== MASTHEAD: organization line, then logo + title block ===== -->
+<section class="hm-masthead">
+  <div class="hm-org">
+    <p class="hm-org__name">Schools Division Office of Antipolo City</p>
+    <p class="hm-org__unit">School Governance and Operations Division (SGOD)</p>
   </div>
 
-  <!-- Row 2: Title row -->
-  <div class="header-title-bar">
-    <div class="header-title-bar-main">
-      <img
-        src="{{ url_for('static', filename='images/project_measure.png') }}"
-        alt="Project MEASURE Logo"
-        class="masthead-irc-logo"
-      />
-      <div class="masthead-divider"></div>
-
-      <!-- Title block: title, subtitle, then the edition line
-           (see .masthead-row-grid, home.css). -->
-      <div class="masthead-row-grid masthead-titles">
-        <h1 class="dashboard-title">Project MEASURE</h1>
-
-        <p class="dashboard-subtitle">
-          Monitoring and Evaluation of Systematic Updates & Results
-        </p>
-
-        <p class="dashboard-subtitle dashboard-edition">(School Edition)</p>
-      </div>
+  <div class="hm-brand">
+    <img
+      src="{{ url_for('static', filename='images/project_measure.png') }}"
+      alt="Project MEASURE Logo"
+      class="hm-brand__logo"
+    />
+    <div class="hm-brand__rule" aria-hidden="true"></div>
+    <div class="hm-brand__text">
+      <h1 class="hm-title">Project MEASURE</h1>
+      <p class="hm-subtitle">
+        Monitoring and Evaluation of Systematic Updates &amp; Results
+      </p>
+      <p class="hm-edition">School Edition</p>
     </div>
   </div>
-</div>
+</section>
 
-<p class="page-instruction">
-  Select a card below or from the navigation bar above to get started.
-</p>
-
-<div class="content__body">
-  <div class="irc-cards-grid">
-    <!-- Card 1: EOPCRF -- the only live report, split into its 4 parts. -->
-    <div class="carousel-card card-color-navy">
-      <div class="carousel-card-body">
-        <p class="carousel-card__code">OPCRF</p>
-        <p class="carousel-card__label">&mdash;</p>
-      </div>
-      <div class="carousel-card__rows">
+<!-- ===== REPORTS ===== -->
+<section class="hm-reports" aria-label="Reports">
+  <div class="hm-grid">
+    <!-- OPCRF: same card anatomy as the others; the footer row holds the parts -->
+    <article class="hm-card hm-card--opcrf">
+      <i class="ti ti-clipboard-check hm-card__icon" aria-hidden="true"></i>
+      <h2 class="hm-card__title">OPCRF</h2>
+      <p class="hm-card__label">
+        Office Performance Commitment and Review Form
+      </p>
+      <div class="hm-card__parts" role="group" aria-label="OPCRF parts">
         {% for tab in tabs %}
         <a
           href="{{ url_for('view_tab', tab_id=tab.id) }}"
-          class="carousel-card__row"
+          class="hm-part"
           title="{{ tab.desc }}"
         >
-          <span>{{ tab.part }}</span>
-          <i class="ti ti-chevron-right" aria-hidden="true"></i>
+          {{ tab.part }}
         </a>
         {% endfor %}
       </div>
-    </div>
+    </article>
 
-    <!-- Card 2: SBM -- a single page, so the whole card is the link. -->
-    <div class="carousel-card card-color-teal">
-      <div class="carousel-card-body">
-        <p class="carousel-card__code">SBM</p>
-        <p class="carousel-card__label">
-          School-Based Management (SBM) Self-Assessment Checklist
-        </p>
-      </div>
-      <a
-        href="{{ url_for('sbm') }}"
-        class="carousel-card__link"
-        aria-label="Open SBM Self-Assessment Checklist"
-      ></a>
-      <i
-        class="ti ti-chevron-right carousel-card__arrow"
-        aria-hidden="true"
-      ></i>
-    </div>
+    <!-- SBM: single page, whole card is the link -->
+    <a href="{{ url_for('sbm') }}" class="hm-card hm-card--link hm-card--teal">
+      <i class="ti ti-building-community hm-card__icon" aria-hidden="true"></i>
+      <h2 class="hm-card__title">SBM</h2>
+      <p class="hm-card__label">
+        School-Based Management (SBM) Self-Assessment Checklist
+      </p>
+      <span class="hm-card__cta">
+        Open <i class="ti ti-arrow-right" aria-hidden="true"></i>
+      </span>
+    </a>
 
-    <!-- Card 3: AIP -- a single page, so the whole card is the link. -->
-    <div class="carousel-card card-color-violet">
-      <div class="carousel-card-body">
-        <p class="carousel-card__code">AIP</p>
-        <p class="carousel-card__label">
-          School Annual Implementation Plan (AIP) Accomplishment Report
-        </p>
-      </div>
-      <a
-        href="{{ url_for('aip') }}"
-        class="carousel-card__link"
-        aria-label="Open School Annual Implementation Plan (AIP) Accomplishment Report"
-      ></a>
-      <i
-        class="ti ti-chevron-right carousel-card__arrow"
-        aria-hidden="true"
-      ></i>
-    </div>
+    <!-- AIP: single page, whole card is the link -->
+    <a
+      href="{{ url_for('aip') }}"
+      class="hm-card hm-card--link hm-card--violet"
+    >
+      <i class="ti ti-calendar-stats hm-card__icon" aria-hidden="true"></i>
+      <h2 class="hm-card__title">AIP</h2>
+      <p class="hm-card__label">
+        School Annual Implementation Plan (AIP) Accomplishment Report
+      </p>
+      <span class="hm-card__cta">
+        Open <i class="ti ti-arrow-right" aria-hidden="true"></i>
+      </span>
+    </a>
 
-    <!-- Card 4: placeholder for a future report card, not yet built. -->
-    <div class="carousel-card carousel-card--ghost" aria-disabled="true">
-      <div class="carousel-card-body">
-        <p class="carousel-card__code carousel-card__code--ghost">DASHBOARD</p>
-        <p class="carousel-card__label carousel-card__label--ghost">&mdash;</p>
-      </div>
-      <span class="carousel-card__soon-cta">
+    <!-- Placeholder for a future report -->
+    <div class="hm-card hm-card--ghost" aria-disabled="true">
+      <i class="ti ti-chart-bar hm-card__icon" aria-hidden="true"></i>
+      <h2 class="hm-card__title">Dashboard</h2>
+      <span class="hm-soon">
         <i class="ti ti-hourglass-high" aria-hidden="true"></i> Coming Soon
       </span>
     </div>
   </div>
-</div>
+</section>
 {% endblock %}

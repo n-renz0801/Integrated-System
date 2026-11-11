@@ -1,9 +1,12 @@
 (function () {
   const workspaceEl = document.getElementById("eopcrf2-workspace");
   if (!workspaceEl) return;
-  const navEl = document.getElementById("eopcrf2-nav");
-  const detailEl = document.getElementById("eopcrf2-detail");
-  const partTabsEl = document.getElementById("eopcrf2-part-tabs");
+  const listEl = document.getElementById("eopcrf2-list");
+  const editorEl = document.getElementById("eopcrf2-editor");
+  const progressCountEl = document.getElementById("eopcrf2-progress-count");
+  const segsEl = document.getElementById("eopcrf2-segments");
+  const nextBtn = document.getElementById("eopcrf2-next-incomplete");
+  const doneBadge = document.getElementById("eopcrf2-done-badge");
 
   // Each part's total score is its average x 0.025 (see the form's
   // "Part II-A / II-B Total Score: Weighted Average (Average x 0.025)").
@@ -161,9 +164,9 @@
 
   const YEAR = new Date().getFullYear();
 
-  // View state: which part (II-A / II-B) and which competency is open.
-  let activePart = "leadership";
+  // View state: which competency is open.
   const sel = { subKey: null };
+  let confirmClear = false; // "Clear competency" is waiting for Clear / Keep
   const PART_SHORT = {
     leadership: { label: "Part II-A", name: "Leadership Competencies" },
     cbc: { label: "Part II-B", name: "Core Behavioural Competencies" },
@@ -191,6 +194,8 @@
     } catch (err) {
       console.error("Failed to load EOPCRF2 data:", err);
     }
+    const firstOpen = ORDER.find((o) => !subProgress(o.sub.key).complete);
+    if (firstOpen) sel.subKey = firstOpen.sub.key;
     render();
   }
 
@@ -253,17 +258,6 @@
   });
 
   // ================= Helpers =================
-  function fmtNum(n) {
-    if (n === null || n === undefined || isNaN(n)) return "—";
-    return (Math.round(n * 100) / 100).toFixed(2);
-  }
-
-  // Weighted scores are small (avg x 0.025), so keep 4 decimals.
-  function fmtWeighted(n) {
-    if (n === null || n === undefined || isNaN(n)) return "—";
-    return n.toFixed(4);
-  }
-
   function escapeHtml(str) {
     const div = document.createElement("div");
     div.textContent = str == null ? "" : str;
@@ -278,14 +272,6 @@
     const rated = values.filter((v) => v !== null && v !== undefined);
     if (rated.length === 0) return null;
     return rated.reduce((sum, v) => sum + v, 0) / rated.length;
-  }
-
-  // Closest 1-5 adjectival rating for a numeric average, e.g. 4.3 ->
-  // "Consistently Demonstrated". Empty when nothing is rated.
-  function ratingDescription(avg) {
-    if (avg === null || avg === undefined || isNaN(avg)) return "";
-    const rounded = Math.min(5, Math.max(1, Math.round(avg)));
-    return RATING_LABELS[rounded];
   }
 
   function subsectionAverage(subKey) {
@@ -303,255 +289,195 @@
     return avg === null ? null : avg * WEIGHT;
   }
 
-  // ================= Icons / progress ring =================
-  // Ring on each competency in the sidebar: arc = rated / total indicators.
-  const RING_R = 8;
-  const RING_C = 2 * Math.PI * RING_R;
-  function progressRing(done, total) {
-    const track = `<circle class="eopcrf2-ring-track" cx="12" cy="12" r="${RING_R}"></circle>`;
-    if (total > 0 && done === total) {
-      return `<svg class="eopcrf2-ring" viewBox="0 0 24 24" aria-hidden="true"><circle class="eopcrf2-ring-fill" cx="12" cy="12" r="10.5"></circle><path class="eopcrf2-ring-check" d="M7.8 12.4l3 3 5.4-6"></path></svg>`;
-    }
-    const frac = total ? done / total : 0;
-    const arc =
-      done > 0
-        ? `<circle class="eopcrf2-ring-arc" cx="12" cy="12" r="${RING_R}" stroke-dasharray="${(RING_C * frac).toFixed(2)} ${RING_C.toFixed(2)}" transform="rotate(-90 12 12)"></circle>`
-        : "";
-    return `<svg class="eopcrf2-ring" viewBox="0 0 24 24" aria-hidden="true">${track}${arc}</svg>`;
-  }
+  // ================= Competency order / progress =================
+  // Flat order of the 9 competencies; code is A1..A3 (II-A), B1..B6 (II-B).
+  const ORDER = [];
+  DATA.forEach((section) => {
+    section.subsections.forEach((sub, i) => {
+      ORDER.push({
+        section,
+        sub,
+        code: (section.key === "leadership" ? "A" : "B") + (i + 1),
+      });
+    });
+  });
 
   function subProgress(subKey) {
     const list = ratings[subKey];
     const done = list.filter((v) => v !== null).length;
-    return {
-      done,
-      total: list.length,
-      state: done === 0 ? "none" : done === list.length ? "done" : "partial",
-    };
+    return { done, total: list.length, complete: done === list.length };
   }
-  const PROGRESS_LABELS = {
-    none: "Not started",
-    partial: "In progress",
-    done: "Complete",
-  };
 
-  function currentSection() {
-    return DATA.find((s) => s.key === activePart);
+  function firstIncompleteAfter(subKey) {
+    const start = ORDER.findIndex((o) => o.sub.key === subKey);
+    for (let step = 1; step <= ORDER.length; step++) {
+      const o = ORDER[(start + step) % ORDER.length];
+      if (!subProgress(o.sub.key).complete) return o.sub.key;
+    }
+    return null;
   }
 
   function ensureSelection() {
-    const section = currentSection();
-    if (section.subsections.some((sub) => sub.key === sel.subKey)) return;
-    sel.subKey = section.subsections[0].key;
+    if (ORDER.some((o) => o.sub.key === sel.subKey)) return;
+    sel.subKey = ORDER[0].sub.key;
   }
 
-  // ================= Render: part tabs =================
-  function renderPartTabs() {
-    let totalWeighted = null;
-    const cards = DATA.map((section) => {
-      const meta = PART_SHORT[section.key];
-      const avg = sectionAverage(section);
-      const w = weightedScore(avg);
-      if (w !== null) totalWeighted = (totalWeighted || 0) + w;
-      const active = section.key === activePart;
+  // ================= Render: progress =================
+  function renderProgress() {
+    const total = ORDER.length;
+    const done = ORDER.filter((o) => subProgress(o.sub.key).complete).length;
+    const complete = done === total;
+    progressCountEl.classList.toggle("is-complete", complete);
+    progressCountEl.innerHTML = `<strong>${done} of ${total}</strong><span>complete</span>`;
+    segsEl.setAttribute("aria-valuemax", String(total));
+    segsEl.setAttribute("aria-valuenow", String(done));
+    segsEl.innerHTML = ORDER.map((o) => {
+      const p = subProgress(o.sub.key);
       return `
-        <button type="button" class="eopcrf2-part-tab${active ? " is-active" : ""}" data-part="${section.key}" role="tab" aria-selected="${active}">
-          <span class="eopcrf2-part-tab-label">${meta.label}</span>
-          <span class="eopcrf2-part-tab-name">${escapeHtml(meta.name)}</span>
-          <span class="eopcrf2-part-tab-stats">
-            <span class="eopcrf2-part-tab-stat" title="Average of the rated competencies">
-              <span class="eopcrf2-part-tab-k">Average</span>
-              <span class="eopcrf2-part-tab-v${avg === null ? " is-empty" : ""}">${fmtNum(avg)}</span>
-            </span>
-            <span class="eopcrf2-part-tab-stat" title="Average x ${WEIGHT}">
-              <span class="eopcrf2-part-tab-k">Weighted</span>
-              <span class="eopcrf2-part-tab-v${w === null ? " is-empty" : ""}">${fmtWeighted(w)}</span>
-            </span>
-          </span>
-          <span class="eopcrf2-part-tab-desc">${escapeHtml(ratingDescription(avg))}</span>
+        <button type="button" class="eopcrf2-seg${o.sub.key === sel.subKey ? " is-active" : ""}${p.complete ? " is-complete" : ""}"
+                data-sub="${o.sub.key}" title="${escapeAttr(o.sub.title)}: ${p.done} of ${p.total} rated">
+          <span class="eopcrf2-seg-bar"><span style="width:${(p.done / p.total) * 100}%"></span></span>
+          <span class="eopcrf2-seg-label">${o.code}</span>
         </button>`;
     }).join("");
-
-    // Total card (not clickable): sum of the parts that have been rated.
-    const avgs = DATA.map((s) => sectionAverage(s)).filter((v) => v !== null);
-    const overallAvg = average(avgs);
-    const total = `
-      <div class="eopcrf2-part-total" role="status">
-        <span class="eopcrf2-part-tab-label">Overall</span>
-        <span class="eopcrf2-part-tab-name">Total Weighted Score</span>
-        <span class="eopcrf2-part-tab-stats">
-          <span class="eopcrf2-part-tab-stat">
-            <span class="eopcrf2-part-tab-k">Score</span>
-            <span class="eopcrf2-part-tab-v${totalWeighted === null ? " is-empty" : ""}">${fmtWeighted(totalWeighted)}</span>
-          </span>
-          <span class="eopcrf2-part-tab-stat">
-            <span class="eopcrf2-part-tab-k">Avg</span>
-            <span class="eopcrf2-part-tab-v${overallAvg === null ? " is-empty" : ""}">${fmtNum(overallAvg)}</span>
-          </span>
-        </span>
-        <span class="eopcrf2-part-tab-desc">${escapeHtml(ratingDescription(overallAvg))}</span>
-      </div>`;
-    partTabsEl.innerHTML = cards + total;
+    nextBtn.hidden = complete;
+    doneBadge.hidden = !complete;
   }
 
-  // ================= Render: sidebar =================
-  function renderNav() {
-    const section = currentSection();
-    const meta = PART_SHORT[section.key];
-    const secAvg = sectionAverage(section);
-
-    const items = section.subsections
-      .map((sub) => {
-        const prog = subProgress(sub.key);
-        const isSel = sub.key === sel.subKey;
-        const tip = `${PROGRESS_LABELS[prog.state]} (${prog.done}/${prog.total} rated)`;
-        return `
-          <button type="button" class="eopcrf2-nav-item${isSel ? " is-selected" : ""}" data-action="select-sub" data-sub="${sub.key}" title="${escapeAttr(sub.title)}"${isSel ? ' aria-current="true"' : ""}>
-            <span class="eopcrf2-nav-main">
-              <span class="eopcrf2-nav-progress" title="${escapeAttr(tip)}" role="img" aria-label="${escapeAttr(tip)}">${progressRing(prog.done, prog.total)}</span>
-              <span class="eopcrf2-nav-code">${escapeHtml(sub.title)}</span>
-            </span>
-            <span class="eopcrf2-nav-avg" title="Competency average">${fmtNum(subsectionAverage(sub.key))}</span>
-          </button>`;
-      })
-      .join("");
-
-    navEl.innerHTML = `
-      <div class="eopcrf2-nav-group">
-        <div class="eopcrf2-nav-group-head">
-          <span class="eopcrf2-nav-group-label">${meta.label}</span>
-          <div class="eopcrf2-nav-group-row">
-            <span class="eopcrf2-nav-group-title">${escapeHtml(meta.name)}</span>
-            <span class="eopcrf2-nav-group-weight" title="Part average">${fmtNum(secAvg)}</span>
-          </div>
-        </div>
-        ${items}
-      </div>`;
+  // ================= Render: list =================
+  function renderList() {
+    let html = "";
+    DATA.forEach((section) => {
+      const meta = PART_SHORT[section.key];
+      const items = ORDER.filter((o) => o.section === section);
+      html += `
+        <div class="eopcrf2-list-group">
+          <span>${meta.label} &middot; ${escapeHtml(meta.name)}</span>
+        </div>`;
+      items.forEach((o) => {
+        const p = subProgress(o.sub.key);
+        const active = o.sub.key === sel.subKey;
+        html += `
+          <div class="eopcrf2-row${active ? " is-active" : ""}${p.complete ? " is-complete" : ""}">
+            <button type="button" class="eopcrf2-row-main" data-action="select-sub" data-sub="${o.sub.key}"${active ? ' aria-current="true"' : ""}>
+              <span class="eopcrf2-row-top">
+                <span class="eopcrf2-row-text">
+                  <span class="eopcrf2-row-name">${escapeHtml(o.sub.title)}</span>
+                </span>
+                <span class="eopcrf2-row-count">${p.done}/${p.total}</span>
+              </span>
+              <span class="eopcrf2-row-bar"><span style="width:${(p.done / p.total) * 100}%"></span></span>
+            </button>
+          </div>`;
+      });
+    });
+    listEl.innerHTML = html;
   }
 
-  // ================= Render: detail panel =================
-  function renderDetail() {
-    const section = currentSection();
+  // ================= Render: editor =================
+  function renderEditor() {
+    const idx = ORDER.findIndex((o) => o.sub.key === sel.subKey);
+    const { section, sub } = ORDER[idx];
     const meta = PART_SHORT[section.key];
-    const subs = section.subsections;
-    const idx = subs.findIndex((sub) => sub.key === sel.subKey);
-    const sub = subs[idx];
-    const secAvg = sectionAverage(section);
+    const actions = confirmClear
+      ? `<span class="eopcrf2-ed-ask">Clear this competency?</span>
+         <button type="button" class="eopcrf2-ed-del eopcrf2-ed-del--confirm" data-act="clear-yes">Clear</button>
+         <button type="button" class="eopcrf2-ed-del" data-act="clear-no">Keep</button>`
+      : `<button type="button" class="eopcrf2-ed-del" data-act="clear"><i class="ti ti-eraser" aria-hidden="true"></i> Clear competency</button>`;
 
-    const rowsHtml = sub.criteria
-      .map((text, i) => renderCriterionRow(sub.key, i, text))
-      .join("");
-    const prev = subs[idx - 1];
-    const next = subs[idx + 1];
-
-    detailEl.innerHTML = `
-      <div class="eopcrf2-intro">
-        <div class="eopcrf2-intro-head">
-          <div>
-            <span class="eopcrf2-label">${meta.label}</span>
-            <h3>${escapeHtml(meta.name)} (2.5%)</h3>
-          </div>
-          <span class="eopcrf2-intro-weighted" title="${escapeAttr(meta.label)} Total Score: Weighted Average (Average x ${WEIGHT})">
-            <span class="eopcrf2-label">Total score</span>
-            <strong>${fmtWeighted(weightedScore(secAvg))}</strong>
-          </span>
+    editorEl.innerHTML = `
+      <div class="eopcrf2-ed-head">
+        <div class="eopcrf2-ed-title">
+          <span class="eopcrf2-ed-cat">${meta.label} &middot; ${escapeHtml(meta.name)}</span>
+          <span class="eopcrf2-ed-name">${escapeHtml(sub.title)}</span>
         </div>
-        <p class="eopcrf2-intro-desc">${escapeHtml(section.description)}</p>
+        <span class="eopcrf2-ed-actions">${actions}</span>
       </div>
-
-      <section class="eopcrf2-subsection-card">
-        <div class="eopcrf2-subsection-header">
-          <div>
-            <span class="eopcrf2-label">Competency ${idx + 1} of ${subs.length}</span>
-            <h3>${escapeHtml(sub.title)}</h3>
-          </div>
-          <span class="eopcrf2-subsection-avg" title="Competency average">${fmtNum(subsectionAverage(sub.key))}</span>
+      <div class="eopcrf2-ed-body">
+        <p class="eopcrf2-part-note">${escapeHtml(section.description)}</p>
+        <div class="eopcrf2-crit-list">
+          ${sub.criteria.map((text, i) => renderCriterionRow(sub.key, i, text)).join("")}
         </div>
-        <div class="eopcrf2-criteria-list">${rowsHtml}</div>
-        <div class="eopcrf2-pager">
-          <button type="button" class="eopcrf2-pager-btn" data-action="select-sub" data-sub="${prev ? prev.key : ""}"${prev ? "" : " disabled"}>&larr; ${prev ? escapeHtml(prev.title) : "Previous"}</button>
-          <button type="button" class="eopcrf2-pager-btn" data-action="select-sub" data-sub="${next ? next.key : ""}"${next ? "" : " disabled"}>${next ? escapeHtml(next.title) : "Next"} &rarr;</button>
-        </div>
-      </section>`;
+      </div>`;
   }
-
-  // Short labels shown inside the rating buttons; the full adjectival rating
-  // is in each button's tooltip.
-  const SHORT_LABELS = {
-    5: "Role model",
-    4: "Consistent",
-    3: "Most times",
-    2: "Sometimes",
-    1: "Rarely",
-  };
 
   function renderCriterionRow(subKey, index, text) {
     const current = ratings[subKey][index];
-    const buttons = [5, 4, 3, 2, 1]
-      .map((r) => {
-        const selected = current === r ? " is-selected" : "";
-        return `<button type="button" class="eopcrf2-rate-btn eopcrf2-rate-btn--r${r}${selected}" data-sub="${subKey}" data-idx="${index}" data-rate="${r}" title="${r} — ${RATING_LABELS[r]}" aria-pressed="${current === r}"><b>${r}</b><small>${SHORT_LABELS[r]}</small></button>`;
-      })
+    const buttons = [1, 2, 3, 4, 5]
+      .map(
+        (r) =>
+          `<button type="button" class="eopcrf2-rate-btn${current === r ? " is-selected" : ""}" data-sub="${subKey}" data-idx="${index}" data-rate="${r}" title="${r} — ${RATING_LABELS[r]}" aria-pressed="${current === r}">${r}</button>`,
+      )
       .join("");
-
     return `
-      <div class="eopcrf2-criterion-row">
-        <span class="eopcrf2-criterion-num">${index + 1}</span>
-        <div class="eopcrf2-criterion-body">
-          <span class="eopcrf2-criterion-text">${escapeHtml(text)}</span>
+      <div class="eopcrf2-crit${current ? " is-rated" : ""}">
+        <span class="eopcrf2-crit-num">${index + 1}</span>
+        <span class="eopcrf2-crit-text">${escapeHtml(text)}</span>
+        <div class="eopcrf2-rate">
+          <div class="eopcrf2-rate-btns" role="group" aria-label="Rating for indicator ${index + 1}">${buttons}</div>
+          <span class="eopcrf2-rate-label">${current ? RATING_LABELS[current] : "Not rated"}</span>
         </div>
-        <div class="eopcrf2-rate-seg" role="group" aria-label="Rating for indicator ${index + 1}">${buttons}</div>
-      </div>
-    `;
+      </div>`;
   }
 
   // ================= Render: all =================
   function render() {
     ensureSelection();
-    renderPartTabs();
-    renderNav();
-    renderDetail();
+    renderProgress();
+    renderList();
+    renderEditor();
   }
 
   // ================= Events =================
-  partTabsEl.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-part]");
-    if (!btn || btn.dataset.part === activePart) return;
-    activePart = btn.dataset.part;
-    sel.subKey = null; // falls back to the first competency of that part
+  function selectSub(subKey, scroll) {
+    if (!subKey) return;
+    sel.subKey = subKey;
+    confirmClear = false;
     render();
+    if (scroll)
+      workspaceEl.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+
+  segsEl.addEventListener("click", (e) => {
+    const seg = e.target.closest(".eopcrf2-seg[data-sub]");
+    if (seg) selectSub(seg.dataset.sub, true);
   });
 
-  function handleSelectSub(e) {
+  nextBtn.addEventListener("click", () => {
+    selectSub(firstIncompleteAfter(sel.subKey), true);
+  });
+
+  listEl.addEventListener("click", (e) => {
     const btn = e.target.closest('[data-action="select-sub"]');
-    if (!btn || btn.disabled || !btn.dataset.sub) return;
-    sel.subKey = btn.dataset.sub;
-    render();
-    if (btn.closest("#eopcrf2-detail")) {
-      workspaceEl.scrollIntoView({ block: "start", behavior: "smooth" });
+    if (btn) selectSub(btn.dataset.sub, false);
+  });
+
+  editorEl.addEventListener("click", (e) => {
+    const rateBtn = e.target.closest(".eopcrf2-rate-btn");
+    if (rateBtn) {
+      const subKey = rateBtn.dataset.sub;
+      const idx = parseInt(rateBtn.dataset.idx, 10);
+      const rate = parseInt(rateBtn.dataset.rate, 10);
+      // Clicking the already-selected rating clears it; otherwise sets it.
+      const newValue = ratings[subKey][idx] === rate ? null : rate;
+      ratings[subKey][idx] = newValue;
+      confirmClear = false;
+      render();
+      saveEntry(subKey, idx, { rating: newValue });
+      return;
     }
-  }
-  navEl.addEventListener("click", handleSelectSub);
-
-  function handleRateClick(e) {
-    const btn = e.target.closest(".eopcrf2-rate-btn");
-    if (!btn) return;
-
-    const subKey = btn.dataset.sub;
-    const idx = parseInt(btn.dataset.idx, 10);
-    const rate = parseInt(btn.dataset.rate, 10);
-
-    // Clicking the already-selected rating clears it; otherwise sets it.
-    const newValue = ratings[subKey][idx] === rate ? null : rate;
-    ratings[subKey][idx] = newValue;
-
+    const act = e.target.closest("[data-act]");
+    if (!act) return;
+    const what = act.dataset.act;
+    if (what === "clear-yes") {
+      // Clears every indicator of the open competency (best-effort saves).
+      ratings[sel.subKey].forEach((value, idx) => {
+        if (value !== null) saveEntry(sel.subKey, idx, { rating: null });
+        ratings[sel.subKey][idx] = null;
+      });
+    }
+    confirmClear = what === "clear";
     render();
-    saveEntry(subKey, idx, { rating: newValue });
-  }
-
-  detailEl.addEventListener("click", (e) => {
-    handleRateClick(e);
-    handleSelectSub(e);
   });
 
   // ================= Print / Save as PDF =================

@@ -1262,6 +1262,30 @@ def reset_sbm_data():
     return jsonify({"reset": True, "year": year}), 200
 
 
+@app.route("/sbm/clear-section", methods=["POST"])
+def clear_sbm_section():
+    """Clears the degree, remarks and MOV link of the listed indicators for a year.
+
+    Body: { "year": 2026, "indicatorNos": [1, 2, 3, 4] }
+    sbm.js sends the indicator numbers of the dimension that is open. Rows are
+    removed, which is the same as an empty answer (see /sbm/data).
+    """
+    data = request.get_json(silent=True) or {}
+    year = data.get("year") or _current_year()
+    nums = data.get("indicatorNos")
+    if (
+        not isinstance(nums, list)
+        or not nums
+        or not all(isinstance(n, int) and not isinstance(n, bool) and 1 <= n <= SBM_INDICATOR_COUNT for n in nums)
+    ):
+        return jsonify({"error": "'indicatorNos' must be a list of valid indicator numbers"}), 400
+    SBMResponse.query.filter(
+        SBMResponse.year == year, SBMResponse.indicator_no.in_(nums)
+    ).delete(synchronize_session=False)
+    db.session.commit()
+    return jsonify({"cleared": True, "year": year, "indicatorNos": nums}), 200
+
+
 # ===========================================================================
 # AIP -- School Annual Implementation Plan accomplishment report
 # ===========================================================================

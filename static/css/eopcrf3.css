@@ -1,9 +1,31 @@
 /* EOPCRF3 - Part III: Summary of Ratings (read-only) */
 
+/* ---------- Header card (same design as the EOPCRF IV page) ---------- */
 .eopcrf3-header {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1.5px solid #e0e0e0;
+  color: #1c2530;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.eopcrf3-header *,
+.eopcrf3-header *::before,
+.eopcrf3-header *::after {
+  box-sizing: border-box;
+}
+
+.eopcrf3-header button {
+  font-family: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  box-shadow: none;
+}
+
+.eopcrf3-header {
+  margin-bottom: 12px;
+  background: #fff;
+  border: 1px solid #e2e6ec;
+  border-bottom: 3px solid var(--gold, #fcd116);
+  border-radius: 10px;
 }
 
 .eopcrf3-header-top {
@@ -12,63 +34,39 @@
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+  padding: 14px 16px;
 }
 
 .eopcrf3-header-title-main {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .eopcrf3-header-badge {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 54px;
-  padding: 0 16px;
+  height: 44px;
+  padding: 0 14px;
   flex-shrink: 0;
   background: var(--navy-deep, #001550);
-  border-radius: 10px;
-  box-sizing: border-box;
-  line-height: 1.1;
-}
-
-.eopcrf3-header-badge-group {
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-}
-
-.eopcrf3-header-badge-page {
   color: #fff;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  border-radius: 8px;
 }
 
-.eopcrf3-header-divider {
-  width: 4px;
-  height: 54px;
-  background: var(--navy-deep, #001550);
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.eopcrf3-header h2 {
-  font-size: 32px;
-  font-weight: 600;
-  margin: 0 0 2px 0;
-  color: var(--navy-deep, #001550);
-  text-transform: uppercase;
-}
-
-.eopcrf3-subtitle {
+.eopcrf3-panel .eopcrf3-header h2 {
   margin: 0;
-  font-size: 13px;
-  color: #8695a8;
-  line-height: 1.4;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--navy-deep, #001550);
+  max-width: 60ch;
 }
 
 .eopcrf3-header-actions {
@@ -78,18 +76,18 @@
   flex-shrink: 0;
 }
 
-/* Save to PDF button (same look as the IRC1a page's) */
+/* Save to PDF button (same look as the EOPCRF IV page's) */
 .eopcrf3-pdf-btn {
   display: flex;
   align-items: center;
   gap: 5px;
-  flex-shrink: 0;
   appearance: none;
   background: #fff;
   color: #185fa5;
   border: 1.5px solid #cfe0f2;
-  padding: 7px 14px;
+  padding: 6px 12px;
   border-radius: 7px;
+  font: inherit;
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
@@ -99,13 +97,14 @@
     border-color 0.15s ease;
 }
 
-.eopcrf3-pdf-btn i {
-  font-size: 13px;
-}
-
 .eopcrf3-pdf-btn:hover {
   background: #eaf2fb;
   border-color: #185fa5;
+}
+
+.eopcrf3-pdf-btn:focus-visible {
+  outline: 2px solid var(--navy-deep, #001550);
+  outline-offset: 2px;
 }
 
 .eopcrf3-pdf-btn:disabled {
@@ -113,244 +112,403 @@
   cursor: not-allowed;
 }
 
-.eopcrf3-form-ref {
-  margin: 0 0 10px 2px;
-  font-size: 12px;
-  font-style: italic;
-  font-weight: 600;
-  color: #4b5563;
-}
-
 /* ------------------------------------------------------------------
-   Guided Flow — numbered rail (1-3) tying the summary table, the PMES
-   rating table, and the Ratee-Rater Agreement together as a top-to-bottom
-   sequence, copied from IRC8c's .irc8c-flow.
+   Body: result card, grouped components, sign-off. Same visual language
+   as the EOPCRF IV workbench (white cards, navy heads with a gold edge).
 ------------------------------------------------------------------ */
 
-.eopcrf3-flow {
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  grid-template-rows: auto auto auto;
-  column-gap: 20px;
-  row-gap: 1.25rem;
-}
-
-.eopcrf3-flow-rail {
-  grid-column: 1;
-  grid-row: 1 / span 3;
-  display: grid;
-  grid-template-rows: subgrid;
-  position: relative;
-}
-
-.eopcrf3-flow-rail::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 20px;
-  bottom: 20px;
-  width: 2px;
-  background: var(--border-strong, #d0d5dd);
-  transform: translateX(-50%);
-}
-
-.eopcrf3-flow-badge {
-  align-self: start;
-  justify-self: center;
-  margin-top: 20px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #1f2937;
-  color: #fff;
+.eopcrf3-body {
+  --e3-ink: #1c2530;
+  --e3-muted: #5b6676;
+  --e3-line: #e2e6ec;
+  --e3-line-strong: #c4ccd8;
+  --e3-navy: var(--navy-deep, #001550);
+  --e3-gold: var(--gold, #fcd116);
+  --e3-soft: #eaf0fa;
+  --e3-seg: #c6d6f4;
+  --e3-t2: #00247a;
+  --e3-t3: #0033a0;
+  --e3-tint: #f6f8fa;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 700;
-  z-index: 1;
-  box-sizing: border-box;
-}
-
-.eopcrf3-flow-section-1,
-.eopcrf3-flow-section-2,
-.eopcrf3-flow-section-3 {
-  grid-column: 2;
-  min-width: 0;
-}
-
-.eopcrf3-flow-section-1 {
-  grid-row: 1;
-}
-
-.eopcrf3-flow-section-2 {
-  grid-row: 2;
-}
-
-.eopcrf3-flow-section-3 {
-  grid-row: 3;
-}
-
-.eopcrf3-flow-label {
-  margin: 20px 0 10px 2px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #1f2937;
-  box-sizing: border-box;
-}
-
-/* ---------- Cards (same look as IRC8c's .irc8c-card) ---------- */
-
-.eopcrf3-card {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.eopcrf3-card-header {
-  padding: 16px 20px;
-  box-sizing: border-box;
-  background: linear-gradient(160deg, #1f2937 0%, #2d3f57 100%);
-}
-
-.eopcrf3-card-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.eopcrf3-subtitle-dark {
-  margin: 4px 0 0 0;
-  font-size: 12.5px;
-  color: #9aa7b8;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+  color: var(--e3-ink);
+  font-size: 14px;
   line-height: 1.5;
 }
 
-/* ---------- Tables ---------- */
-
-.eopcrf3-table-wrap {
-  overflow-x: auto;
+.eopcrf3-body *,
+.eopcrf3-body *::before,
+.eopcrf3-body *::after {
+  box-sizing: border-box;
 }
 
-.eopcrf3-table {
-  width: 100%;
-  border-collapse: collapse;
+.eopcrf3-card {
   background: #fff;
-  font-size: 13px;
-  color: #1f2937;
+  border: 1px solid var(--e3-line);
+  border-radius: 10px;
 }
 
-.eopcrf3-table th,
-.eopcrf3-table td {
-  border: 1px solid #e2e5ea;
-  padding: 10px 12px;
-  vertical-align: middle;
+.eopcrf3-body [hidden] {
+  display: none !important;
 }
 
-.eopcrf3-table tr > :first-child {
-  border-left: none;
+/* ---------- Result ---------- */
+
+.eopcrf3-hero {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  column-gap: 36px;
+  align-items: center;
+  padding: 22px 26px 20px;
 }
 
-.eopcrf3-table tr > :last-child {
-  border-right: none;
+.eopcrf3-hero-main {
+  display: flex;
+  flex-direction: column;
 }
 
-.eopcrf3-table thead tr:first-child > th {
-  border-top: none;
-}
-
-.eopcrf3-table tbody tr:last-child > *,
-.eopcrf3-table tbody tr:last-child > td {
-  border-bottom: none;
-}
-
-.eopcrf3-table thead th {
-  background: #eef0f3;
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-  color: #374151;
-}
-
-.eopcrf3-part-cell {
-  background: #f7f8fa;
-  font-size: 12px;
+.eopcrf3-eyebrow {
+  font-size: 11px;
   font-weight: 600;
-  text-align: center;
-  width: 80px;
-  color: #374151;
-}
-
-.eopcrf3-component {
-  min-width: 220px;
-}
-
-.eopcrf3-center {
-  text-align: center;
-}
-
-.eopcrf3-score {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: #1f2937;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--e3-muted);
 }
 
 .eopcrf3-overall {
-  font-size: 20px;
+  margin-top: 2px;
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--e3-navy);
+}
+
+.eopcrf3-band {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 1.7em;
+  margin-top: 8px;
+}
+
+.eopcrf3-band-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--e3-navy);
+}
+
+.eopcrf3-band-num {
+  font-size: 12.5px;
+  color: var(--e3-muted);
+}
+
+.eopcrf3-scale-wrap {
+  position: relative;
+  padding-top: 34px;
+}
+
+/* The pin sits above the bar at the score's position on the 1-5 range. */
+.eopcrf3-pin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+.eopcrf3-pin i {
+  padding: 2px 9px;
+  font-size: 12px;
+  font-style: normal;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #1f2937;
+  color: #fff;
+  background: var(--e3-navy);
+  border-radius: 6px;
 }
 
-.eopcrf3-pmes {
-  font-size: 18px;
-  font-weight: 700;
-  color: #4a6fa5;
+.eopcrf3-pin::after {
+  content: "";
+  width: 0;
+  height: 0;
+  margin-top: -1px;
+  border: 5px solid transparent;
+  border-top-color: var(--e3-navy);
 }
 
-.eopcrf3-pmes--outstanding {
-  color: #1f8a43;
+.eopcrf3-scale,
+.eopcrf3-band-labels {
+  display: flex;
+  gap: 4px;
 }
-.eopcrf3-pmes--very-satisfactory {
-  color: #2f6fb8;
+
+.eopcrf3-scale {
+  height: 8px;
 }
-.eopcrf3-pmes--satisfactory {
-  color: #b57a00;
+
+.eopcrf3-seg {
+  background: var(--e3-seg);
+  border-radius: 4px;
 }
-.eopcrf3-pmes--unsatisfactory,
-.eopcrf3-pmes--poor {
-  color: #c0392b;
+
+.eopcrf3-seg.is-active {
+  background: linear-gradient(90deg, var(--e3-t2), var(--e3-t3));
+}
+
+/* Widths follow the PMES bands on the 1-5 range. */
+.eopcrf3-seg[data-band="poor"],
+.eopcrf3-seg[data-band="outstanding"],
+.eopcrf3-band-labels [data-band="poor"],
+.eopcrf3-band-labels [data-band="outstanding"] {
+  flex: 12.5;
+}
+
+.eopcrf3-seg[data-band="unsatisfactory"],
+.eopcrf3-seg[data-band="satisfactory"],
+.eopcrf3-seg[data-band="very-satisfactory"],
+.eopcrf3-band-labels [data-band="unsatisfactory"],
+.eopcrf3-band-labels [data-band="satisfactory"],
+.eopcrf3-band-labels [data-band="very-satisfactory"] {
+  flex: 25;
+}
+
+.eopcrf3-band-labels {
+  margin-top: 8px;
+}
+
+.eopcrf3-band-labels > div {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--e3-muted);
+}
+
+.eopcrf3-band-labels small {
+  display: block;
+  font-size: 11px;
+  color: #8a94a3;
+  font-variant-numeric: tabular-nums;
+}
+
+.eopcrf3-band-labels > div.is-active {
+  font-weight: 600;
+  color: var(--e3-navy);
+}
+
+.eopcrf3-band-labels > div.is-active small {
+  font-weight: 400;
+  color: var(--e3-muted);
+}
+
+.eopcrf3-empty {
+  grid-column: 1 / -1;
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--e3-muted);
+}
+
+/* ---------- Components ----------
+   Every row (and each navy group head) shares one grid so Weight, Out of
+   and Score line up across both parts. */
+
+.eopcrf3-comp {
+  --e3-cols: minmax(0, 1fr) 70px 90px 110px;
+  overflow: hidden;
+}
+
+.eopcrf3-group + .eopcrf3-group {
+  border-top: 1px solid var(--e3-line);
+}
+
+.eopcrf3-group-head,
+.eopcrf3-row {
+  display: grid;
+  grid-template-columns: var(--e3-cols);
+  align-items: center;
+  column-gap: 12px;
+}
+
+.eopcrf3-group-head {
+  padding: 10px 16px 13px;
+  background: var(--e3-navy);
+  box-shadow: inset 0 -3px 0 var(--e3-gold);
+}
+
+.eopcrf3-group-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.eopcrf3-group-head span {
+  font-size: 12px;
+  text-align: right;
+  color: #c9d3ee;
+}
+
+.eopcrf3-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eopcrf3-row {
+  padding: 11px 16px;
+  border-top: 1px solid var(--e3-line);
+}
+
+.eopcrf3-rows .eopcrf3-row:first-child {
+  border-top: 0;
+}
+
+.eopcrf3-m {
+  font-size: 13px;
+  text-align: right;
+  color: var(--e3-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.eopcrf3-s {
+  justify-self: end;
+  min-width: 88px;
+  padding: 3px 10px;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--e3-navy);
+  background: var(--e3-soft);
+  border-radius: 8px;
+}
+
+.eopcrf3-row--total {
+  background: var(--e3-tint);
+}
+
+.eopcrf3-row--total .eopcrf3-row-name {
+  font-weight: 600;
+}
+
+.eopcrf3-row--total .eopcrf3-s {
+  color: #fff;
+  background: var(--e3-navy);
 }
 
 /* ---------- Ratee-Rater Agreement ----------
-   Uses base.css's .report-signatory-grid / -block / -label / -person /
-   -avatar / -info / -name classes; only the pieces below are new. */
+   Re-skins base.css's .report-signatory-* classes for this page only: a
+   centered stack per signatory (label, name with underline, position, date). */
+
+.eopcrf3-sign {
+  padding: 14px 20px 16px;
+}
+
+.eopcrf3-sign .report-signatory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+  margin: 0;
+  padding: 0;
+}
+
+.eopcrf3-sign .report-signatory-block {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  text-align: center;
+}
+
+.eopcrf3-sign .report-signatory-label {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: center;
+  color: var(--e3-muted);
+}
+
+.eopcrf3-sign .report-signatory-avatar {
+  display: none;
+}
+
+.eopcrf3-sign .report-signatory-person,
+.eopcrf3-sign .report-signatory-info {
+  display: block;
+  width: 100%;
+}
+
+.eopcrf3-sign .report-signatory-name {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 4px 0;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--e3-ink);
+  border-bottom: 1px solid var(--e3-line-strong);
+}
 
 .eopcrf3-sign-name {
   min-height: 1.4em;
   overflow-wrap: anywhere;
 }
 
-.eopcrf3-load-error {
-  text-align: center;
-  padding: 24px 20px;
-  margin-bottom: 16px;
-  color: #c0392b;
-  border: 1.5px dashed #f2b8b0;
-  border-radius: 12px;
-  background: #fdf3f2;
+.eopcrf3-sign p.report-signatory-position {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 30px;
+  margin: 8px 0 0;
+  padding: 4px 0;
   font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  text-align: center;
+  color: var(--e3-muted);
+}
+
+.eopcrf3-sign .report-signatory-date {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.eopcrf3-sign .report-signatory-date-btn {
+  padding: 5px 12px;
+  font-size: 13px;
+  color: var(--e3-ink);
+  background: #fff;
+  border: 1px solid var(--e3-line-strong);
+  border-radius: 8px;
+}
+
+.eopcrf3-load-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #b42318;
+  background: #fef3f2;
+  border: 1px solid #fecdca;
+  border-radius: 8px;
 }
 
 /* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+  .eopcrf3-hero {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 18px;
+  }
+}
 
 @media (max-width: 640px) {
   .eopcrf3-header-actions {
@@ -362,24 +520,42 @@
     justify-content: center;
   }
 
-  .eopcrf3-header h2 {
-    font-size: 21px;
+  .eopcrf3-panel .eopcrf3-header h2 {
+    font-size: 20px;
   }
 
   .eopcrf3-header-badge {
-    height: 44px;
+    height: 40px;
     padding: 0 12px;
+    font-size: 13px;
   }
 
-  .eopcrf3-header-badge-group {
-    font-size: 9px;
+  /* Phone width: drop the "Out of" column and show only the active band name. */
+  .eopcrf3-comp {
+    --e3-cols: minmax(0, 1fr) 48px 84px;
   }
 
-  .eopcrf3-header-badge-page {
-    font-size: 15px;
+  .eopcrf3-max {
+    display: none;
   }
 
-  .eopcrf3-header-divider {
-    height: 44px;
+  .eopcrf3-band-labels {
+    display: block;
+  }
+
+  .eopcrf3-band-labels > div:not(.is-active) {
+    display: none;
+  }
+
+  .eopcrf3-s {
+    min-width: 72px;
+  }
+
+  .eopcrf3-overall {
+    font-size: 40px;
+  }
+
+  .eopcrf3-sign .report-signatory-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

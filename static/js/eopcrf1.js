@@ -2,12 +2,14 @@
   const workspaceEl = document.getElementById("eopcrf1-workspace");
   if (!workspaceEl) return;
 
-  const navEl = document.getElementById("eopcrf1-nav");
-  const detailEl = document.getElementById("eopcrf1-detail");
-  const emptyStateEl = document.getElementById("eopcrf1-empty-state");
-  const emptyStateTextEl = document.getElementById("eopcrf1-empty-state-text");
-  const partTabsEl = document.getElementById("eopcrf1-part-tabs");
-  const emptyAddKraBtn = document.getElementById("eopcrf1-empty-add-kra");
+  const listEl = document.getElementById("eopcrf1-list");
+  const editorEl = document.getElementById("eopcrf1-editor");
+  const progressEl = document.getElementById("eopcrf1-progress");
+  const progressCountEl = document.getElementById("eopcrf1-progress-count");
+  const segsEl = document.getElementById("eopcrf1-segments");
+  const nextBtn = document.getElementById("eopcrf1-next-incomplete");
+  const doneBadge = document.getElementById("eopcrf1-done-badge");
+  const errorStateEl = document.getElementById("eopcrf1-error-state");
 
   // ================= Reset button + confirmation modal =================
   const resetBtn = document.getElementById("eopcrf1-reset-btn");
@@ -77,25 +79,6 @@
     "eopcrf1-inline-icon",
   );
 
-  // Progress ring shown on each objective in the sidebar. The arc length is
-  // done/total, so the ring fills as the objective is completed:
-  //   none    -> empty track
-  //   partial -> arc proportional to what is filled in
-  //   done    -> solid ring with a check mark
-  const RING_R = 8;
-  const RING_C = 2 * Math.PI * RING_R;
-  function progressRing(prog) {
-    const track = `<circle class="eopcrf1-ring-track" cx="12" cy="12" r="${RING_R}"></circle>`;
-    if (prog.state === "done") {
-      return `<svg class="eopcrf1-ring" viewBox="0 0 24 24" aria-hidden="true"><circle class="eopcrf1-ring-fill" cx="12" cy="12" r="10.5"></circle><path class="eopcrf1-ring-check" d="M7.8 12.4l3 3 5.4-6"></path></svg>`;
-    }
-    const frac = prog.total ? prog.done / prog.total : 0;
-    const arc =
-      prog.state === "partial"
-        ? `<circle class="eopcrf1-ring-arc" cx="12" cy="12" r="${RING_R}" stroke-dasharray="${(RING_C * frac).toFixed(2)} ${RING_C.toFixed(2)}" transform="rotate(-90 12 12)"></circle>`
-        : "";
-    return `<svg class="eopcrf1-ring" viewBox="0 0 24 24" aria-hidden="true">${track}${arc}</svg>`;
-  }
   const PROGRESS_LABELS = {
     none: "Not started",
     partial: "In progress",
@@ -131,7 +114,6 @@
     { key: "c", label: "Part I-C", full: "Organizational Effectiveness" },
   ];
   const PART_EXPECTED_TOTAL = { a: 60, b: 20, c: 15 };
-  let activePart = "a";
 
   // ================= State =================
   // `state.kras` mirrors GET /irc/eopcrf1/data. `sel` is the only piece of
@@ -285,40 +267,6 @@
     return { weight: sumWeights(kras), score: hasAny ? scoreSum : null };
   }
 
-  // ================= Render: tabs =================
-  function renderPartTabs() {
-    partTabsEl.innerHTML = PARTS.map((p) => {
-      const t = partTotals(p.key);
-      const expected = PART_EXPECTED_TOTAL[p.key];
-      const weightOk = Math.abs(t.weight - expected) < 0.005;
-      const weightTip = weightOk
-        ? `Part weight (target ${expected}%)`
-        : `Part weight is ${fmtWeight(t.weight)}. It should total ${expected}%`;
-      return `
-        <button type="button" class="eopcrf1-part-tab${p.key === activePart ? " is-active" : ""}" data-part="${p.key}" role="tab" aria-selected="${p.key === activePart}">
-          <span class="eopcrf1-part-tab-label">${p.label}</span>
-          <span class="eopcrf1-part-tab-name">${escapeHtml(p.full)}</span>
-          <span class="eopcrf1-part-tab-stats">
-            <span class="eopcrf1-part-tab-stat" title="${escapeHtml(weightTip)}">
-              <span class="eopcrf1-part-tab-k">Weight</span>
-              <span class="eopcrf1-part-tab-v${weightOk ? "" : " is-warn"}">${fmtWeight(t.weight)}</span>
-            </span>
-            <span class="eopcrf1-part-tab-stat" title="Total score for this part">
-              <span class="eopcrf1-part-tab-k">Score</span>
-              <span class="eopcrf1-part-tab-v${t.score === null ? " is-empty" : ""}">${t.score === null ? "—" : fmt3(t.score)}</span>
-            </span>
-          </span>
-        </button>`;
-    }).join("");
-  }
-
-  partTabsEl.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-part]");
-    if (!btn || btn.dataset.part === activePart) return;
-    activePart = btn.dataset.part;
-    render();
-  });
-
   // ================= Render: selection =================
   function ensureSelection(visibleKras) {
     const kra = visibleKras.find((k) => id(k.id) === id(sel.kraId));
@@ -392,100 +340,137 @@
       missing: checks.filter((c) => !c.ok).map((c) => c.label),
     };
   }
+  // ================= Ordered KRAs / progress =================
+  // Everything is one list now: Part I-A, then I-B, then I-C.
+  const orderedKras = () =>
+    PARTS.flatMap((p) => state.kras.filter((k) => k.part === p.key));
+  const partCode = (key) => "I-" + key.toUpperCase();
+  const kraWord = (kra) => (kra.part === "c" ? "Area" : "KRA");
 
-  // ================= Render: sidebar =================
-  // Sticky strip at the top of the nav (Part I-B only): the Add KRA button plus
-  // a live meter of the KRA weight total against the 20% cap.
-  function renderNavToolbar() {
-    if (activePart !== "b") return "";
-    const expected = PART_EXPECTED_TOTAL.b;
-    const total = partTotals("b").weight;
-    const diff = Math.round((expected - total) * 100) / 100;
-    // Weight met (20%): no indicator at all, just the Add KRA button.
-    let stateCls = "";
-    let msg = "";
-    if (diff > 0.005) {
-      stateCls = "is-warn";
-      msg = `KRA weights total ${fmtWeight(total)}, not ${expected}%. Allocate ${fmtWeight(diff)} more.`;
-    } else if (diff < -0.005) {
-      stateCls = "is-over";
-      msg = `KRA weights total ${fmtWeight(total)}, which is ${fmtWeight(-diff)} over the ${expected}% target. Reduce a KRA's weight.`;
-    }
-    const pct = Math.max(0, Math.min(100, (total / expected) * 100));
-    const meter = stateCls
-      ? `<div class="eopcrf1-nav-total ${stateCls}" role="status">
-          <div class="eopcrf1-nav-total-head">
-            <span>KRA weight</span>
-            <strong>${fmtWeight(total)} / ${expected}%</strong>
-          </div>
-          <div class="eopcrf1-nav-total-bar" aria-hidden="true"><span style="width:${pct}%"></span></div>
-          <p class="eopcrf1-nav-total-msg">${escapeHtml(msg)}</p>
-        </div>`
-      : "";
-    return `
-      <div class="eopcrf1-nav-toolbar">
-        <button type="button" class="eopcrf1-add-btn eopcrf1-nav-add" data-action="add-kra">${ICON_PLUS}Add KRA</button>
-        ${meter}
-      </div>`;
+  function kraProgressInfo(kra) {
+    const n = kra.objectives.length;
+    let frac = 0;
+    let done = 0;
+    kra.objectives.forEach((o) => {
+      const p = objectiveProgress(kra, o);
+      frac += p.total ? p.done / p.total : 0;
+      if (p.state === "done") done++;
+    });
+    return { n, done, frac: n ? frac / n : 0, complete: n > 0 && done === n };
   }
 
-  function renderNav(visibleKras) {
-    const groups = visibleKras
-      .map((kra) => {
+  // Which objective (if any) is waiting for "Clear objective" confirmation.
+  let confirmClearObjId = null;
+
+  // ================= Render: progress =================
+  function renderProgress(kras) {
+    let total = 0;
+    let done = 0;
+    kras.forEach((k) =>
+      k.objectives.forEach((o) => {
+        total++;
+        if (objectiveProgress(k, o).state === "done") done++;
+      }),
+    );
+    const complete = total > 0 && done === total;
+    progressCountEl.classList.toggle("is-complete", complete);
+    progressCountEl.innerHTML = `<strong>${done} of ${total}</strong><span>complete</span>`;
+    segsEl.setAttribute("aria-valuemax", String(total));
+    segsEl.setAttribute("aria-valuenow", String(done));
+    segsEl.innerHTML = kras
+      .map((k) => {
+        const info = kraProgressInfo(k);
+        const active = id(k.id) === id(sel.kraId);
+        const title = `${kraWord(k)} ${kraNumber(k)} (Part ${partCode(k.part)}): ${info.done} of ${info.n} objectives complete`;
+        return `
+          <button type="button" class="eopcrf1-seg${active ? " is-active" : ""}${info.complete ? " is-complete" : ""}" data-kra-id="${k.id}" title="${escapeHtml(title)}">
+            <span class="eopcrf1-seg-bar"><span style="width:${info.frac * 100}%"></span></span>
+            <span class="eopcrf1-seg-label">${partCode(k.part)} &middot; ${kraNumber(k)}</span>
+          </button>`;
+      })
+      .join("");
+    nextBtn.hidden = complete || total === 0;
+    doneBadge.hidden = !complete;
+  }
+
+  // ================= Render: list =================
+  function weightMessage(total, expected) {
+    const diff = Math.round((expected - total) * 100) / 100;
+    if (diff > 0.005)
+      return `KRA weights total ${fmtWeight(total)}, not ${expected}%. Allocate ${fmtWeight(diff)} more.`;
+    if (diff < -0.005)
+      return `KRA weights total ${fmtWeight(total)}, which is ${fmtWeight(-diff)} over the ${expected}% target. Reduce a KRA's weight.`;
+    return "";
+  }
+
+  function renderList(kras) {
+    let html = "";
+    PARTS.forEach((p) => {
+      const partKras = kras.filter((k) => k.part === p.key);
+      const expected = PART_EXPECTED_TOTAL[p.key];
+      const total = partTotals(p.key).weight;
+      const msg = partKras.length ? weightMessage(total, expected) : "";
+      html += `
+        <div class="eopcrf1-list-group">
+          <span>${p.label} &middot; ${escapeHtml(p.full)}</span>
+          <span class="eopcrf1-wchip ${msg ? "is-warn" : "is-ok"}" title="Part weight (target ${expected}%)">${fmtWeight(total)} / ${expected}%</span>
+        </div>`;
+      if (msg)
+        html += `<div class="eopcrf1-wmsg" role="status">${escapeHtml(msg)}</div>`;
+      if (p.key === "b")
+        html += `<div class="eopcrf1-list-tools"><button type="button" class="eopcrf1-add-btn" data-action="add-kra">${ICON_PLUS}Add KRA</button></div>`;
+      partKras.forEach((kra) => {
         const isSelKra = id(kra.id) === id(sel.kraId);
+        const cls = isSelKra
+          ? sel.objId === null
+            ? " is-active"
+            : " is-parent"
+          : "";
         const actions = kra.locked
           ? ""
           : `<button type="button" class="eopcrf1-icon-btn" data-action="add-objective" data-kra-id="${kra.id}" title="Add objective">${ICON_PLUS}</button>
              <button type="button" class="eopcrf1-icon-btn" data-action="edit-kra" data-kra-id="${kra.id}" title="Edit KRA">${ICON_EDIT}</button>
              <button type="button" class="eopcrf1-icon-btn eopcrf1-icon-btn--danger" data-action="delete-kra" data-kra-id="${kra.id}" title="Delete KRA">${ICON_TRASH}</button>`;
-        const mm = objectiveWeightMismatch(kra);
-        const navWarn = mm.mismatch
-          ? `<p class="eopcrf1-warn eopcrf1-nav-warn" role="alert">Objective weights total ${fmtWeight(mm.totalObj)}, but this KRA is ${fmtWeight(mm.kraW)}. They should match.</p>`
-          : "";
-        const items = kra.objectives
-          .map((obj, i) => {
-            const { code, title } = splitObjectiveText(
-              obj.text,
-              `${kraNumber(kra)}.${i + 1}`,
-            );
-            const isSel = isSelKra && id(obj.id) === id(sel.objId);
-            const prog = objectiveProgress(kra, obj);
-            const progTip =
-              prog.state === "done"
-                ? "Complete"
-                : `${PROGRESS_LABELS[prog.state]} (${prog.done}/${prog.total}). Still needed: ${prog.missing.join(", ")}`;
-            return `
-              <button type="button" class="eopcrf1-nav-item${isSel ? " is-selected" : ""}" data-action="select-obj" data-kra-id="${kra.id}" data-obj-id="${obj.id}" title="${escapeHtml(title || "Untitled objective")}"${isSel ? ' aria-current="true"' : ""}>
-                <span class="eopcrf1-nav-main">
-                  <span class="eopcrf1-nav-progress eopcrf1-nav-progress--${prog.state}" title="${escapeHtml(progTip)}" role="img" aria-label="${escapeHtml(PROGRESS_LABELS[prog.state] + " (" + prog.done + " of " + prog.total + ")")}">${progressRing(prog)}</span>
-                  <span class="eopcrf1-nav-code">Objective ${escapeHtml(code)}</span>
-                </span>
-                <span class="eopcrf1-nav-weight" title="Objective weight">${fmtWeight(obj.weight)}</span>
-              </button>`;
-          })
-          .join("");
-        return `
-          <div class="eopcrf1-nav-group">
-            <div class="eopcrf1-nav-group-head${isSelKra && sel.objId === null ? " is-selected" : ""}">
-              <span class="eopcrf1-nav-group-label">KRA ${kraNumber(kra)}</span>
-              <div class="eopcrf1-nav-group-row">
-                <button type="button" class="eopcrf1-nav-group-title" data-action="select-kra" data-kra-id="${kra.id}">${kra.text ? escapeHtml(kra.text) : "Untitled KRA"}</button>
-                <span class="eopcrf1-nav-group-weight" title="KRA weight">${fmtWeight(kra.weight)}</span>
-              </div>
-              ${actions ? `<div class="eopcrf1-nav-group-actions">${actions}</div>` : ""}
-            </div>
-            ${navWarn}
-            ${items}
+        html += `
+          <div class="eopcrf1-kra${cls}">
+            <button type="button" class="eopcrf1-kra-main" data-action="select-kra" data-kra-id="${kra.id}"${cls === " is-active" ? ' aria-current="true"' : ""}>
+              <span class="eopcrf1-kra-name">${kraWord(kra)} ${kraNumber(kra)} &middot; ${kra.text ? escapeHtml(kra.text) : "Untitled KRA"}</span>
+              <span class="eopcrf1-wchip" title="KRA weight">${fmtWeight(kra.weight)}</span>
+            </button>
+            ${actions}
           </div>`;
-      })
-      .join("");
-    navEl.innerHTML = renderNavToolbar() + groups;
+        const mm = objectiveWeightMismatch(kra);
+        if (mm.mismatch)
+          html += `<p class="eopcrf1-warn" role="alert">Objective weights total ${fmtWeight(mm.totalObj)}, but this KRA is ${fmtWeight(mm.kraW)}. They should match.</p>`;
+        kra.objectives.forEach((obj, i) => {
+          const { code } = splitObjectiveText(
+            obj.text,
+            `${kraNumber(kra)}.${i + 1}`,
+          );
+          const isSel = isSelKra && id(obj.id) === id(sel.objId);
+          const prog = objectiveProgress(kra, obj);
+          const tip =
+            prog.state === "done"
+              ? "Complete"
+              : `${PROGRESS_LABELS[prog.state]} (${prog.done}/${prog.total}). Still needed: ${prog.missing.join(", ")}`;
+          html += `
+            <div class="eopcrf1-row eopcrf1-row--obj${isSel ? " is-active" : ""}${prog.state === "done" ? " is-complete" : ""}">
+              <button type="button" class="eopcrf1-row-main" data-action="select-obj" data-kra-id="${kra.id}" data-obj-id="${obj.id}" title="${escapeHtml(tip)}"${isSel ? ' aria-current="true"' : ""}>
+                <span class="eopcrf1-row-top">
+                  <span class="eopcrf1-row-text"><span class="eopcrf1-row-name">Objective ${escapeHtml(code)}</span></span>
+                  <span class="eopcrf1-row-count">${fmtWeight(obj.weight)} &middot; ${prog.done}/${prog.total}</span>
+                </span>
+                <span class="eopcrf1-row-bar"><span style="width:${prog.total ? (prog.done / prog.total) * 100 : 0}%"></span></span>
+              </button>
+            </div>`;
+        });
+      });
+    });
+    listEl.innerHTML = html;
   }
 
-  // ================= Render: detail panel =================
-  // Red asterisk (Google Forms style) shown beside a label while its field is
-  // still empty. render() rebuilds the panel after every save, so it
-  // disappears on its own once the field has a value.
+  // ================= Render: editor =================
+  // Red asterisk shown beside a label while its field is still empty.
   const reqMark = (isEmpty) =>
     isEmpty
       ? '<span class="eopcrf1-req" title="Required" aria-label="Required">*</span>'
@@ -497,40 +482,33 @@
   const textOrDash = (v) =>
     v ? escapeHtml(v) : '<span class="eopcrf1-muted">—</span>';
 
-  function renderKraBlock(kra) {
-    const isC = kra.part === "c";
-    const editBtn = kra.locked
-      ? ""
-      : `<button type="button" class="eopcrf1-icon-btn" data-action="edit-kra" data-kra-id="${kra.id}" title="Edit KRA">${ICON_EDIT}</button>`;
+  function renderKraSection(kra) {
     const align =
-      isC || kra.part === "b"
-        ? ""
-        : `<div class="eopcrf1-align">
-           ${field("GAA programs / subprograms", textOrDash(kra.gaaProgram))}
-           ${field("BEDP pillars", textOrDash(kra.bedpPillars))}
-           ${field("Current administration agenda", textOrDash(kra.adminAgenda))}
-         </div>`;
+      kra.part === "a"
+        ? field("GAA programs / subprograms", textOrDash(kra.gaaProgram)) +
+          field("BEDP pillars", textOrDash(kra.bedpPillars)) +
+          field(
+            "Current administration agenda",
+            textOrDash(kra.adminAgenda),
+            "eopcrf1-fact--wide",
+          )
+        : "";
     return `
-      <section class="eopcrf1-kra-block">
-        <div class="eopcrf1-kra-block-head">
-          <div>
-            <span class="eopcrf1-label">${isC ? "Area" : "KRA"} ${kraNumber(kra)}</span>
-            <h3>${kra.text ? escapeHtml(kra.text) : "Untitled KRA"}</h3>
-          </div>
-          <div class="eopcrf1-kra-block-side">
-            <span class="eopcrf1-weight-chip">${fmtWeight(kra.weight)}</span>
-            ${editBtn}
-          </div>
+      <section class="eopcrf1-sec">
+        <h4>${kra.part === "c" ? "Area" : "Key result area"}</h4>
+        <div class="eopcrf1-facts">
+          ${field(`${kraWord(kra)} ${kraNumber(kra)}`, kra.text ? escapeHtml(kra.text) : '<span class="eopcrf1-muted">Untitled KRA</span>')}
+          ${field("Weight", escapeHtml(fmtWeight(kra.weight)))}
+          ${align}
         </div>
-        ${align}
       </section>`;
   }
 
   function renderLevelRow(obj, cat, level, selectedRate, locked) {
     const item = obj[cat.key].find((i) => i.rate === level.n);
     const isSel = selectedRate === level.n;
-    // A level with no descriptor can't be rated. (If a stale rating is already
-    // sitting on such a level it stays clickable so it can be cleared.)
+    // A level with no descriptor can't be rated. (A stale rating already on
+    // such a level stays clickable so it can be cleared.)
     const hasText = !!(
       item &&
       typeof item.label === "string" &&
@@ -559,20 +537,20 @@
     const raw = obj.ratings[cat.key];
     const selectedRate = hasVal(raw) ? Number(raw) : null;
     return `
-      <section class="eopcrf1-cat">
+      <div class="eopcrf1-cat">
         <div class="eopcrf1-cat-head">
           <h4>${cat.label}${reqMark(selectedRate === null && hasDescriptors(obj, cat.key))}</h4>
           <span class="eopcrf1-cat-rating${selectedRate === null ? " is-empty" : ""}">${selectedRate === null ? "Not rated" : `${selectedRate} · ${levelName(selectedRate)}`}</span>
         </div>
-        <div class="eopcrf1-levels${selectedRate === null ? "" : " has-selection"}" role="radiogroup" aria-label="${cat.label} rating">
+        <div class="eopcrf1-levels" role="radiogroup" aria-label="${cat.label} rating">
           ${LEVELS.map((l) => renderLevelRow(obj, cat, l, selectedRate, locked)).join("")}
         </div>
-      </section>`;
+      </div>`;
   }
 
   function renderMovLink(obj) {
     if (!obj.mov) {
-      return `<button type="button" class="eopcrf1-btn eopcrf1-btn--ghost eopcrf1-btn--sm" data-action="edit-mov">${ICON_PLUS}Add link</button>`;
+      return `<button type="button" class="eopcrf1-mini" data-action="edit-mov">+ Add link</button>`;
     }
     return `
       <div class="eopcrf1-mov-row">
@@ -582,119 +560,147 @@
       </div>`;
   }
 
-  function renderObjective(kra, obj) {
+  function renderObjectiveBody(kra, obj) {
     const locked = !!kra.locked;
-    const objIndex = kra.objectives.findIndex((o) => id(o.id) === id(obj.id));
-    const { code, title } = splitObjectiveText(
-      obj.text,
-      `${kraNumber(kra)}.${objIndex + 1}`,
-    );
-    const avg = computeAverage(obj);
-    const score = computeScore(obj);
-    const chip = (label, key) => {
-      const v = obj.ratings[key];
-      return `<div class="eopcrf1-result"><span class="eopcrf1-label">${label}</span><span class="eopcrf1-result-value">${hasVal(v) ? v : "—"}</span></div>`;
-    };
-    const objActions = locked
-      ? ""
-      : `<button type="button" class="eopcrf1-icon-btn" data-action="edit-objective" title="Edit objective">${ICON_EDIT}</button>
-         <button type="button" class="eopcrf1-icon-btn eopcrf1-icon-btn--danger" data-action="delete-objective" title="Delete objective">${ICON_TRASH}</button>`;
-
+    const timelineEmpty = !obj.timeline || !String(obj.timeline).trim();
+    const actualEmpty = !obj.actualResults || !String(obj.actualResults).trim();
     return `
-      <section class="eopcrf1-obj" data-kra-id="${kra.id}" data-obj-id="${obj.id}">
-        <div class="eopcrf1-obj-head">
-          <div>
-            <span class="eopcrf1-label">Objective ${escapeHtml(code)}</span>
-            <h3>${title ? escapeHtml(title) : "Untitled objective"}</h3>
+      ${renderKraSection(kra)}
+      <section class="eopcrf1-sec">
+        <h4>Planning</h4>
+        <div class="eopcrf1-facts">
+          <div class="eopcrf1-fact">
+            <span class="eopcrf1-label"><span>Timeline${reqMark(timelineEmpty)}</span><button type="button" class="eopcrf1-mini" data-action="edit-timeline">${timelineEmpty ? "Add" : "Edit"}</button></span>
+            <div class="eopcrf1-fact-value">${textOrDash(obj.timeline)}</div>
           </div>
-          <div class="eopcrf1-obj-actions">
-            <span class="eopcrf1-obj-score" title="Weighted average for this objective"><span class="eopcrf1-obj-score-k">Weighted score</span><span class="eopcrf1-obj-score-v${score === null ? " is-empty" : ""}">${score === null ? "—" : fmt3(score)}</span></span>${objActions}
-          </div>
+          ${field("Weight allocation", escapeHtml(fmtWeight(obj.weight)))}
+          ${field("Target value", textOrDash(obj.targetValue))}
+          ${field("Target description", textOrDash(obj.targetDescription))}
         </div>
-
-        <div class="eopcrf1-group eopcrf1-group--plan">
-          <h4 class="eopcrf1-group-title"><i class="ti ti-calendar-event" aria-hidden="true"></i>Planning</h4>
-          <div class="eopcrf1-group-body">
-          <div class="eopcrf1-facts">
-            ${field("Timeline" + reqMark(!obj.timeline || !String(obj.timeline).trim()), `<span>${textOrDash(obj.timeline)}</span><button type="button" class="eopcrf1-icon-btn" data-action="edit-timeline" title="Edit timeline">${ICON_EDIT}</button>`, "eopcrf1-fact--inline")}
-            ${field("Weight allocation", escapeHtml(fmtWeight(obj.weight)))}
-            ${field("Target value", textOrDash(obj.targetValue))}
-            ${field("Target description", textOrDash(obj.targetDescription))}
+      </section>
+      <section class="eopcrf1-sec">
+        <h4>Performance measures and rating scale</h4>
+        ${INDICATOR_CATEGORIES.map((c) => renderCategory(obj, c, locked)).join("")}
+      </section>
+      <section class="eopcrf1-sec">
+        <h4>Evaluation</h4>
+        <div class="eopcrf1-eval">
+          <div class="eopcrf1-fact">
+            <span class="eopcrf1-label">Means of verification</span>
+            <div class="eopcrf1-box${obj.movRequired ? "" : " is-empty"}">${obj.movRequired ? escapeHtml(obj.movRequired) : "No MOVs listed for this objective."}</div>
+            <div class="eopcrf1-mov-wrap">${renderMovLink(obj)}</div>
           </div>
-          </div>
-        </div>
-
-        <div class="eopcrf1-group eopcrf1-group--perf">
-          <h4 class="eopcrf1-group-title"><i class="ti ti-list-check" aria-hidden="true"></i>Performance measures and rating scale</h4>
-          <div class="eopcrf1-group-body">
-          ${INDICATOR_CATEGORIES.map((c) => renderCategory(obj, c, locked)).join("")}
-          </div>
-        </div>
-
-        <div class="eopcrf1-group eopcrf1-group--eval">
-          <h4 class="eopcrf1-group-title"><i class="ti ti-clipboard-check" aria-hidden="true"></i>Evaluation</h4>
-          <div class="eopcrf1-group-body">
-          <div class="eopcrf1-eval">
-            <div class="eopcrf1-fact">
-              <span class="eopcrf1-label">Means of verification</span>
-              <div class="eopcrf1-box${obj.movRequired ? "" : " is-empty"}">${obj.movRequired ? escapeHtml(obj.movRequired) : "No MOVs listed for this objective."}</div>
-              <div class="eopcrf1-mov-wrap">${renderMovLink(obj)}</div>
-            </div>
-            <div class="eopcrf1-fact">
-              <span class="eopcrf1-label eopcrf1-label--row"><span>Actual accomplishments${reqMark(!obj.actualResults || !String(obj.actualResults).trim())}</span><button type="button" class="eopcrf1-icon-btn" data-action="edit-actual" title="Edit actual accomplishments">${ICON_EDIT}</button></span>
-              <div class="eopcrf1-box${obj.actualResults ? "" : " is-empty"}">${obj.actualResults ? escapeHtml(obj.actualResults) : "No accomplishments recorded yet."}</div>
-            </div>
-          </div>
-          <div class="eopcrf1-results">
-            ${chip("Quality", "quality")}${chip("Efficiency", "efficiency")}${chip("Timeliness", "timeliness")}
-            <div class="eopcrf1-result eopcrf1-result--total"><span class="eopcrf1-label">Average (QET)</span><span class="eopcrf1-result-value">${avg === null ? "—" : fmt3(avg)}</span></div>
-            <div class="eopcrf1-result eopcrf1-result--total"><span class="eopcrf1-label">Weighted average</span><span class="eopcrf1-result-value">${score === null ? "—" : fmt3(score)}</span></div>
-          </div>
+          <div class="eopcrf1-fact">
+            <span class="eopcrf1-label"><span>Actual accomplishments${reqMark(actualEmpty)}</span><button type="button" class="eopcrf1-mini" data-action="edit-actual">${actualEmpty ? "Add" : "Edit"}</button></span>
+            <div class="eopcrf1-box${actualEmpty ? " is-empty" : ""}">${actualEmpty ? "No accomplishments recorded yet." : escapeHtml(obj.actualResults)}</div>
           </div>
         </div>
       </section>`;
   }
 
-  function renderDetail(visibleKras) {
-    const kra = visibleKras.find((k) => id(k.id) === id(sel.kraId));
+  function renderEditor(kras) {
+    const kra = kras.find((k) => id(k.id) === id(sel.kraId));
     if (!kra) {
-      detailEl.innerHTML = "";
+      editorEl.innerHTML = `
+        <div class="eopcrf1-ed-head"><div class="eopcrf1-ed-title"><span class="eopcrf1-ed-name">Nothing selected</span></div></div>
+        <div class="eopcrf1-ed-body"><div class="eopcrf1-empty-inline"><p>Pick an objective from the list. In Part I-B you can add your own KRAs with <strong>Add KRA</strong>.</p></div></div>`;
       return;
     }
+    const part = PARTS.find((p) => p.key === kra.part);
     const obj = sel.objId !== null ? findObjective(kra.id, sel.objId) : null;
-    let body = renderKraBlock(kra);
-    if (obj) {
-      body += renderObjective(kra, obj);
-    } else if (!kra.locked) {
-      body += `<div class="eopcrf1-empty-inline"><p>This KRA has no objectives yet.</p><button type="button" class="eopcrf1-btn eopcrf1-btn--primary" data-action="add-objective" data-kra-id="${kra.id}">${ICON_PLUS}Add objective</button></div>`;
+
+    if (!obj) {
+      const edit = kra.locked
+        ? ""
+        : `<button type="button" class="eopcrf1-ed-del" data-action="edit-kra" data-kra-id="${kra.id}"><i class="ti ti-pencil" aria-hidden="true"></i> Edit KRA</button>`;
+      editorEl.innerHTML = `
+        <div class="eopcrf1-ed-head">
+          <div class="eopcrf1-ed-title">
+            <span class="eopcrf1-ed-cat">${part.label} &middot; ${escapeHtml(part.full)}</span>
+            <span class="eopcrf1-ed-name">${kraWord(kra)} ${kraNumber(kra)} &middot; ${kra.text ? escapeHtml(kra.text) : "Untitled KRA"}</span>
+          </div>
+          <span class="eopcrf1-ed-actions">${edit}</span>
+        </div>
+        <div class="eopcrf1-ed-body">
+          ${renderKraSection(kra)}
+          ${
+            kra.locked
+              ? ""
+              : `<div class="eopcrf1-empty-inline"><p>This KRA has no objectives yet.</p><button type="button" class="eopcrf1-btn eopcrf1-btn--primary" data-action="add-objective" data-kra-id="${kra.id}">${ICON_PLUS}Add objective</button></div>`
+          }
+        </div>`;
+      return;
     }
-    detailEl.innerHTML = body;
+
+    const objIndex = kra.objectives.findIndex((o) => id(o.id) === id(obj.id));
+    const { code, title } = splitObjectiveText(
+      obj.text,
+      `${kraNumber(kra)}.${objIndex + 1}`,
+    );
+    const asking =
+      confirmClearObjId !== null && id(confirmClearObjId) === id(obj.id);
+    const actions = asking
+      ? `<span class="eopcrf1-ed-ask">Clear this objective?</span>
+         <button type="button" class="eopcrf1-ed-del eopcrf1-ed-del--confirm" data-action="clear-yes">Clear</button>
+         <button type="button" class="eopcrf1-ed-del" data-action="clear-no">Keep</button>`
+      : `${
+          kra.locked
+            ? ""
+            : `<button type="button" class="eopcrf1-ed-del" data-action="edit-objective"><i class="ti ti-pencil" aria-hidden="true"></i> Edit</button>
+               <button type="button" class="eopcrf1-ed-del" data-action="delete-objective"><i class="ti ti-trash" aria-hidden="true"></i> Delete</button>`
+        }<button type="button" class="eopcrf1-ed-del" data-action="clear"><i class="ti ti-eraser" aria-hidden="true"></i> Clear objective</button>`;
+    editorEl.innerHTML = `
+      <div class="eopcrf1-ed-head">
+        <div class="eopcrf1-ed-title">
+          <span class="eopcrf1-ed-cat">${kraWord(kra)} ${kraNumber(kra)} &middot; Objective ${escapeHtml(code)}</span>
+          <span class="eopcrf1-ed-name" title="${escapeHtml(title || "")}">${title ? escapeHtml(title) : "Untitled objective"}</span>
+        </div>
+        <span class="eopcrf1-ed-actions">${actions}</span>
+      </div>
+      <div class="eopcrf1-ed-body">${renderObjectiveBody(kra, obj)}</div>`;
   }
 
   // ================= Render: all =================
   function render() {
-    renderPartTabs();
-
-    const visibleKras = state.kras.filter((k) => k.part === activePart);
-    const isEmpty = visibleKras.length === 0;
-    emptyStateEl.style.display = isEmpty ? "block" : "none";
-    emptyAddKraBtn.style.display =
-      isEmpty && activePart === "b" ? "inline-flex" : "none";
-    workspaceEl.style.display = isEmpty ? "none" : "";
-    if (isEmpty) {
-      emptyStateTextEl.innerHTML =
-        activePart === "b"
-          ? "No KRAs yet. Click <strong>Add KRA</strong> to start planning."
-          : "Nothing here yet. This part's fixed structure is created the first time data loads for this rating year.";
-      navEl.innerHTML = "";
-      detailEl.innerHTML = "";
-      return;
-    }
-
-    ensureSelection(visibleKras);
-    renderNav(visibleKras);
-    renderDetail(visibleKras);
+    const kras = orderedKras();
+    ensureSelection(kras);
+    renderProgress(kras);
+    renderList(kras);
+    renderEditor(kras);
   }
+
+  // ================= Progress panel events =================
+  segsEl.addEventListener("click", (e) => {
+    const seg = e.target.closest(".eopcrf1-seg[data-kra-id]");
+    if (!seg) return;
+    const kra = findKra(seg.dataset.kraId);
+    if (!kra) return;
+    sel.kraId = kra.id;
+    sel.objId = kra.objectives.length ? kra.objectives[0].id : null;
+    render();
+    workspaceEl.scrollIntoView({ block: "start", behavior: "smooth" });
+  });
+
+  nextBtn.addEventListener("click", () => {
+    const all = [];
+    orderedKras().forEach((k) =>
+      k.objectives.forEach((o) => all.push({ k, o })),
+    );
+    if (!all.length) return;
+    const start = all.findIndex(
+      (x) => id(x.k.id) === id(sel.kraId) && id(x.o.id) === id(sel.objId),
+    );
+    for (let step = 1; step <= all.length; step++) {
+      const x = all[(start + step + all.length) % all.length];
+      if (objectiveProgress(x.k, x.o).state !== "done") {
+        sel.kraId = x.k.id;
+        sel.objId = x.o.id;
+        render();
+        workspaceEl.scrollIntoView({ block: "start", behavior: "smooth" });
+        return;
+      }
+    }
+  });
 
   // ================= Modal control =================
   let modalCtx = null; // { mode, kraId, objId, category, itemId, level }
@@ -979,10 +985,6 @@
     }
   });
 
-  emptyAddKraBtn.addEventListener("click", () =>
-    openModal({ mode: "add-kra" }),
-  );
-
   // ================= Reset =================
   const PART_NAMES = { a: "Part I-A", b: "Part I-B", c: "Part I-C" };
   const getSelectedResetParts = () =>
@@ -1088,6 +1090,38 @@
     render();
   }
 
+  // Clears everything entered on one objective (ratings, timeline, MOV link,
+  // actual accomplishments). The objective itself is kept.
+  async function clearObjective(kraId, objId) {
+    const obj = findObjective(kraId, objId);
+    if (!obj) return;
+    const base = `/irc/eopcrf1/objective/${objId}`;
+    try {
+      for (const c of INDICATOR_CATEGORIES) {
+        if (hasVal(obj.ratings && obj.ratings[c.key]))
+          upsertObjective(
+            await apiCall("POST", `${base}/rating`, {
+              category: c.key,
+              rating: null,
+            }),
+          );
+      }
+      if (obj.mov)
+        upsertObjective(await apiCall("POST", `${base}/mov`, { url: "" }));
+      if (obj.actualResults)
+        upsertObjective(
+          await apiCall("POST", `${base}/actual-results`, { text: "" }),
+        );
+      if (obj.timeline)
+        upsertObjective(
+          await apiCall("POST", `${base}/timeline`, { text: "" }),
+        );
+    } catch (err) {
+      alert(err.message);
+    }
+    render();
+  }
+
   workspaceEl.addEventListener("click", async (e) => {
     const el = e.target.closest("[data-action]");
     if (!el) return;
@@ -1107,9 +1141,9 @@
         if (
           window.matchMedia &&
           window.matchMedia("(max-width: 900px)").matches &&
-          detailEl.scrollIntoView
+          editorEl.scrollIntoView
         ) {
-          detailEl.scrollIntoView({ block: "start" });
+          editorEl.scrollIntoView({ block: "start" });
         }
         break;
       case "select-kra": {
@@ -1230,6 +1264,18 @@
       case "edit-timeline":
         openModal({ mode: "edit-timeline", kraId, objId });
         break;
+      case "clear":
+        confirmClearObjId = objId;
+        render();
+        break;
+      case "clear-no":
+        confirmClearObjId = null;
+        render();
+        break;
+      case "clear-yes":
+        confirmClearObjId = null;
+        await clearObjective(kraId, objId);
+        break;
       case "pick-level": {
         const obj = findObjective(kraId, objId);
         if (!obj) return;
@@ -1266,7 +1312,6 @@
     e.preventDefault();
     row.click();
   });
-
   // ================= Form details (report header) =================
   const detailsSumEl = document.getElementById("eopcrf1-details-sum");
   const headerInputs = document.querySelectorAll("[data-header]");
@@ -1274,11 +1319,13 @@
   function updateDetailsSummary(h) {
     const bits = [
       (h.nameOfEmployee || "").toUpperCase(),
+      h.positionOfEmployee,
       h.ratingPeriod,
     ].filter(Boolean);
     detailsSumEl.textContent = bits.length
       ? bits.join(" · ")
       : "Not filled in yet";
+    detailsSumEl.classList.toggle("is-incomplete", !bits.length);
   }
 
   async function loadHeader() {
@@ -1348,6 +1395,57 @@
         alert(err.message);
       }
     });
+  });
+
+  // ---- Form details drawer ----
+  const drawerOverlay = document.getElementById("eopcrf1-drawer-overlay");
+  const drawerEl = document.getElementById("eopcrf1-drawer");
+  let drawerReturnFocus = null;
+
+  function openDrawer() {
+    drawerReturnFocus = document.activeElement;
+    drawerOverlay.classList.add("visible");
+    const first = drawerEl.querySelector("input, textarea");
+    if (first) first.focus();
+  }
+
+  function closeDrawer() {
+    if (!drawerOverlay.classList.contains("visible")) return;
+    // Blur the focused field so its pending "change" save fires first.
+    if (drawerEl.contains(document.activeElement))
+      document.activeElement.blur();
+    drawerOverlay.classList.remove("visible");
+    if (drawerReturnFocus && drawerReturnFocus.focus) drawerReturnFocus.focus();
+  }
+
+  document
+    .getElementById("eopcrf1-details-open")
+    .addEventListener("click", openDrawer);
+  document
+    .getElementById("eopcrf1-drawer-close")
+    .addEventListener("click", closeDrawer);
+  drawerOverlay.addEventListener("mousedown", (e) => {
+    if (e.target === drawerOverlay) closeDrawer();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeDrawer();
+  });
+  // Keep Tab inside the open drawer.
+  drawerEl.addEventListener("keydown", (e) => {
+    if (e.key !== "Tab") return;
+    const f = Array.from(
+      drawerEl.querySelectorAll("input, textarea, button"),
+    ).filter((x) => !x.disabled);
+    if (!f.length) return;
+    const first = f[0];
+    const last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   });
 
   // ================= Print / Save as PDF =================
@@ -1715,12 +1813,24 @@
       const data = await apiCall("GET", "/irc/eopcrf1/data");
       state.year = data.year;
       state.kras = data.kras;
+      // Open on the first objective that still needs work.
+      const kras = orderedKras();
+      for (const k of kras) {
+        const o = k.objectives.find(
+          (x) => objectiveProgress(k, x).state !== "done",
+        );
+        if (o) {
+          sel.kraId = k.id;
+          sel.objId = o.id;
+          break;
+        }
+      }
       render();
     } catch (err) {
       workspaceEl.style.display = "none";
-      emptyStateEl.style.display = "block";
-      emptyStateTextEl.textContent =
-        "Couldn't load this report: " + err.message;
+      progressEl.style.display = "none";
+      errorStateEl.style.display = "block";
+      errorStateEl.textContent = "Couldn't load this report: " + err.message;
     }
   }
 

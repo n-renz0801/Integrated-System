@@ -1,5 +1,5 @@
-{% extends "base.html" %} {% block title %}OPCRF Part I - Project-MEASURE-School{% endblock
-%} {% block content %}
+{% extends "base.html" %} {% block title %}OPCRF Part I -
+Project-MEASURE-School{% endblock %} {% block content %}
 
 <link
   rel="stylesheet"
@@ -11,21 +11,13 @@
 />
 
 <section id="eopcrf1-tab" class="tab-panel eopcrf1-panel">
+  <!-- Header: title, actions and the form-details summary in one card -->
   <div class="eopcrf1-header">
     <div class="eopcrf1-header-top">
       <div class="eopcrf1-header-title-main">
-        <span class="eopcrf1-header-badge">
-          <span class="eopcrf1-header-badge-group">OPCRF</span>
-          <span class="eopcrf1-header-badge-page">I</span>
-        </span>
-        <div class="eopcrf1-header-divider"></div>
+        <span class="eopcrf1-header-badge">OPCRF I</span>
         <div>
-          <h2>OFFICE PERFORMANCE COMMITMENT &amp; Review Form</h2>
-          <p class="eopcrf1-subtitle">
-            Part I-A and Part I-C are the office's fixed structure — just rate
-            each indicator. Part I-B is yours to build: add your own KRAs and
-            objectives.
-          </p>
+          <h2>Office Performance Commitment &amp; Review Form</h2>
         </div>
       </div>
       <div class="eopcrf1-header-actions">
@@ -37,180 +29,64 @@
         </button>
       </div>
     </div>
+    <div class="eopcrf1-meta">
+      <i class="ti ti-file-description" aria-hidden="true"></i>
+      <span class="eopcrf1-details-sum" id="eopcrf1-details-sum"
+        >Not filled in yet</span
+      >
+      <span class="eopcrf1-meta-gap"></span>
+      <button type="button" class="eopcrf1-link-btn" id="eopcrf1-details-open">
+        Edit form details
+      </button>
+    </div>
   </div>
 
-  <!-- Form details: the identifying block at the top of the printed OPCRF.
-       Each field saves on change through /api/eopcrf1/report-header. The
-       Rater's and Approving Authority's positions are fixed (not editable). -->
-  <details class="eopcrf1-details" id="eopcrf1-details">
-    <summary>
-      <span class="eopcrf1-details-icon" aria-hidden="true"
-        ><i class="ti ti-file-description"></i
+  <!-- Overall progress: one segment per KRA / area (click to jump). -->
+  <div class="eopcrf1-progress" id="eopcrf1-progress">
+    <div class="eopcrf1-progress-summary">
+      <span
+        class="eopcrf1-progress-count"
+        id="eopcrf1-progress-count"
+        title="An objective is complete when its timeline, ratings and actual accomplishments are filled in"
       ></span>
-      <span class="eopcrf1-details-heading">
-        <span class="eopcrf1-details-title">Form details</span>
-        <span class="eopcrf1-details-sum" id="eopcrf1-details-sum"
-          >Not filled in yet</span
-        >
-      </span>
-      <span class="eopcrf1-details-toggle">
-        <span class="eopcrf1-when-closed">Click to expand</span>
-        <span class="eopcrf1-when-open">Collapse</span>
-        <i class="ti ti-chevron-down" aria-hidden="true"></i>
-      </span>
-    </summary>
-
-    <div class="eopcrf1-details-grid">
-      <!-- Group 1: the employee being rated -->
-      <fieldset class="eopcrf1-dgroup">
-        <legend class="eopcrf1-dgroup-title">
-          <i class="ti ti-user" aria-hidden="true"></i>Employee
-        </legend>
-        <label class="eopcrf1-field"
-          ><span class="eopcrf1-label">Name of employee</span
-          ><input
-            type="text"
-            id="eopcrf1-h-nameOfEmployee"
-            data-header="nameOfEmployee"
-            data-upper="1"
-        /></label>
-        <label class="eopcrf1-field"
-          ><span class="eopcrf1-label">Position / designation</span
-          ><input
-            type="text"
-            id="eopcrf1-h-positionOfEmployee"
-            data-header="positionOfEmployee"
-        /></label>
-      </fieldset>
-
-      <!-- Group 2: who rates and approves -->
-      <fieldset class="eopcrf1-dgroup">
-        <legend class="eopcrf1-dgroup-title">
-          <i class="ti ti-user-check" aria-hidden="true"></i>Rater &amp;
-          approving authority
-        </legend>
-        <label class="eopcrf1-field"
-          ><span class="eopcrf1-label">Name of rater</span
-          ><input
-            type="text"
-            id="eopcrf1-h-nameOfRater"
-            data-header="nameOfRater"
-            data-upper="1"
-          /><span class="eopcrf1-field-hint"
-            >Assistant Schools Division Superintendent</span
-          ></label
-        >
-        <label class="eopcrf1-field"
-          ><span class="eopcrf1-label">Approving authority</span
-          ><input
-            type="text"
-            id="eopcrf1-h-approvingAuthority"
-            data-authority="name"
-            data-upper="1"
-          /><span class="eopcrf1-field-hint"
-            >Schools Division Superintendent</span
-          ></label
-        >
-      </fieldset>
-
-      <!-- Group 3: office and review period -->
-      <fieldset class="eopcrf1-dgroup">
-        <legend class="eopcrf1-dgroup-title">
-          <i class="ti ti-building" aria-hidden="true"></i>Office &amp; review
-          period
-        </legend>
-        <label class="eopcrf1-field eopcrf1-field--wide"
-          ><span class="eopcrf1-label"
-            >Strand / bureau / center / service / region / division /
-            school</span
-          ><input type="text" id="eopcrf1-h-bureau" data-header="bureau"
-        /></label>
-        <label class="eopcrf1-field"
-          ><span class="eopcrf1-label">Review period</span
-          ><input
-            type="text"
-            id="eopcrf1-h-ratingPeriod"
-            data-header="ratingPeriod"
-        /></label>
-        <label class="eopcrf1-field"
-          ><span class="eopcrf1-label">Date of review</span
-          ><input
-            type="date"
-            id="eopcrf1-h-dateOfReview"
-            data-header="dateOfReview"
-        /></label>
-      </fieldset>
-
-      <!-- Group 4: statement of purpose -->
-      <fieldset class="eopcrf1-dgroup eopcrf1-dgroup--stretch">
-        <legend class="eopcrf1-dgroup-title">
-          <i class="ti ti-notes" aria-hidden="true"></i>Statement of purpose
-        </legend>
-        <label class="eopcrf1-field eopcrf1-field--grow"
-          ><span class="eopcrf1-label eopcrf1-label--sr"
-            >Statement of purpose</span
-          ><textarea
-            id="eopcrf1-h-statementOfPurpose"
-            data-header="statementOfPurpose"
-            rows="5"
-          ></textarea>
-        </label>
-      </fieldset>
     </div>
-  </details>
-
-  <div id="eopcrf1-part-tabs" class="eopcrf1-part-tabs" role="tablist"></div>
+    <div
+      class="eopcrf1-segments"
+      id="eopcrf1-segments"
+      role="progressbar"
+      aria-label="Overall progress"
+      aria-valuemin="0"
+      aria-valuemax="0"
+      aria-valuenow="0"
+    ></div>
+    <button type="button" class="eopcrf1-next-btn" id="eopcrf1-next-incomplete">
+      <i class="ti ti-player-skip-forward" aria-hidden="true"></i> Next
+      incomplete
+    </button>
+    <span class="eopcrf1-done-badge" id="eopcrf1-done-badge" hidden>
+      <i class="ti ti-circle-check" aria-hidden="true"></i> Form complete
+    </span>
+  </div>
 
   <div id="eopcrf1-workspace" class="eopcrf1-workspace">
     <div class="eopcrf1-nav-col">
-      <nav id="eopcrf1-nav" class="eopcrf1-nav" aria-label="Objectives"></nav>
+      <!-- A div, not <nav>: base.css styles bare nav/header elements. -->
+      <div
+        id="eopcrf1-list"
+        class="eopcrf1-list"
+        role="navigation"
+        aria-label="KRAs and objectives"
+      ></div>
     </div>
-    <div id="eopcrf1-detail" class="eopcrf1-detail"></div>
+    <div id="eopcrf1-editor" class="eopcrf1-editor"></div>
   </div>
 
   <div
-    id="eopcrf1-empty-state"
-    class="eopcrf1-empty-state"
+    id="eopcrf1-error-state"
+    class="eopcrf1-error-state"
     style="display: none"
-  >
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M9 11l3 3L22 4"></path>
-      <path
-        d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
-      ></path>
-    </svg>
-    <p id="eopcrf1-empty-state-text">
-      No KRAs yet. Click <strong>Add KRA</strong> to start planning.
-    </p>
-    <!-- Shown for Part I-B only. Once a KRA exists, "Add KRA" lives at the top
-         of the sidebar nav instead. -->
-    <button
-      type="button"
-      class="eopcrf1-add-btn eopcrf1-empty-add-btn"
-      id="eopcrf1-empty-add-kra"
-      style="display: none"
-    >
-      <svg
-        class="eopcrf1-inline-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 5v14M5 12h14"></path>
-      </svg>
-      Add KRA
-    </button>
-  </div>
+    role="alert"
+  ></div>
 
   <!-- ============= Entry modal (KRA / Objective / Rubric / MOV / Actual results / Timeline) ============= -->
   <div id="eopcrf1-entry-modal" class="eopcrf1-modal" style="display: none">
@@ -318,6 +194,135 @@
     <div class="eopcrf1-modal-overlay" id="eopcrf1EntryModalOverlay"></div>
   </div>
 </section>
+
+<!-- ================= FORM DETAILS DRAWER =================
+     The identifying block at the top of the printed OPCRF. Each field saves
+     on change through /api/eopcrf1/report-header (approving authority through
+     /api/eopcrf1/approving-authority). The Rater's and Approving Authority's
+     positions are fixed (not editable). -->
+<div id="eopcrf1-drawer-overlay" class="eopcrf1-drawer-overlay">
+  <aside
+    class="eopcrf1-drawer"
+    id="eopcrf1-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="eopcrf1-drawer-title"
+  >
+    <div class="eopcrf1-drawer-head">
+      <h4 id="eopcrf1-drawer-title">Form details</h4>
+      <button
+        type="button"
+        class="eopcrf1-btn eopcrf1-drawer-close"
+        id="eopcrf1-drawer-close"
+        aria-label="Close form details"
+      >
+        <i class="ti ti-x" aria-hidden="true"></i> Close
+      </button>
+    </div>
+    <div class="eopcrf1-drawer-body">
+      <p class="eopcrf1-drawer-note">
+        These appear at the top of the printed form. Changes save as you leave
+        each field.
+      </p>
+
+      <!-- Group 1: the employee being rated -->
+      <fieldset class="eopcrf1-dgroup">
+        <legend class="eopcrf1-dgroup-title">
+          <i class="ti ti-user" aria-hidden="true"></i>Employee
+        </legend>
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Name of employee</span
+          ><input
+            type="text"
+            id="eopcrf1-h-nameOfEmployee"
+            data-header="nameOfEmployee"
+            data-upper="1"
+        /></label>
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Position / designation</span
+          ><input
+            type="text"
+            id="eopcrf1-h-positionOfEmployee"
+            data-header="positionOfEmployee"
+        /></label>
+      </fieldset>
+
+      <!-- Group 2: who rates and approves -->
+      <fieldset class="eopcrf1-dgroup">
+        <legend class="eopcrf1-dgroup-title">
+          <i class="ti ti-user-check" aria-hidden="true"></i>Rater &amp;
+          approving authority
+        </legend>
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Name of rater</span
+          ><input
+            type="text"
+            id="eopcrf1-h-nameOfRater"
+            data-header="nameOfRater"
+            data-upper="1"
+          /><span class="eopcrf1-field-hint"
+            >Assistant Schools Division Superintendent</span
+          ></label
+        >
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Approving authority</span
+          ><input
+            type="text"
+            id="eopcrf1-h-approvingAuthority"
+            data-authority="name"
+            data-upper="1"
+          /><span class="eopcrf1-field-hint"
+            >Schools Division Superintendent</span
+          ></label
+        >
+      </fieldset>
+
+      <!-- Group 3: office and review period -->
+      <fieldset class="eopcrf1-dgroup">
+        <legend class="eopcrf1-dgroup-title">
+          <i class="ti ti-building" aria-hidden="true"></i>Office &amp; review
+          period
+        </legend>
+        <label class="eopcrf1-field eopcrf1-field--wide"
+          ><span class="eopcrf1-label"
+            >Strand / bureau / center / service / region / division /
+            school</span
+          ><input type="text" id="eopcrf1-h-bureau" data-header="bureau"
+        /></label>
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Review period</span
+          ><input
+            type="text"
+            id="eopcrf1-h-ratingPeriod"
+            data-header="ratingPeriod"
+        /></label>
+        <label class="eopcrf1-field"
+          ><span class="eopcrf1-label">Date of review</span
+          ><input
+            type="date"
+            id="eopcrf1-h-dateOfReview"
+            data-header="dateOfReview"
+        /></label>
+      </fieldset>
+
+      <!-- Group 4: statement of purpose -->
+      <fieldset class="eopcrf1-dgroup eopcrf1-dgroup--stretch">
+        <legend class="eopcrf1-dgroup-title">
+          <i class="ti ti-notes" aria-hidden="true"></i>Statement of purpose
+        </legend>
+        <label class="eopcrf1-field eopcrf1-field--grow"
+          ><span class="eopcrf1-label eopcrf1-label--sr"
+            >Statement of purpose</span
+          ><textarea
+            id="eopcrf1-h-statementOfPurpose"
+            data-header="statementOfPurpose"
+            rows="5"
+          ></textarea>
+        </label>
+      </fieldset>
+    </div>
+  </aside>
+</div>
 
 <!-- ================= RESET CONFIRMATION MODAL ================= -->
 <div id="eopcrf1-reset-confirm-overlay" class="eopcrf1-confirm-overlay">

@@ -172,6 +172,8 @@ nav ul li a.active::after {
 ═══════════════════════════════════════════════════════════════════════════ */
 
 .content {
+  /* Soft canvas so white cards stand out; screen only (see @media print). */
+  background: var(--off-white);
   /* 250px at >=1680px (unchanged from the original design) down to
      100px at <=1366px, scaling continuously with --shrink. */
   padding: 30px calc(250px - 150px * var(--shrink));
@@ -686,5 +688,248 @@ textarea[readonly] {
     font-size: 7.5px !important;
     transform: translateY(-10px) !important;
     border-bottom: none !important;
+  }
+}
+
+/* ---------- OPCRF I, II and IV: report signatories (always visible, compact) ----------
+   Same look as the OPCRF III agreement block: a white card, then a centered
+   stack per signatory (label, name with underline, position, date). The footer
+   is shared, so this is scoped through body[data-active-tab]. Markup and
+   content are unchanged; the "Report signatories" title is just not shown. */
+@media screen {
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory {
+    --e3-ink: #1c2530;
+    --e3-muted: #5b6676;
+    --e3-line: #e2e6ec;
+    --e3-line-strong: #c4ccd8;
+    margin-top: 16px;
+    padding: 14px 20px 16px;
+    overflow: visible;
+    background: #fff;
+    border: 1px solid var(--e3-line);
+    border-radius: 10px;
+    box-shadow: none;
+    color: var(--e3-ink);
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    *,
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    *::before,
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    *::after {
+    box-sizing: border-box;
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-title {
+    display: none;
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-grid,
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-grid--three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px 24px;
+    margin: 0;
+    padding: 0;
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-block {
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    text-align: center;
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-block:not(:last-child) {
+    border: 0;
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-label {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    text-align: center;
+    color: var(--e3-muted);
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-avatar {
+    display: none;
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-person,
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-info {
+    display: block;
+    width: 100%;
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-name {
+    display: block;
+    width: 100%;
+    min-height: 1.4em;
+    margin: 0;
+    padding: 4px 0;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    color: var(--e3-ink);
+    border-bottom: 1px solid var(--e3-line-strong);
+    overflow-wrap: anywhere;
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    p.report-signatory-position {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 30px;
+    margin: 6px 0 0;
+    padding: 2px 0;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 20px;
+    text-align: center;
+    color: var(--e3-muted);
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-date {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-date-btn {
+    padding: 4px 12px;
+    font-size: 13px;
+    color: var(--e3-ink);
+    background: #fff;
+    border: 1px solid var(--e3-line-strong);
+    border-radius: 8px;
+  }
+}
+
+@media screen and (max-width: 860px) {
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-grid,
+  body:is(
+      [data-active-tab="eopcrf1"],
+      [data-active-tab="eopcrf2"],
+      [data-active-tab="eopcrf4"]
+    )
+    .report-signatory
+    .report-signatory-grid--three {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media print {
+  .content {
+    background: transparent;
   }
 }

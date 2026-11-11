@@ -9,10 +9,10 @@
     "Annex A: School-Based Management (SBM) Self-Assessment Checklist";
 
   const DEGREES = [
-    { key: "not_yet", label: "Not yet manifested" },
-    { key: "rarely", label: "Rarely manifested" },
-    { key: "frequently", label: "Frequently manifested" },
-    { key: "always", label: "Always manifested" },
+    { key: "not_yet", label: "Not yet manifested", short: "Not yet" },
+    { key: "rarely", label: "Rarely manifested", short: "Rarely" },
+    { key: "frequently", label: "Frequently manifested", short: "Frequently" },
+    { key: "always", label: "Always manifested", short: "Always" },
   ];
   const DEGREE_NOTE = "(Please tick the box that best describes your school)";
 
@@ -124,6 +124,7 @@
     active: 0, // index into DIMENSIONS
     open: new Set(), // indicator numbers whose Remarks box is expanded
     mov: {}, // { "7": "edit" | "confirm" } transient MOV-link UI mode per indicator
+    confirmClear: false, // "Clear section" is waiting for Clear / Keep
   };
 
   const el = (id) => document.getElementById(id);
@@ -242,30 +243,31 @@
     navEl.innerHTML = DIMENSIONS.map((dim, i) => {
       const done = answeredIn(dim);
       const total = dim.items.length;
-      const complete = done === total;
+      const isDone = done === total;
       return `
-        <button type="button" class="sbm-nav-item${i === state.active ? " is-active" : ""}${complete ? " is-complete" : ""}"
+        <button type="button" class="sbm-nav-item${i === state.active ? " is-active" : ""}${isDone ? " is-complete" : ""}"
                 data-dim="${i}" ${i === state.active ? 'aria-current="true"' : ""}>
           <span class="sbm-nav-top">
             <span class="sbm-nav-name">${escapeHtml(dim.name)}</span>
-            <span class="sbm-nav-count">${
-              complete
-                ? '<i class="ti ti-circle-check-filled" aria-hidden="true"></i>'
-                : ""
-            }${done} of ${total}</span>
+            <span class="sbm-nav-count">${isDone ? '<i class="ti ti-circle-check-filled" aria-hidden="true"></i>' : ""}${done}/${total}</span>
           </span>
-          <span class="sbm-nav-bar"><span style="width:${(done / total) * 100}%"></span></span>
+          <span class="sbm-nav-bar" aria-hidden="true"><span style="width:${(done / total) * 100}%"></span></span>
         </button>`;
     }).join("");
   }
 
   function optionsHtml(n, selected) {
+    // Roving tabindex: one tab stop per row (the chosen option, else the first).
+    const stop = DEGREES.some((d) => d.key === selected)
+      ? selected
+      : DEGREES[0].key;
     return DEGREES.map(
-      (d) => `
+      (d, i) => `
         <button type="button" class="sbm-opt${selected === d.key ? " is-selected" : ""}"
-                role="radio" aria-checked="${selected === d.key}" data-degree="${d.key}">
-          <span class="sbm-box" aria-hidden="true"></span>
-          <span class="sbm-opt-label">${d.label}</span>
+                role="radio" aria-checked="${selected === d.key}" data-degree="${d.key}"
+                tabindex="${d.key === stop ? 0 : -1}" title="${d.label} (press ${i + 1})"
+                aria-label="${d.label}">
+          <span class="sbm-opt-label" aria-hidden="true">${d.short}</span>
         </button>`,
     ).join("");
   }
@@ -314,14 +316,12 @@
   function movHtml(n) {
     const link = resp(n).movLink;
     const mode = state.mov[n];
-    const label = `<span class="sbm-mov-label">MOV link${link ? "" : "<em>required</em>"}</span>`;
     if (!link || mode === "edit") {
       const verb = link ? "Save" : "Attach";
       return `
         <div class="sbm-mov${link ? "" : " is-missing"}">
-          ${label}
           <input type="text" inputmode="url" class="sbm-mov-input" value="${escapeHtml(link)}"
-                 placeholder="Paste the link to your evidence (https://\u2026)" autocomplete="off" spellcheck="false"
+                 placeholder="Paste your MOV link here (required)" autocomplete="off" spellcheck="false"
                  aria-label="MOV link for indicator ${n}" />
           <button type="button" class="sbm-mov-btn sbm-mov-btn--primary sbm-mov-save" ${link ? "" : "disabled"}>${verb}</button>
           ${link ? '<button type="button" class="sbm-mov-btn sbm-mov-cancel">Cancel</button>' : ""}
@@ -346,7 +346,7 @@
              <button type="button" class="sbm-mov-icon sbm-mov-edit" aria-label="Edit MOV link for indicator ${n}" title="Edit link"><i class="ti ti-pencil" aria-hidden="true"></i></button>
              <button type="button" class="sbm-mov-icon sbm-mov-icon--danger sbm-mov-remove" aria-label="Remove MOV link for indicator ${n}" title="Remove link"><i class="ti ti-trash" aria-hidden="true"></i></button>
            </span>`;
-    return `<div class="sbm-mov">${label}${tile}${actions}</div>`;
+    return `<div class="sbm-mov">${tile}${actions}</div>`;
   }
 
   // First non-empty line of a remark, shown beside the toggle when collapsed.
@@ -368,7 +368,7 @@
       <i class="ti ${has ? "ti-message-circle-filled" : "ti-message-plus"} sbm-remarks-icon" aria-hidden="true"></i>
       <span class="sbm-remarks-toggle-text">${has || isOpen ? "Remarks" : "Add remarks"}</span>
       <span class="sbm-remarks-snippet"${snippet ? "" : " hidden"}>${escapeHtml(snippet)}</span>
-      <i class="ti ti-chevron-down sbm-remarks-chev" aria-hidden="true"></i>`;
+      <span class="sbm-remarks-act">${isOpen ? "Close" : has ? "Edit" : ""}</span>`;
   }
 
   function cardHtml(item) {
@@ -377,56 +377,50 @@
     const isOpen = state.open.has(item.n);
     return `
       <article class="sbm-card${isComplete(item.n) ? " is-complete" : ""}" data-n="${item.n}" id="sbm-card-${item.n}">
-        <div class="sbm-card-main">
-          <p class="sbm-indicator"><span class="sbm-no">${item.n}.</span><span class="sbm-indicator-text">${item.html}</span></p>
+        <p class="sbm-indicator"><span class="sbm-no">${item.n}</span><span class="sbm-indicator-text">${item.html}</span></p>
+        <div class="sbm-bar">
           <div class="sbm-opts" role="radiogroup" aria-label="Degree of Manifestation for indicator ${item.n}">
             ${optionsHtml(item.n, r.degree)}
           </div>
+          ${movHtml(item.n)}
         </div>
-        <div class="sbm-card-foot">
+        <div class="sbm-remarks-row">
           <button type="button" class="sbm-remarks-toggle${hasRemarks ? " has-remarks" : ""}" aria-expanded="${isOpen}">
             ${remarksToggleInner(item.n, isOpen)}
           </button>
+          <div class="sbm-remarks" ${isOpen ? "" : "hidden"}>
+            <textarea rows="1" aria-label="Remarks for indicator ${item.n}">${escapeHtml(r.remarks)}</textarea>
+          </div>
         </div>
-        <div class="sbm-remarks" ${isOpen ? "" : "hidden"}>
-          <textarea rows="3" aria-label="Remarks for indicator ${item.n}">${escapeHtml(r.remarks)}</textarea>
-        </div>
-        ${movHtml(item.n)}
       </article>`;
+  }
+
+  // Banner actions: clear this dimension (two steps, like Clear row on OPCRF IV).
+  function dimActionsHtml() {
+    return state.confirmClear
+      ? `<span class="sbm-dim-ask">Clear this section?</span>
+         <button type="button" class="sbm-dim-del sbm-dim-del--confirm" data-act="clear-yes">Clear</button>
+         <button type="button" class="sbm-dim-del" data-act="clear-no">Keep</button>`
+      : `<button type="button" class="sbm-dim-del" data-act="clear"><i class="ti ti-eraser" aria-hidden="true"></i> Clear section</button>`;
   }
 
   function renderDetail() {
     const dim = DIMENSIONS[state.active];
-    const prev = DIMENSIONS[state.active - 1];
-    const next = DIMENSIONS[state.active + 1];
     detailEl.innerHTML = `
       <div class="sbm-dim-head">
-        <h3>${escapeHtml(dim.name)}</h3>
-        <p>${escapeHtml(dim.description)}</p>
+        <div class="sbm-dim-text">
+          <h3>${escapeHtml(dim.name)}</h3>
+          <p>${escapeHtml(dim.description)}</p>
+        </div>
+        <div class="sbm-dim-actions">${dimActionsHtml()}</div>
       </div>
-      <div class="sbm-cols" aria-hidden="true">
-        <span>SBM Indicator</span>
-        <span class="sbm-cols-degree"><strong>Degree of Manifestation</strong><small>${DEGREE_NOTE}</small></span>
-      </div>
-      <div class="sbm-cards">${dim.items.map(cardHtml).join("")}</div>
-      <div class="sbm-pager">
-        ${
-          prev
-            ? `<button type="button" class="sbm-btn" data-go="${state.active - 1}"><i class="ti ti-arrow-left" aria-hidden="true"></i> ${escapeHtml(prev.name)}</button>`
-            : "<span></span>"
-        }
-        ${
-          next
-            ? `<button type="button" class="sbm-btn sbm-btn--primary" data-go="${state.active + 1}">${escapeHtml(next.name)} <i class="ti ti-arrow-right" aria-hidden="true"></i></button>`
-            : "<span></span>"
-        }
-      </div>`;
+      <div class="sbm-cards">${dim.items.map(cardHtml).join("")}</div>`;
     detailEl.querySelectorAll("textarea").forEach(autoGrow);
   }
 
   function autoGrow(ta) {
     ta.style.height = "auto";
-    ta.style.height = Math.max(ta.scrollHeight + 2, 72) + "px";
+    ta.style.height = Math.max(ta.scrollHeight + 2, 44) + "px";
   }
 
   // Update one card in place (keeps keyboard focus / typing intact).
@@ -435,11 +429,39 @@
     if (!card) return;
     const r = resp(n);
     card.classList.toggle("is-complete", isComplete(n));
-    card.querySelectorAll(".sbm-opt").forEach((btn) => {
+    const opts = Array.from(card.querySelectorAll(".sbm-opt"));
+    const stop = opts.some((b) => b.dataset.degree === r.degree)
+      ? r.degree
+      : opts[0].dataset.degree;
+    opts.forEach((btn) => {
       const on = btn.dataset.degree === r.degree;
       btn.classList.toggle("is-selected", on);
       btn.setAttribute("aria-checked", String(on));
+      btn.tabIndex = btn.dataset.degree === stop ? 0 : -1;
     });
+  }
+
+  // Choose (or clear, when it is already chosen) the degree for one indicator.
+  function setDegree(n, key) {
+    const r = resp(n);
+    const previous = r.degree;
+    const next = previous === key ? null : key;
+    r.degree = next;
+    updateCard(n);
+    refreshCounts();
+    save(n, { degree: next }).catch(() => {
+      r.degree = previous;
+      updateCard(n);
+      refreshCounts();
+    });
+  }
+
+  function focusCardOptions(card) {
+    if (!card) return;
+    const target =
+      card.querySelector('.sbm-opt[tabindex="0"]') ||
+      card.querySelector(".sbm-opt");
+    if (target) target.focus();
   }
 
   function refreshCounts() {
@@ -449,6 +471,7 @@
 
   function goToDimension(i, opts = {}) {
     state.active = i;
+    state.confirmClear = false;
     renderProgress();
     renderNav();
     renderDetail();
@@ -474,9 +497,58 @@
     save(n, { remarks: resp(n).remarks }).catch(() => {});
   }
 
+  // ================= Clear section =================
+  // Empties the degree, remarks and MOV link of every indicator in the open
+  // dimension. Two steps: Clear section, then Clear / Keep.
+  async function handleSectionAction(what) {
+    const box = detailEl.querySelector(".sbm-dim-actions");
+    if (!box) return;
+    if (what === "clear" || what === "clear-no") {
+      state.confirmClear = what === "clear";
+      box.innerHTML = dimActionsHtml();
+      const next = box.querySelector(
+        what === "clear" ? '[data-act="clear-no"]' : '[data-act="clear"]',
+      );
+      if (next) next.focus();
+    } else if (what === "clear-yes") {
+      await clearSection();
+    }
+  }
+
+  async function clearSection() {
+    const nums = DIMENSIONS[state.active].items.map((it) => it.n);
+    nums.forEach((n) => {
+      if (saveTimers[n] !== undefined) {
+        clearTimeout(saveTimers[n]);
+        delete saveTimers[n];
+      }
+    });
+    setStatus("saving");
+    try {
+      await apiCall("POST", "/sbm/clear-section", {
+        year: state.year,
+        indicatorNos: nums,
+      });
+      nums.forEach((n) => {
+        delete state.responses[String(n)];
+        delete state.mov[n];
+        state.open.delete(n);
+      });
+      state.confirmClear = false;
+      refreshCounts();
+      renderDetail();
+      setStatus("saved");
+    } catch (err) {
+      state.confirmClear = false;
+      const box = detailEl.querySelector(".sbm-dim-actions");
+      if (box) box.innerHTML = dimActionsHtml();
+      setStatus("error", err.message);
+    }
+  }
+
   detailEl.addEventListener("click", (e) => {
-    const go = e.target.closest("[data-go]");
-    if (go) return goToDimension(Number(go.dataset.go));
+    const act = e.target.closest("[data-act]");
+    if (act) return handleSectionAction(act.dataset.act);
 
     const card = e.target.closest(".sbm-card");
     if (!card) return;
@@ -485,20 +557,7 @@
     if (e.target.closest(".sbm-mov")) return handleMovClick(n, e);
 
     const opt = e.target.closest(".sbm-opt");
-    if (opt) {
-      const r = resp(n);
-      const previous = r.degree;
-      const next = previous === opt.dataset.degree ? null : opt.dataset.degree;
-      r.degree = next;
-      updateCard(n);
-      refreshCounts();
-      save(n, { degree: next }).catch(() => {
-        r.degree = previous;
-        updateCard(n);
-        refreshCounts();
-      });
-      return;
-    }
+    if (opt) return setDegree(n, opt.dataset.degree);
 
     if (e.target.closest(".sbm-remarks-toggle")) {
       const box = card.querySelector(".sbm-remarks");
@@ -638,6 +697,29 @@
     }
   });
 
+  detailEl.addEventListener("keydown", (e) => {
+    const opt = e.target.closest && e.target.closest(".sbm-opt");
+    if (!opt || e.altKey || e.ctrlKey || e.metaKey) return;
+    const card = opt.closest(".sbm-card");
+    const n = Number(card.dataset.n);
+    const opts = Array.from(card.querySelectorAll(".sbm-opt"));
+    const i = opts.indexOf(opt);
+    if (e.key >= "1" && e.key <= String(DEGREES.length)) {
+      e.preventDefault();
+      setDegree(n, DEGREES[Number(e.key) - 1].key);
+      focusCardOptions(el("sbm-card-" + (n + 1))); // keep going down the list
+    } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      const to = opts[i + (e.key === "ArrowRight" ? 1 : -1)];
+      if (to) to.focus();
+    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      focusCardOptions(
+        el("sbm-card-" + (n + (e.key === "ArrowDown" ? 1 : -1))),
+      );
+    }
+  });
+
   // Go to the first indicator that isn't finished yet (no degree or no link).
   nextBtn.addEventListener("click", () => {
     for (let d = 0; d < DIMENSIONS.length; d++) {
@@ -671,7 +753,10 @@
     if (e.target === overlay) closeReset();
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeReset();
+    if (e.key === "Escape") {
+      closeReset();
+      closeDrawer();
+    }
   });
   el("sbm-reset-confirm-confirm").addEventListener("click", async () => {
     try {
@@ -683,6 +768,7 @@
       state.responses = {};
       state.open.clear();
       state.mov = {};
+      state.confirmClear = false;
       closeReset();
       renderProgress();
       renderNav();
@@ -704,7 +790,7 @@
   // (independent of OPCRF I's Form details). `schoolInfo` always mirrors the
   // inputs, so Ctrl+P (which can't wait for a request) prints what is on screen.
   const schoolInfo = { school: "", head: "", year: "" };
-  const schoolEl = el("sbm-school");
+  const schoolOpenBtn = el("sbm-school-open");
   const schoolSumEl = el("sbm-school-sum");
   const schoolStatusEl = el("sbm-school-status");
   const schoolInputs = Array.from(document.querySelectorAll("[data-school]"));
@@ -724,6 +810,9 @@
       ? "Not filled in yet"
       : bits.join(" \u00b7 ") + (missing ? " (incomplete)" : "");
     schoolSumEl.classList.toggle("is-incomplete", missing);
+    schoolOpenBtn.textContent = bits.length
+      ? "Edit school details"
+      : "Add school details";
   }
 
   function setSchoolStatus(message) {
@@ -786,13 +875,54 @@
         input.value = input.dataset.upper ? v.toUpperCase() : v;
       });
       syncSchoolInfo();
-      // Open the panel while anything is still missing, so it isn't overlooked.
-      if (!schoolInfo.school || !schoolInfo.head || !schoolInfo.year)
-        schoolEl.open = true;
     } catch (err) {
       /* leave the lines blank to be filled in by hand */
     }
   }
+
+  // ---- School details + About drawer ----
+  const drawerOverlay = el("sbm-drawer-overlay");
+  const drawerEl = el("sbm-drawer");
+  let drawerReturnFocus = null;
+
+  function openDrawer() {
+    drawerReturnFocus = document.activeElement;
+    drawerOverlay.classList.add("visible");
+    const first = schoolInputs[0];
+    if (first) first.focus();
+  }
+
+  function closeDrawer() {
+    if (!drawerOverlay.classList.contains("visible")) return;
+    flushSchool(); // save anything still waiting on its typing delay
+    drawerOverlay.classList.remove("visible");
+    if (drawerReturnFocus && drawerReturnFocus.focus) drawerReturnFocus.focus();
+  }
+
+  el("sbm-school-open").addEventListener("click", () => openDrawer());
+  el("sbm-drawer-close").addEventListener("click", closeDrawer);
+  drawerOverlay.addEventListener("mousedown", (e) => {
+    if (e.target === drawerOverlay) closeDrawer();
+  });
+  // Keep Tab inside the open drawer.
+  drawerEl.addEventListener("keydown", (e) => {
+    if (e.key !== "Tab") return;
+    const f = Array.from(
+      drawerEl.querySelectorAll(
+        "input, button, [tabindex]:not([tabindex='-1'])",
+      ),
+    ).filter((x) => !x.disabled);
+    if (!f.length) return;
+    const first = f[0];
+    const last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
 
   function schoolNoteHtml() {
     const row = (label, value) =>

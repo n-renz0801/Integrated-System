@@ -1,5 +1,5 @@
-{% extends "base.html" %} {% block title %}OPCRF Part II - Project-MEASURE-School{% endblock
-%} {% block content %}
+{% extends "base.html" %} {% block title %}OPCRF Part II -
+Project-MEASURE-School{% endblock %} {% block content %}
 
 <link
   rel="stylesheet"
@@ -11,129 +11,89 @@
 />
 
 <section id="eopcrf2-tab" class="tab-panel eopcrf2-panel">
-  <!-- ================= 1. PAGE HEADER ================= -->
+  <!-- Header: title and actions in one card -->
   <div class="eopcrf2-header">
     <div class="eopcrf2-header-top">
       <div class="eopcrf2-header-title-main">
-        <span class="eopcrf2-header-badge">
-          <span class="eopcrf2-header-badge-group">OPCRF</span>
-          <span class="eopcrf2-header-badge-page">II</span>
-        </span>
-        <div class="eopcrf2-header-divider"></div>
+        <span class="eopcrf2-header-badge">OPCRF II</span>
         <div>
           <h2>Leadership and Core Behavioral Competencies</h2>
-          <p class="eopcrf2-subtitle">
-            Rate each behavioural indicator under Part II-A: Leadership
-            Competencies and Part II-B: Core Behavioural Competencies.
-          </p>
         </div>
       </div>
       <div class="eopcrf2-header-actions">
         <button type="button" id="eopcrf2-print-btn" class="eopcrf2-pdf-btn">
           <i class="ti ti-file-type-pdf" aria-hidden="true"></i> Save to PDF
         </button>
-        <button type="button" id="eopcrf2-reset-btn" class="eopcrf2-reset-btn">
-          <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset All Data
+        <button type="button" class="eopcrf2-reset-btn" id="eopcrf2-reset-btn">
+          <i class="ti ti-refresh-alert" aria-hidden="true"></i> Reset Data
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Rating scale: collapsed by default, same pattern as eopcrf1's "Form details" -->
-  <details class="eopcrf2-details" id="eopcrf2-scale-details">
-    <summary>
-      <span class="eopcrf2-details-icon" aria-hidden="true"
-        ><i class="ti ti-star"></i
+  <!-- Overall progress: one segment per competency (click to jump). -->
+  <div class="eopcrf2-progress" id="eopcrf2-progress">
+    <div class="eopcrf2-progress-summary">
+      <span
+        class="eopcrf2-progress-count"
+        id="eopcrf2-progress-count"
+        title="A competency is complete when all five indicators are rated"
       ></span>
-      <span class="eopcrf2-details-heading">
-        <span class="eopcrf2-details-title">Rating scale</span>
-        <span class="eopcrf2-details-sum"
-          >DepEd Competencies Scale &middot; 5 (Role Model) to 1 (Rarely
-          Demonstrated)</span
-        >
-      </span>
-      <span class="eopcrf2-details-toggle">
-        <span class="eopcrf2-when-closed">Click to expand</span>
-        <span class="eopcrf2-when-open">Collapse</span>
-        <i class="ti ti-chevron-down" aria-hidden="true"></i>
-      </span>
-    </summary>
-    <div class="eopcrf2-scale">
-      <table class="eopcrf2-scale-table">
-        <thead>
-          <tr>
-            <th>Numerical Rating</th>
-            <th>Adjectival Rating</th>
-            <th>Definition</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>5</strong></td>
-            <td>Role Model</td>
-            <td>
-              Behavioral indicator is consistently exhibited and is worthy of
-              emulation.
-            </td>
-          </tr>
-          <tr>
-            <td><strong>4</strong></td>
-            <td>Consistently Demonstrated</td>
-            <td>Behavioral indicator is constantly shown.</td>
-          </tr>
-          <tr>
-            <td><strong>3</strong></td>
-            <td>Most of the Time Demonstrated</td>
-            <td>Behavioral indicator is often shown.</td>
-          </tr>
-          <tr>
-            <td><strong>2</strong></td>
-            <td>Sometimes Demonstrated</td>
-            <td>Behavioral indicator is irregularly shown.</td>
-          </tr>
-          <tr>
-            <td><strong>1</strong></td>
-            <td>Rarely Demonstrated</td>
-            <td>Behavioral indicator is seldom shown.</td>
-          </tr>
-        </tbody>
-      </table>
     </div>
-  </details>
+    <div
+      class="eopcrf2-segments"
+      id="eopcrf2-segments"
+      role="progressbar"
+      aria-label="Overall progress"
+      aria-valuemin="0"
+      aria-valuemax="9"
+      aria-valuenow="0"
+    ></div>
+    <button type="button" class="eopcrf2-next-btn" id="eopcrf2-next-incomplete">
+      <i class="ti ti-player-skip-forward" aria-hidden="true"></i> Next
+      incomplete
+    </button>
+    <span class="eopcrf2-done-badge" id="eopcrf2-done-badge" hidden>
+      <i class="ti ti-circle-check" aria-hidden="true"></i> Form complete
+    </span>
+  </div>
 
-  <!-- Part II-A / II-B cards (clickable) + total score card; built by eopcrf2.js -->
-  <div id="eopcrf2-part-tabs" class="eopcrf2-part-tabs" role="tablist"></div>
-
-  <!-- Sidebar (competencies) + detail panel (indicators to rate) -->
   <div id="eopcrf2-workspace" class="eopcrf2-workspace">
     <div class="eopcrf2-nav-col">
-      <nav id="eopcrf2-nav" class="eopcrf2-nav" aria-label="Competencies"></nav>
+      <!-- A div, not <nav>: base.css styles bare nav/header elements. -->
+      <div
+        id="eopcrf2-list"
+        class="eopcrf2-list"
+        role="navigation"
+        aria-label="Competencies"
+      ></div>
     </div>
-    <div id="eopcrf2-detail" class="eopcrf2-detail"></div>
+    <div id="eopcrf2-editor" class="eopcrf2-editor"></div>
   </div>
 </section>
 
-<!-- ================= RESET-PAGE CONFIRMATION MODAL ================= -->
+<!-- ================= RESET CONFIRMATION MODAL ================= -->
 <div id="eopcrf2-reset-confirm-overlay" class="eopcrf2-confirm-overlay">
-  <div class="eopcrf2-confirm-box">
-    <h4>Reset the contents of this page?</h4>
-    <p>
-      This will delete all data entered on this page. This cannot be undone.
+  <div class="eopcrf2-confirm-box" role="dialog" aria-modal="true">
+    <h4>Reset this form?</h4>
+    <p class="eopcrf2-reset-intro">
+      This clears every rating in Part II-A and Part II-B. This cannot be
+      undone.
     </p>
     <div class="eopcrf2-confirm-actions">
       <button
         type="button"
         id="eopcrf2-reset-confirm-cancel"
-        class="eopcrf2-btn-secondary"
+        class="eopcrf2-btn"
       >
         Cancel
       </button>
       <button
         type="button"
         id="eopcrf2-reset-confirm-confirm"
-        class="eopcrf2-btn-danger"
+        class="eopcrf2-btn eopcrf2-btn--danger"
       >
-        Yes, Reset
+        Yes, reset
       </button>
     </div>
   </div>

@@ -1,5 +1,5 @@
-{% extends "base.html" %} {% block title %}AIP - Project-MEASURE-School{% endblock %} {%
-block content %}
+{% extends "base.html" %} {% block title %}AIP - Project-MEASURE-School{%
+endblock %} {% block content %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/aip.css') }}" />
 <link
@@ -8,17 +8,13 @@ block content %}
 />
 
 <section id="aip-tab" class="tab-panel aip-panel">
+  <!-- Header: title, actions and the school summary in one card -->
   <div class="aip-header">
     <div class="aip-header-top">
       <div class="aip-header-title-main">
         <span class="aip-header-badge">AIP</span>
-        <div class="aip-header-divider"></div>
         <div>
           <h2>School Annual Implementation Plan</h2>
-          <p class="aip-subtitle">
-            Project MEASURE-AIP &middot; add each program/project with its
-            target, accomplishment and MOV link.
-          </p>
         </div>
       </div>
       <div class="aip-header-actions">
@@ -30,170 +26,49 @@ block content %}
         </button>
       </div>
     </div>
+    <div class="aip-meta">
+      <i class="ti ti-school" aria-hidden="true"></i>
+      <span class="aip-school-sum" id="aip-school-sum">Not filled in yet</span>
+      <span class="aip-meta-gap"></span>
+      <button type="button" class="aip-link-btn" id="aip-school-open">
+        Edit school and print details
+      </button>
+    </div>
   </div>
 
-  <!-- School details: printed at the top of the report. Independent of the
-       SBM and OPCRF I forms. Saved through /aip/info by aip.js. -->
-  <details class="aip-about aip-school" id="aip-school">
-    <summary>
-      <span class="aip-about-icon" aria-hidden="true"
-        ><i class="ti ti-school"></i
-      ></span>
-      <span class="aip-about-title">School details</span>
-      <span class="aip-school-sum" id="aip-school-sum">Not filled in yet</span>
-      <span class="aip-about-toggle">
-        <span class="aip-when-closed">Click to expand</span>
-        <span class="aip-when-open">Collapse</span>
-        <i class="ti ti-chevron-down" aria-hidden="true"></i>
-      </span>
-    </summary>
-    <div class="aip-school-body">
-      <label class="aip-field aip-field--wide"
-        ><span class="aip-label">Name of School</span
-        ><input
-          type="text"
-          data-info="schoolName"
-          data-upper="1"
-          maxlength="255"
-          autocomplete="off"
-      /></label>
-      <label class="aip-field"
-        ><span class="aip-label">Name of School Head</span
-        ><input
-          type="text"
-          data-info="schoolHead"
-          data-upper="1"
-          maxlength="255"
-          autocomplete="off"
-      /></label>
-      <label class="aip-field aip-field--year"
-        ><span class="aip-label">School Year</span
-        ><input
-          type="text"
-          data-info="schoolYear"
-          maxlength="50"
-          autocomplete="off"
-      /></label>
-
-      <details class="aip-more">
-        <summary>
-          <i class="ti ti-chevron-right" aria-hidden="true"></i>
-          More print details
-          <span class="aip-more-hint"
-            >report title, header lines and signatories</span
-          >
-        </summary>
-        <div class="aip-more-grid">
-          <label class="aip-field aip-field--wide"
-            ><span class="aip-label">Report title</span
-            ><input
-              type="text"
-              data-info="reportTitle"
-              maxlength="255"
-              autocomplete="off"
-          /></label>
-          <label class="aip-field"
-            ><span class="aip-label">Region</span
-            ><input
-              type="text"
-              data-info="region"
-              maxlength="255"
-              autocomplete="off"
-          /></label>
-          <label class="aip-field"
-            ><span class="aip-label">Division</span
-            ><input
-              type="text"
-              data-info="division"
-              maxlength="255"
-              autocomplete="off"
-          /></label>
-          <label class="aip-field"
-            ><span class="aip-label">District</span
-            ><input
-              type="text"
-              data-info="district"
-              maxlength="255"
-              autocomplete="off"
-          /></label>
-
-          <fieldset class="aip-sign">
-            <legend>Prepared by</legend>
-            <label class="aip-field"
-              ><span class="aip-label">Name</span
-              ><input
-                type="text"
-                data-info="schoolHead"
-                data-upper="1"
-                maxlength="255"
-                autocomplete="off"
-            /></label>
-            <label class="aip-field"
-              ><span class="aip-label">Position</span
-              ><input
-                type="text"
-                data-info="headPosition"
-                maxlength="255"
-                autocomplete="off"
-            /></label>
-          </fieldset>
-          <fieldset class="aip-sign">
-            <legend>Checked by</legend>
-            <label class="aip-field"
-              ><span class="aip-label">Name</span
-              ><input
-                type="text"
-                data-info="checkedByName"
-                data-upper="1"
-                maxlength="255"
-                autocomplete="off"
-            /></label>
-            <label class="aip-field"
-              ><span class="aip-label">Position</span
-              ><input
-                type="text"
-                data-info="checkedByPosition"
-                maxlength="255"
-                autocomplete="off"
-            /></label>
-          </fieldset>
-          <fieldset class="aip-sign">
-            <legend>Noted by</legend>
-            <label class="aip-field"
-              ><span class="aip-label">Name</span
-              ><input
-                type="text"
-                data-info="notedByName"
-                data-upper="1"
-                maxlength="255"
-                autocomplete="off"
-            /></label>
-            <label class="aip-field"
-              ><span class="aip-label">Position</span
-              ><input
-                type="text"
-                data-info="notedByPosition"
-                maxlength="255"
-                autocomplete="off"
-            /></label>
-          </fieldset>
-        </div>
-      </details>
-
+  <!-- Overall progress: one segment per program/project (click to jump). -->
+  <div class="aip-progress" id="aip-progress">
+    <div class="aip-progress-summary">
       <span
-        class="aip-school-status"
-        id="aip-school-status"
-        role="status"
+        class="aip-progress-count"
+        id="aip-progress-count"
+        title="A program/project is complete when every field and its MOV link are filled in"
       ></span>
+      <span class="aip-save-status" id="aip-save-status" role="status"></span>
     </div>
-  </details>
+    <div
+      class="aip-segments"
+      id="aip-segments"
+      role="progressbar"
+      aria-label="Overall progress"
+      aria-valuemin="0"
+      aria-valuemax="0"
+      aria-valuenow="0"
+    ></div>
+    <button type="button" class="aip-next-btn" id="aip-next-incomplete">
+      <i class="ti ti-player-skip-forward" aria-hidden="true"></i> Next
+      incomplete
+    </button>
+    <span class="aip-done-badge" id="aip-done-badge" hidden>
+      <i class="ti ti-circle-check" aria-hidden="true"></i> Report complete
+    </span>
+  </div>
 
   <div id="aip-workspace" class="aip-workspace">
     <div class="aip-nav-col">
       <button type="button" class="aip-add-btn" id="aip-add-btn">
         <i class="ti ti-plus" aria-hidden="true"></i> Add program/project
       </button>
-      <p class="aip-count" id="aip-count"></p>
       <!-- A div, not <nav>: base.css styles bare nav/header elements. -->
       <div
         id="aip-list"
@@ -205,7 +80,6 @@ block content %}
     <div id="aip-editor" class="aip-editor"></div>
   </div>
 
-  <p class="aip-save-status" id="aip-save-status" role="status"></p>
   <div
     id="aip-error-state"
     class="aip-error-state"
@@ -235,6 +109,170 @@ block content %}
       </button>
     </div>
   </div>
+</div>
+
+<!-- ================= SCHOOL DETAILS + PRINT DETAILS DRAWER =================
+     Printed at the top and bottom of the report. Independent of the SBM and
+     OPCRF I forms. Saved as you type through /aip/info by aip.js. -->
+<div id="aip-drawer-overlay" class="aip-drawer-overlay">
+  <aside
+    class="aip-drawer"
+    id="aip-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="aip-drawer-title"
+  >
+    <div class="aip-drawer-head">
+      <h4 id="aip-drawer-title">School and print details</h4>
+      <button
+        type="button"
+        class="aip-btn aip-drawer-close"
+        id="aip-drawer-close"
+        aria-label="Close school and print details"
+      >
+        <i class="ti ti-x" aria-hidden="true"></i> Close
+      </button>
+    </div>
+    <div class="aip-drawer-body">
+      <p class="aip-school-note">
+        These appear on the printed report. Changes save as you type.
+        <span
+          class="aip-school-status"
+          id="aip-school-status"
+          role="status"
+        ></span>
+      </p>
+
+      <section class="aip-sec" id="aip-sec-school">
+        <h5>School</h5>
+        <label class="aip-school-field"
+          ><span class="aip-school-label">Name of School</span
+          ><input
+            type="text"
+            data-info="schoolName"
+            data-upper="1"
+            maxlength="255"
+            autocomplete="off"
+        /></label>
+        <label class="aip-school-field"
+          ><span class="aip-school-label">Name of School Head</span
+          ><input
+            type="text"
+            data-info="schoolHead"
+            data-upper="1"
+            maxlength="255"
+            autocomplete="off"
+        /></label>
+        <label class="aip-school-field"
+          ><span class="aip-school-label">School Year</span
+          ><input
+            type="text"
+            data-info="schoolYear"
+            maxlength="50"
+            placeholder="e.g. 2025-2026"
+            autocomplete="off"
+        /></label>
+      </section>
+
+      <section class="aip-sec" id="aip-sec-print">
+        <h5>Report heading</h5>
+        <label class="aip-school-field"
+          ><span class="aip-school-label">Report title</span
+          ><input
+            type="text"
+            data-info="reportTitle"
+            maxlength="255"
+            autocomplete="off"
+        /></label>
+        <div class="aip-pair">
+          <label class="aip-school-field"
+            ><span class="aip-school-label">Region</span
+            ><input
+              type="text"
+              data-info="region"
+              maxlength="255"
+              autocomplete="off"
+          /></label>
+          <label class="aip-school-field"
+            ><span class="aip-school-label">Division</span
+            ><input
+              type="text"
+              data-info="division"
+              maxlength="255"
+              autocomplete="off"
+          /></label>
+        </div>
+        <label class="aip-school-field"
+          ><span class="aip-school-label">District</span
+          ><input
+            type="text"
+            data-info="district"
+            maxlength="255"
+            autocomplete="off"
+        /></label>
+      </section>
+
+      <section class="aip-sec" id="aip-sec-sign">
+        <h5>Signatories</h5>
+        <fieldset class="aip-sign">
+          <legend>Prepared by</legend>
+          <p class="aip-sign-note">Name is the School Head above.</p>
+          <label class="aip-school-field"
+            ><span class="aip-school-label">Position</span
+            ><input
+              type="text"
+              data-info="headPosition"
+              maxlength="255"
+              autocomplete="off"
+          /></label>
+        </fieldset>
+        <fieldset class="aip-sign">
+          <legend>Checked by</legend>
+          <div class="aip-pair">
+            <label class="aip-school-field"
+              ><span class="aip-school-label">Name</span
+              ><input
+                type="text"
+                data-info="checkedByName"
+                data-upper="1"
+                maxlength="255"
+                autocomplete="off"
+            /></label>
+            <label class="aip-school-field"
+              ><span class="aip-school-label">Position</span
+              ><input
+                type="text"
+                data-info="checkedByPosition"
+                maxlength="255"
+                autocomplete="off"
+            /></label>
+          </div>
+        </fieldset>
+        <fieldset class="aip-sign">
+          <legend>Noted by</legend>
+          <div class="aip-pair">
+            <label class="aip-school-field"
+              ><span class="aip-school-label">Name</span
+              ><input
+                type="text"
+                data-info="notedByName"
+                data-upper="1"
+                maxlength="255"
+                autocomplete="off"
+            /></label>
+            <label class="aip-school-field"
+              ><span class="aip-school-label">Position</span
+              ><input
+                type="text"
+                data-info="notedByPosition"
+                maxlength="255"
+                autocomplete="off"
+            /></label>
+          </div>
+        </fieldset>
+      </section>
+    </div>
+  </aside>
 </div>
 
 <!-- Print-only copy of the report; built and moved to <body> by aip.js -->
